@@ -1,0 +1,12 @@
+[
+    {"name": "Bench Press", "category": "Chest"},
+    {"name": "Squats", "category": "Legs"},
+    {"name": "Deadlift", "category": "Back"},
+    {"name": "Pull-Ups", "category": "Back"},
+    {"name": "Push-Ups", "category": "Chest"},
+    {"name": "Lunges", "category": "Legs"},
+    {"name": "Shoulder Press", "category": "Shoulders"},
+    {"name": "Bicep Curls", "category": "Arms"},
+    {"name": "Plank", "category": "Core"},
+    {"name": "Running", "category": "Cardio"}
+]
