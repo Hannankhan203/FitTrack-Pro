@@ -712,6 +712,1129 @@ $photoCount = count($photos);
             border: none;
             border-radius: var(--border-radius);
         }
+
+        /* ============================================
+   PREMIUM MOBILE RESPONSIVE DESIGN - PROGRESS PHOTOS
+   ============================================ */
+
+/* Base mobile styles */
+@media (max-width: 767.98px) {
+    /* Reset container spacing */
+    .container.mt-4 {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        max-width: 100%;
+        margin-top: 0 !important;
+    }
+    
+    /* Body background and padding */
+    body {
+        background: #f5f9ff;
+        padding-bottom: 70px; /* Space for mobile nav */
+    }
+    
+    /* Mobile Navigation - Enhanced */
+    .mobile-nav {
+        display: flex !important;
+        background: white;
+        border-radius: 25px 25px 0 0;
+        padding: 0.75rem 0.5rem;
+        box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.15);
+        position: fixed;
+        bottom: 0;
+        left: 0.5rem;
+        right: 0.5rem;
+        margin: 0 auto;
+        max-width: 500px;
+        z-index: 1000;
+    }
+    
+    .mobile-nav-item {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-decoration: none;
+        color: #94a3b8;
+        font-size: 0.75rem;
+        padding: 0.5rem 0.25rem;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+    }
+    
+    .mobile-nav-item:hover,
+    .mobile-nav-item.active {
+        color: #3a86ff;
+        background: rgba(58, 134, 255, 0.08);
+        transform: translateY(-3px);
+    }
+    
+    .mobile-nav-item i {
+        font-size: 1.3rem;
+        margin-bottom: 0.25rem;
+        transition: all 0.3s ease;
+    }
+    
+    .mobile-nav-item.active i {
+        transform: scale(1.1);
+    }
+    
+    /* Hide desktop navbar on mobile */
+    .navbar-nav {
+        display: none !important;
+    }
+    
+    .navbar-toggler {
+        border: none;
+        padding: 0.5rem;
+    }
+    
+    .navbar-toggler:focus {
+        box-shadow: none;
+    }
+    
+    /* Page Header - Redesigned for mobile */
+    .page-header {
+        border-radius: 0 0 32px 32px !important;
+        padding: 1.5rem !important;
+        margin: 0 0 1.5rem 0 !important;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .page-header::before {
+        display: none;
+    }
+    
+    .page-header::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 40px;
+        background: linear-gradient(to top, rgba(0,0,0,0.05), transparent);
+    }
+    
+    .page-header h1 {
+        font-size: 1.5rem !important;
+        margin-bottom: 0.5rem;
+        line-height: 1.3;
+    }
+    
+    .page-header p {
+        font-size: 0.95rem;
+        margin-bottom: 0;
+    }
+    
+    /* Alert Messages */
+    .alert {
+        margin: 0 0.75rem 1rem 0.75rem !important;
+        border-radius: 16px !important;
+        padding: 1rem !important;
+        font-size: 0.9rem;
+    }
+    
+    .alert i {
+        font-size: 1.1rem !important;
+        margin-right: 0.5rem !important;
+    }
+    
+    .alert-success {
+        background: linear-gradient(135deg, #38b000, #70e000) !important;
+        color: white;
+        border: none;
+    }
+    
+    /* Upload Card - Mobile Optimized */
+    .upload-card {
+        margin: 0 0.75rem 1.5rem 0.75rem !important;
+        padding: 1.5rem !important;
+        border-radius: 20px !important;
+    }
+    
+    .upload-icon {
+        width: 70px !important;
+        height: 70px !important;
+        font-size: 1.8rem !important;
+        margin-bottom: 1rem !important;
+    }
+    
+    .upload-card h4 {
+        font-size: 1.2rem !important;
+        margin-bottom: 0.75rem !important;
+    }
+    
+    .upload-card p.text-muted {
+        font-size: 0.9rem !important;
+        margin-bottom: 1.25rem !important;
+        line-height: 1.5;
+    }
+    
+    /* File Input - Mobile Optimized */
+    .file-input-wrapper {
+        margin-bottom: 1rem !important;
+    }
+    
+    .file-input-label {
+        padding: 1rem !important;
+        min-height: 56px !important;
+        border-radius: 14px !important;
+        border-width: 2px !important;
+    }
+    
+    .file-input-label .text-center {
+        font-size: 0.9rem;
+    }
+    
+    .file-input-label i {
+        font-size: 1.1rem !important;
+        margin-right: 0.5rem !important;
+    }
+    
+    #fileName {
+        font-size: 0.9rem !important;
+    }
+    
+    /* Selected file name display */
+    .file-name {
+        margin-top: 0.75rem !important;
+        padding: 0.75rem !important;
+        font-size: 0.85rem !important;
+        border-radius: 12px !important;
+    }
+    
+    .file-name i {
+        font-size: 0.9rem !important;
+        margin-right: 0.5rem !important;
+    }
+    
+    /* Upload Progress */
+    .upload-progress {
+        margin-top: 1rem !important;
+    }
+    
+    .progress-bar {
+        height: 6px !important;
+        border-radius: 8px !important;
+        margin-bottom: 0.375rem !important;
+    }
+    
+    .upload-status {
+        font-size: 0.8rem !important;
+    }
+    
+    /* Upload Button */
+    .btn-primary {
+        padding: 0.875rem !important;
+        font-size: 1rem !important;
+        border-radius: 14px !important;
+        min-height: 56px !important;
+        margin-top: 1rem !important;
+    }
+    
+    .btn-primary i {
+        font-size: 1.1rem !important;
+        margin-right: 0.5rem !important;
+    }
+    
+    /* Gallery Section - Mobile Optimized */
+    .gallery-section {
+        margin: 0 0.75rem 1.5rem 0.75rem !important;
+        padding: 1.5rem !important;
+        border-radius: 20px !important;
+    }
+    
+    .section-header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 1rem;
+        margin-bottom: 1.5rem !important;
+        padding-bottom: 1rem !important;
+    }
+    
+    .section-title {
+        font-size: 1.2rem !important;
+        margin-bottom: 0 !important;
+    }
+    
+    .section-title i {
+        font-size: 1.1rem !important;
+        margin-right: 0.5rem !important;
+    }
+    
+    .photo-count {
+        font-size: 0.8rem !important;
+        padding: 0.2rem 0.625rem !important;
+        margin-left: 0.5rem !important;
+    }
+    
+    /* Toggle View Button */
+    .btn-secondary {
+        padding: 0.625rem 1rem !important;
+        font-size: 0.9rem !important;
+        border-radius: 12px !important;
+        min-height: 40px !important;
+    }
+    
+    .btn-secondary i {
+        font-size: 0.9rem !important;
+        margin-right: 0.25rem !important;
+    }
+    
+    /* Gallery Grid - Mobile Optimized */
+    .gallery-grid {
+        grid-template-columns: 1fr !important;
+        gap: 1rem !important;
+    }
+    
+    /* Photo Card - Mobile Optimized */
+    .photo-card {
+        border-radius: 16px !important;
+        overflow: hidden;
+    }
+    
+    .photo-img-container {
+        height: 280px !important;
+    }
+    
+    .photo-img-container img {
+        max-height: 280px !important;
+    }
+    
+    /* Photo Overlay - Always visible on mobile for better UX */
+    .photo-overlay {
+        opacity: 1 !important;
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent 60%) !important;
+    }
+    
+    .photo-date {
+        font-size: 0.9rem !important;
+        margin-bottom: 0.75rem !important;
+    }
+    
+    .photo-date small {
+        font-size: 0.8rem !important;
+        opacity: 0.9;
+    }
+    
+    .photo-actions {
+        gap: 0.75rem !important;
+    }
+    
+    .photo-btn {
+        padding: 0.5rem !important;
+        border-radius: 10px !important;
+        font-size: 0.9rem !important;
+        min-height: 40px !important;
+        min-width: 40px !important;
+    }
+    
+    .photo-btn i {
+        font-size: 1rem !important;
+    }
+    
+    /* Empty State - Mobile Optimized */
+    .empty-state {
+        padding: 2rem 1rem !important;
+    }
+    
+    .empty-state i {
+        font-size: 3rem !important;
+        margin-bottom: 0.75rem !important;
+    }
+    
+    .empty-state h4 {
+        font-size: 1.2rem !important;
+        margin-bottom: 0.5rem !important;
+    }
+    
+    .empty-state p {
+        font-size: 0.9rem !important;
+        margin-bottom: 1.5rem !important;
+        max-width: 280px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    
+    /* Comparison Section - Mobile Optimized */
+    .comparison-section {
+        margin: 0 0.75rem 1.5rem 0.75rem !important;
+        padding: 1.5rem !important;
+        border-radius: 20px !important;
+    }
+    
+    .comparison-header {
+        margin-bottom: 1.5rem !important;
+    }
+    
+    .comparison-title {
+        font-size: 1.3rem !important;
+        margin-bottom: 0.25rem !important;
+    }
+    
+    .comparison-subtitle {
+        font-size: 0.9rem !important;
+        opacity: 0.8;
+    }
+    
+    .comparison-container {
+        grid-template-columns: 1fr !important;
+        gap: 1.5rem !important;
+    }
+    
+    .comparison-label {
+        font-size: 1rem !important;
+        margin-bottom: 0.75rem !important;
+        padding: 0.5rem !important;
+        border-radius: 10px !important;
+    }
+    
+    .photo-img-container[style*="height: 350px"] {
+        height: 250px !important;
+    }
+    
+    .comparison-vs {
+        position: relative !important;
+        top: 0 !important;
+        left: 0 !important;
+        transform: none !important;
+        margin: 0 auto 1rem auto !important;
+        width: 50px !important;
+        height: 50px !important;
+        font-size: 1rem !important;
+    }
+    
+    .comparison-container > div {
+        text-align: center;
+    }
+    
+    .comparison-container small {
+        font-size: 0.85rem !important;
+    }
+    
+    /* Progress Timeline - Mobile Optimized */
+    .progress-timeline {
+        margin-top: 1.5rem !important;
+        padding: 0.75rem !important;
+        border-radius: 12px !important;
+        flex-wrap: wrap;
+        gap: 1rem;
+        justify-content: space-around;
+    }
+    
+    .timeline-item {
+        margin: 0 0.5rem !important;
+    }
+    
+    .timeline-dot {
+        width: 10px !important;
+        height: 10px !important;
+        margin-bottom: 0.25rem !important;
+    }
+    
+    .timeline-label {
+        font-size: 0.8rem !important;
+    }
+    
+    /* Tips Section - Mobile Optimized */
+    .gallery-section:last-child {
+        margin-bottom: 2rem !important;
+    }
+    
+    .row {
+        margin: 0 !important;
+    }
+    
+    .col-md-4.mb-3 {
+        width: 100% !important;
+        margin-bottom: 1.25rem !important;
+    }
+    
+    .d-flex.align-items-start {
+        gap: 0.75rem;
+    }
+    
+    .d-flex.align-items-start .me-3 i {
+        font-size: 1.5rem !important;
+        margin-top: 0.125rem;
+    }
+    
+    .d-flex.align-items-start h6 {
+        font-size: 0.95rem !important;
+        margin-bottom: 0.25rem !important;
+    }
+    
+    .d-flex.align-items-start .small {
+        font-size: 0.85rem !important;
+        line-height: 1.4;
+    }
+    
+    /* Animation for mobile */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .upload-card,
+    .gallery-section,
+    .comparison-section {
+        animation: fadeInUp 0.5s ease-out;
+    }
+    
+    /* Stagger animations */
+    .upload-card { animation-delay: 0.1s; }
+    .gallery-section { animation-delay: 0.2s; }
+    .comparison-section { animation-delay: 0.3s; }
+    
+    /* Photo card entrance animation */
+    @keyframes photoCardEntrance {
+        from {
+            opacity: 0;
+            transform: translateY(20px) scale(0.95);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+    
+    .photo-card {
+        animation: photoCardEntrance 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    /* Stagger photo animations */
+    .photo-card:nth-child(1) { animation-delay: 0.1s; }
+    .photo-card:nth-child(2) { animation-delay: 0.2s; }
+    .photo-card:nth-child(3) { animation-delay: 0.3s; }
+    .photo-card:nth-child(4) { animation-delay: 0.4s; }
+    .photo-card:nth-child(5) { animation-delay: 0.5s; }
+    .photo-card:nth-child(6) { animation-delay: 0.6s; }
+}
+
+/* Extra small devices (phones under 400px) */
+@media (max-width: 399.98px) {
+    .mobile-nav {
+        left: 0.25rem;
+        right: 0.25rem;
+        padding: 0.5rem;
+    }
+    
+    .page-header {
+        padding: 1.25rem !important;
+    }
+    
+    .page-header h1 {
+        font-size: 1.3rem !important;
+    }
+    
+    .page-header p {
+        font-size: 0.9rem;
+    }
+    
+    .alert {
+        margin: 0 0.5rem 0.75rem 0.5rem !important;
+        padding: 0.875rem !important;
+        font-size: 0.85rem !important;
+    }
+    
+    .upload-card,
+    .gallery-section,
+    .comparison-section {
+        margin: 0 0.5rem 1rem 0.5rem !important;
+        padding: 1.25rem !important;
+    }
+    
+    .upload-icon {
+        width: 60px !important;
+        height: 60px !important;
+        font-size: 1.5rem !important;
+    }
+    
+    .upload-card h4 {
+        font-size: 1.1rem !important;
+    }
+    
+    .file-input-label {
+        padding: 0.875rem !important;
+        min-height: 52px !important;
+    }
+    
+    #fileName {
+        font-size: 0.85rem !important;
+    }
+    
+    .btn-primary {
+        padding: 0.75rem !important;
+        min-height: 52px !important;
+        font-size: 0.95rem !important;
+    }
+    
+    .photo-img-container {
+        height: 250px !important;
+    }
+    
+    .photo-img-container img {
+        max-height: 250px !important;
+    }
+    
+    .photo-date {
+        font-size: 0.85rem !important;
+    }
+    
+    .photo-btn {
+        min-height: 36px !important;
+        min-width: 36px !important;
+        padding: 0.375rem !important;
+    }
+    
+    .photo-btn i {
+        font-size: 0.9rem !important;
+    }
+    
+    .empty-state {
+        padding: 1.5rem 1rem !important;
+    }
+    
+    .empty-state i {
+        font-size: 2.5rem !important;
+    }
+    
+    .empty-state h4 {
+        font-size: 1.1rem !important;
+    }
+    
+    .comparison-title {
+        font-size: 1.2rem !important;
+    }
+    
+    .photo-img-container[style*="height: 350px"] {
+        height: 220px !important;
+    }
+    
+    .btn-secondary {
+        padding: 0.5rem 0.75rem !important;
+        font-size: 0.85rem !important;
+    }
+}
+
+/* Tablet portrait mode (768px - 991px) */
+@media (min-width: 768px) and (max-width: 991.98px) {
+    .container.mt-4 {
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+    }
+    
+    .mobile-nav {
+        display: flex !important;
+        left: 1rem;
+        right: 1rem;
+    }
+    
+    .navbar-nav {
+        display: none !important;
+    }
+    
+    .gallery-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+    
+    .photo-img-container {
+        height: 300px !important;
+    }
+    
+    .photo-img-container img {
+        max-height: 300px !important;
+    }
+    
+    .row .col-md-4.mb-3 {
+        width: 33.333% !important;
+        margin-bottom: 0 !important;
+    }
+}
+
+/* Landscape mode optimization */
+@media (max-height: 600px) and (orientation: landscape) {
+    .mobile-nav {
+        padding: 0.5rem;
+    }
+    
+    .mobile-nav-item {
+        font-size: 0.7rem;
+        padding: 0.25rem 0.125rem;
+    }
+    
+    .mobile-nav-item i {
+        font-size: 1.1rem;
+        margin-bottom: 0.125rem;
+    }
+    
+    .page-header {
+        padding: 1rem !important;
+        margin-bottom: 1rem !important;
+    }
+    
+    .page-header h1 {
+        font-size: 1.2rem !important;
+    }
+    
+    .upload-card,
+    .gallery-section,
+    .comparison-section {
+        margin-bottom: 1rem !important;
+        padding: 1rem !important;
+    }
+    
+    .upload-icon {
+        width: 50px !important;
+        height: 50px !important;
+        font-size: 1.2rem !important;
+    }
+    
+    .photo-img-container {
+        height: 200px !important;
+    }
+    
+    .photo-img-container img {
+        max-height: 200px !important;
+    }
+    
+    .photo-img-container[style*="height: 350px"] {
+        height: 180px !important;
+    }
+    
+    .btn-primary {
+        min-height: 52px !important;
+        padding: 0.75rem !important;
+    }
+    
+    .file-input-label {
+        min-height: 48px !important;
+        padding: 0.75rem !important;
+    }
+}
+
+/* iPhone notch and safe area support */
+@supports (padding: max(0px)) {
+    .container.mt-4 {
+        padding-left: max(0.75rem, env(safe-area-inset-left)) !important;
+        padding-right: max(0.75rem, env(safe-area-inset-right)) !important;
+    }
+    
+    .mobile-nav {
+        padding-bottom: max(0.75rem, env(safe-area-inset-bottom)) !important;
+    }
+    
+    .page-header {
+        padding-top: max(1.5rem, env(safe-area-inset-top)) !important;
+    }
+}
+
+/* Loading animations */
+@keyframes buttonPulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(0.98);
+    }
+}
+
+.btn-primary:disabled {
+    animation: buttonPulse 1s infinite;
+}
+
+/* Touch feedback for mobile */
+@media (hover: none) and (pointer: coarse) {
+    .photo-card:hover {
+        transform: none !important;
+    }
+    
+    .photo-card:active {
+        transform: scale(0.98) !important;
+    }
+    
+    .photo-btn:hover {
+        transform: none !important;
+    }
+    
+    .photo-btn:active {
+        transform: scale(1.1) !important;
+    }
+    
+    .btn-primary:hover,
+    .btn-secondary:hover {
+        transform: none !important;
+    }
+    
+    .btn-primary:active,
+    .btn-secondary:active {
+        transform: scale(0.98) !important;
+    }
+    
+    .file-input-label:hover {
+        transform: none !important;
+    }
+    
+    .file-input-label:active {
+        transform: scale(0.98) !important;
+    }
+}
+
+/* Custom scrollbar for mobile webkit */
+@media (max-width: 767.98px) {
+    ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+    
+    ::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+        background: linear-gradient(135deg, #3a86ff, #8338ec);
+        border-radius: 10px;
+    }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    @media (max-width: 767.98px) {
+        body {
+            background: #121826;
+            color: #e2e8f0;
+        }
+        
+        .upload-card,
+        .gallery-section {
+            background: #1e293b;
+            color: #e2e8f0;
+            border-color: #374151 !important;
+        }
+        
+        .mobile-nav {
+            background: #1e293b;
+        }
+        
+        .mobile-nav-item {
+            color: #94a3b8;
+        }
+        
+        .mobile-nav-item.active {
+            color: #3a86ff;
+            background: rgba(58, 134, 255, 0.15);
+        }
+        
+        .file-input-label {
+            background: #2d3748 !important;
+            border-color: #374151 !important;
+            color: #e2e8f0 !important;
+        }
+        
+        .file-name {
+            background: #2d3748 !important;
+            color: #94a3b8 !important;
+        }
+        
+        .file-name i.text-primary {
+            color: #3a86ff !important;
+        }
+        
+        .progress-bar {
+            background: #374151 !important;
+        }
+        
+        .photo-card {
+            background: #2d3748 !important;
+        }
+        
+        .photo-img-container {
+            background-color: #1e293b !important;
+        }
+        
+        .photo-overlay {
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent 60%) !important;
+        }
+        
+        .photo-btn {
+            background: rgba(255, 255, 255, 0.15) !important;
+            border-color: rgba(255, 255, 255, 0.2) !important;
+        }
+        
+        .photo-btn-delete {
+            background: rgba(239, 68, 68, 0.8) !important;
+            border-color: rgba(239, 68, 68, 0.3) !important;
+        }
+        
+        .photo-btn-delete:hover {
+            background: rgba(239, 68, 68, 1) !important;
+        }
+        
+        .comparison-section {
+            background: linear-gradient(135deg, #4f46e5, #7c3aed) !important;
+        }
+        
+        .comparison-label {
+            background: rgba(255, 255, 255, 0.15) !important;
+        }
+        
+        .timeline-dot {
+            background: rgba(255, 255, 255, 0.9) !important;
+        }
+        
+        .text-muted {
+            color: #94a3b8 !important;
+        }
+        
+        .btn-secondary {
+            background: #475569 !important;
+            color: #e2e8f0 !important;
+            border: none !important;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #2563eb, #3730a3) !important;
+        }
+        
+        .empty-state i {
+            color: #374151 !important;
+        }
+        
+        .alert-success {
+            background: linear-gradient(135deg, #059669, #065f46) !important;
+        }
+    }
+}
+
+/* Enhanced animations for mobile */
+@keyframes slideInFromLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideInFromRight {
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Section animations */
+.upload-card {
+    animation: slideInFromLeft 0.5s ease-out;
+}
+
+.gallery-section {
+    animation: slideInFromRight 0.5s ease-out;
+}
+
+/* Upload progress animation */
+@keyframes uploadProgress {
+    from {
+        width: 0%;
+    }
+    to {
+        width: 100%;
+    }
+}
+
+.progress-fill {
+    animation: uploadProgress 2s ease-in-out infinite alternate;
+}
+
+/* Photo hover effects */
+@media (hover: hover) and (pointer: fine) {
+    .photo-card:hover {
+        transform: translateY(-8px);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+}
+
+/* Lightbox adjustments for mobile */
+@media (max-width: 767.98px) {
+    .lb-outerContainer {
+        border-radius: 16px !important;
+        overflow: hidden;
+    }
+    
+    .lb-container {
+        padding: 0 !important;
+    }
+    
+    .lb-nav a.lb-prev,
+    .lb-nav a.lb-next {
+        width: 44px !important;
+        height: 44px !important;
+    }
+    
+    .lb-data .lb-close {
+        width: 44px !important;
+        height: 44px !important;
+        top: 10px !important;
+        right: 10px !important;
+    }
+}
+
+/* Upload button loading animation */
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.btn-primary i.fa-spinner {
+    animation: spin 1s linear infinite;
+}
+
+/* Form focus states */
+.file-input-label:focus-within,
+.btn-primary:focus,
+.btn-secondary:focus {
+    box-shadow: 0 0 0 3px rgba(58, 134, 255, 0.2) !important;
+}
+
+/* Empty state image tips */
+@media (max-width: 767.98px) {
+    .empty-state .d-flex.justify-content-center.gap-2 {
+        gap: 1rem !important;
+        flex-wrap: wrap;
+    }
+    
+    .empty-state .text-center {
+        flex: 1;
+        min-width: 100px;
+    }
+    
+    .empty-state .text-center i {
+        font-size: 1.5rem !important;
+    }
+    
+    .empty-state .text-center small {
+        font-size: 0.8rem !important;
+    }
+}
+
+/* Responsive typography */
+@media (max-width: 767.98px) {
+    h1, h2, h3, h4, h5, h6 {
+        margin-bottom: 0.75rem !important;
+    }
+    
+    p, div, span {
+        margin-bottom: 0.5rem !important;
+    }
+    
+    .mb-3 {
+        margin-bottom: 1rem !important;
+    }
+    
+    .mb-4 {
+        margin-bottom: 1.5rem !important;
+    }
+    
+    .mt-3 {
+        margin-top: 1rem !important;
+    }
+    
+    .mt-4 {
+        margin-top: 1.5rem !important;
+    }
+}
+
+/* Mobile-specific utility classes */
+@media (max-width: 767.98px) {
+    .mobile-only {
+        display: block !important;
+    }
+    
+    .desktop-only {
+        display: none !important;
+    }
+    
+    .mobile-text-center {
+        text-align: center !important;
+    }
+    
+    .mobile-stack {
+        flex-direction: column !important;
+        gap: 0.75rem !important;
+    }
+}
+
+/* Ensure proper content flow on mobile */
+@media (max-width: 767.98px) {
+    body {
+        overflow-x: hidden;
+        width: 100%;
+    }
+    
+    /* Prevent horizontal scrolling */
+    * {
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+    
+    img, video, iframe {
+        max-width: 100%;
+        height: auto;
+    }
+}
+
+/* Fix for mobile keyboard */
+@media (max-width: 767.98px) {
+    input, textarea, select {
+        font-size: 16px !important; /* Prevents iOS zoom */
+    }
+}
+
+/* Accessibility improvements for mobile */
+@media (max-width: 767.98px) {
+    .btn, a, input[type="submit"], button {
+        min-height: 44px !important;
+        min-width: 44px !important;
+    }
+    
+    input, select, textarea {
+        min-height: 44px !important;
+    }
+    
+    .photo-btn {
+        min-height: 44px !important;
+        min-width: 44px !important;
+    }
+    
+    /* Focus styles for better accessibility */
+    *:focus {
+        outline: 2px solid #3a86ff !important;
+        outline-offset: 2px !important;
+    }
+}
+
+/* Smooth transitions */
+* {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
     </style>
 </head>
 

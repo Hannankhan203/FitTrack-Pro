@@ -576,6 +576,995 @@ if ($_POST) {
                 opacity: 1;
             }
         }
+
+        /* ============================================
+   PREMIUM MOBILE RESPONSIVE DESIGN - PROFILE
+   ============================================ */
+
+/* Base mobile styles */
+@media (max-width: 767.98px) {
+    /* Reset container spacing */
+    .container.mt-4 {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        max-width: 100%;
+        margin-top: 0 !important;
+    }
+    
+    /* Body background and padding */
+    body {
+        background: #f5f9ff;
+        padding-bottom: 70px; /* Space for mobile nav */
+    }
+    
+    /* Mobile Navigation - Enhanced */
+    .mobile-nav {
+        display: flex !important;
+        background: white;
+        border-radius: 25px 25px 0 0;
+        padding: 0.75rem 0.5rem;
+        box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.15);
+        position: fixed;
+        bottom: 0;
+        left: 0.5rem;
+        right: 0.5rem;
+        margin: 0 auto;
+        max-width: 500px;
+        z-index: 1000;
+    }
+    
+    .mobile-nav-item {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-decoration: none;
+        color: #94a3b8;
+        font-size: 0.75rem;
+        padding: 0.5rem 0.25rem;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+    }
+    
+    .mobile-nav-item:hover,
+    .mobile-nav-item.active {
+        color: #3a86ff;
+        background: rgba(58, 134, 255, 0.08);
+        transform: translateY(-3px);
+    }
+    
+    .mobile-nav-item i {
+        font-size: 1.3rem;
+        margin-bottom: 0.25rem;
+        transition: all 0.3s ease;
+    }
+    
+    .mobile-nav-item.active i {
+        transform: scale(1.1);
+    }
+    
+    /* Hide desktop navbar on mobile */
+    .navbar-nav {
+        display: none !important;
+    }
+    
+    .navbar-toggler {
+        border: none;
+        padding: 0.5rem;
+    }
+    
+    .navbar-toggler:focus {
+        box-shadow: none;
+    }
+    
+    /* Page Header - Redesigned for mobile */
+    .page-header {
+        border-radius: 0 0 32px 32px;
+        padding: 1.5rem !important;
+        margin: 0 0 1.5rem 0 !important;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .page-header::before {
+        display: none;
+    }
+    
+    .page-header::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 40px;
+        background: linear-gradient(to top, rgba(0,0,0,0.05), transparent);
+    }
+    
+    .page-header h1 {
+        font-size: 1.5rem !important;
+        margin-bottom: 0.5rem;
+        line-height: 1.3;
+    }
+    
+    .page-header p {
+        font-size: 0.95rem;
+        margin-bottom: 0;
+    }
+    
+    /* Main content row */
+    .row {
+        margin: 0 !important;
+    }
+    
+    .col-lg-8,
+    .col-lg-4 {
+        padding: 0 !important;
+    }
+    
+    /* User Profile Card - Mobile Optimized */
+    .user-profile-card {
+        margin: 0 0.75rem 1.5rem 0.75rem !important;
+        padding: 1.5rem !important;
+        border-radius: 20px !important;
+    }
+    
+    .user-avatar {
+        width: 100px !important;
+        height: 100px !important;
+        font-size: 2.5rem !important;
+        margin-bottom: 1rem !important;
+        border-width: 4px !important;
+    }
+    
+    .user-name {
+        font-size: 1.3rem !important;
+        margin-bottom: 0.25rem !important;
+    }
+    
+    .user-email {
+        font-size: 0.9rem !important;
+        margin-bottom: 1rem !important;
+    }
+    
+    .user-stats {
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 0.75rem !important;
+        margin-top: 1rem !important;
+    }
+    
+    .stat-value {
+        font-size: 1.3rem !important;
+        margin-bottom: 0.125rem !important;
+    }
+    
+    .stat-label {
+        font-size: 0.75rem !important;
+    }
+    
+    /* Goal Card - Mobile Optimized */
+    .goal-card {
+        margin: 0 0.75rem 1.5rem 0.75rem !important;
+        padding: 1.5rem !important;
+        border-radius: 20px !important;
+    }
+    
+    .goal-header {
+        flex-direction: column;
+        align-items: flex-start;
+        text-align: center;
+        gap: 1rem;
+        margin-bottom: 1.25rem !important;
+        padding-bottom: 1rem !important;
+    }
+    
+    .goal-icon {
+        width: 50px !important;
+        height: 50px !important;
+        font-size: 1.5rem !important;
+        margin: 0 auto !important;
+    }
+    
+    .goal-title {
+        font-size: 1.2rem !important;
+        width: 100%;
+        text-align: center;
+    }
+    
+    /* Achievement Banner */
+    .achievement-banner {
+        border-radius: 16px !important;
+        padding: 0.875rem !important;
+        margin-bottom: 1.25rem !important;
+        flex-direction: column;
+        text-align: center;
+        gap: 0.75rem;
+    }
+    
+    .achievement-banner .btn-sm {
+        align-self: flex-end;
+        margin-top: -0.5rem;
+    }
+    
+    /* Form Styles */
+    .mb-4 {
+        margin-bottom: 1.25rem !important;
+    }
+    
+    .form-label {
+        font-size: 0.95rem !important;
+        margin-bottom: 0.5rem !important;
+    }
+    
+    .form-control {
+        padding: 0.875rem !important;
+        border-radius: 12px !important;
+        font-size: 1rem !important;
+        min-height: 56px !important;
+    }
+    
+    .input-unit {
+        right: 0.875rem !important;
+        font-size: 0.95rem !important;
+    }
+    
+    .form-text {
+        font-size: 0.85rem !important;
+        margin-top: 0.25rem !important;
+    }
+    
+    /* Goal Type Selector - Mobile Optimized */
+    .goal-type-selector {
+        grid-template-columns: 1fr !important;
+        gap: 0.75rem !important;
+        margin-bottom: 1.25rem !important;
+    }
+    
+    .goal-type-option {
+        padding: 1.25rem 1rem !important;
+        border-radius: 16px !important;
+        text-align: left !important;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .goal-type-option:hover {
+        transform: translateY(-2px) !important;
+    }
+    
+    .goal-type-icon {
+        font-size: 1.8rem !important;
+        margin-bottom: 0 !important;
+        flex-shrink: 0;
+        width: 60px;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(58, 134, 255, 0.1);
+        border-radius: 12px;
+    }
+    
+    .goal-type-title {
+        font-size: 1.1rem !important;
+        margin-bottom: 0.125rem !important;
+    }
+    
+    .goal-type-desc {
+        font-size: 0.85rem !important;
+    }
+    
+    /* Goal Preview */
+    .goal-preview {
+        border-radius: 16px !important;
+        padding: 1.25rem !important;
+        margin-top: 1.25rem !important;
+    }
+    
+    .goal-preview-title {
+        font-size: 1.1rem !important;
+        margin-bottom: 0.75rem !important;
+    }
+    
+    .goal-preview-values {
+        flex-direction: column !important;
+        gap: 0.5rem !important;
+        margin: 0.75rem 0 !important;
+    }
+    
+    .goal-value {
+        font-size: 1.6rem !important;
+    }
+    
+    .goal-arrow {
+        transform: rotate(90deg);
+        font-size: 1.25rem !important;
+    }
+    
+    /* Submit Button */
+    .btn-primary {
+        padding: 0.875rem !important;
+        font-size: 1rem !important;
+        border-radius: 14px !important;
+        min-height: 56px !important;
+        margin-top: 1rem !important;
+    }
+    
+    .btn-primary i {
+        font-size: 1.1rem !important;
+        margin-right: 0.5rem !important;
+    }
+    
+    /* Badges Card - Mobile Optimized */
+    .badges-card {
+        margin: 0 0.75rem 1.5rem 0.75rem !important;
+        padding: 1.5rem !important;
+        border-radius: 20px !important;
+    }
+    
+    .badges-header {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 1rem;
+        margin-bottom: 1.5rem !important;
+        padding-bottom: 1rem !important;
+    }
+    
+    .badges-icon {
+        width: 50px !important;
+        height: 50px !important;
+        font-size: 1.5rem !important;
+        margin: 0 auto !important;
+    }
+    
+    .badges-title {
+        font-size: 1.2rem !important;
+        text-align: center;
+    }
+    
+    .badge-count {
+        font-size: 0.85rem !important;
+        padding: 0.25rem 0.625rem !important;
+    }
+    
+    /* Badges Grid */
+    .badges-grid {
+        grid-template-columns: 1fr !important;
+        gap: 1rem !important;
+    }
+    
+    .badge-card {
+        padding: 1.25rem !important;
+        border-radius: 16px !important;
+    }
+    
+    .badge-icon {
+        width: 70px !important;
+        height: 70px !important;
+        font-size: 2rem !important;
+        margin-bottom: 0.75rem !important;
+    }
+    
+    .badge-name {
+        font-size: 1.1rem !important;
+        margin-bottom: 0.25rem !important;
+    }
+    
+    .badge-status {
+        font-size: 0.8rem !important;
+        padding: 0.25rem 0.625rem !important;
+    }
+    
+    /* Empty Badges */
+    .empty-badges {
+        padding: 2rem 1rem !important;
+    }
+    
+    .empty-badges i {
+        font-size: 3rem !important;
+        margin-bottom: 0.75rem !important;
+    }
+    
+    .empty-badges h4 {
+        font-size: 1.2rem !important;
+        margin-bottom: 0.5rem !important;
+    }
+    
+    .empty-badges p {
+        font-size: 0.9rem !important;
+        max-width: 250px;
+        margin: 0 auto;
+    }
+    
+    /* Tips Card */
+    .badges-card.mt-4 {
+        margin-top: 0 !important;
+        margin-bottom: 1.5rem !important;
+    }
+    
+    .d-flex.align-items-start {
+        margin-bottom: 1rem !important;
+    }
+    
+    .d-flex.align-items-start i {
+        margin-top: 0.125rem;
+    }
+    
+    /* Buttons - Mobile Optimized */
+    .btn {
+        padding: 0.625rem 1rem !important;
+        font-size: 0.9rem !important;
+        border-radius: 12px !important;
+        min-height: 48px !important;
+    }
+    
+    .btn-sm {
+        padding: 0.375rem 0.75rem !important;
+        min-height: 36px !important;
+        font-size: 0.8rem !important;
+    }
+    
+    /* Animation for mobile */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .user-profile-card,
+    .goal-card,
+    .badge-card,
+    .badges-card {
+        animation: fadeInUp 0.5s ease-out;
+    }
+    
+    /* Stagger animations */
+    .user-profile-card { animation-delay: 0.1s; }
+    .goal-card { animation-delay: 0.2s; }
+    .badge-card:nth-child(1) { animation-delay: 0.3s; }
+    .badge-card:nth-child(2) { animation-delay: 0.4s; }
+    .badge-card:nth-child(3) { animation-delay: 0.5s; }
+    .badge-card:nth-child(4) { animation-delay: 0.6s; }
+}
+
+/* Extra small devices (phones under 400px) */
+@media (max-width: 399.98px) {
+    .mobile-nav {
+        left: 0.25rem;
+        right: 0.25rem;
+        padding: 0.5rem;
+    }
+    
+    .page-header {
+        padding: 1.25rem !important;
+    }
+    
+    .page-header h1 {
+        font-size: 1.3rem !important;
+    }
+    
+    .page-header p {
+        font-size: 0.9rem;
+    }
+    
+    .user-profile-card,
+    .goal-card,
+    .badges-card {
+        margin: 0 0.5rem 1rem 0.5rem !important;
+        padding: 1.25rem !important;
+    }
+    
+    .user-avatar {
+        width: 90px !important;
+        height: 90px !important;
+        font-size: 2.2rem !important;
+    }
+    
+    .user-name {
+        font-size: 1.2rem !important;
+    }
+    
+    .user-email {
+        font-size: 0.85rem !important;
+    }
+    
+    .user-stats {
+        grid-template-columns: 1fr !important;
+        gap: 1rem !important;
+    }
+    
+    .stat-value {
+        font-size: 1.4rem !important;
+    }
+    
+    .goal-type-option {
+        flex-direction: column;
+        text-align: center !important;
+        gap: 0.75rem;
+    }
+    
+    .goal-type-icon {
+        width: 50px;
+        height: 50px;
+        font-size: 1.5rem;
+    }
+    
+    .goal-value {
+        font-size: 1.4rem !important;
+    }
+    
+    .badge-icon {
+        width: 60px !important;
+        height: 60px !important;
+        font-size: 1.8rem !important;
+    }
+    
+    .btn-primary {
+        font-size: 0.95rem !important;
+        padding: 0.75rem !important;
+    }
+    
+    .empty-badges {
+        padding: 1.5rem 1rem !important;
+    }
+    
+    .empty-badges i {
+        font-size: 2.5rem !important;
+    }
+}
+
+/* Tablet portrait mode (768px - 991px) */
+@media (min-width: 768px) and (max-width: 991.98px) {
+    .container.mt-4 {
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+    }
+    
+    .mobile-nav {
+        display: flex !important;
+        left: 1rem;
+        right: 1rem;
+    }
+    
+    .navbar-nav {
+        display: none !important;
+    }
+    
+    .goal-type-selector {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+    
+    .goal-type-option:nth-child(3) {
+        grid-column: span 2;
+    }
+    
+    .badges-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+    
+    .user-stats {
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 0.75rem;
+    }
+}
+
+/* Landscape mode optimization */
+@media (max-height: 700px) and (orientation: landscape) {
+    .mobile-nav {
+        padding: 0.5rem;
+    }
+    
+    .mobile-nav-item {
+        font-size: 0.7rem;
+        padding: 0.25rem 0.125rem;
+    }
+    
+    .mobile-nav-item i {
+        font-size: 1.1rem;
+        margin-bottom: 0.125rem;
+    }
+    
+    .page-header {
+        padding: 1rem !important;
+        margin-bottom: 1rem !important;
+    }
+    
+    .page-header h1 {
+        font-size: 1.2rem !important;
+    }
+    
+    .user-profile-card,
+    .goal-card,
+    .badges-card {
+        margin-bottom: 1rem !important;
+        padding: 1rem !important;
+    }
+    
+    .user-avatar {
+        width: 80px !important;
+        height: 80px !important;
+        font-size: 2rem !important;
+    }
+    
+    .goal-type-option {
+        padding: 1rem !important;
+    }
+    
+    .goal-type-icon {
+        width: 50px;
+        height: 50px;
+        font-size: 1.5rem;
+    }
+    
+    .badge-card {
+        padding: 1rem !important;
+    }
+}
+
+/* iPhone notch and safe area support */
+@supports (padding: max(0px)) {
+    .container.mt-4 {
+        padding-left: max(0.75rem, env(safe-area-inset-left)) !important;
+        padding-right: max(0.75rem, env(safe-area-inset-right)) !important;
+    }
+    
+    .mobile-nav {
+        padding-bottom: max(0.75rem, env(safe-area-inset-bottom)) !important;
+    }
+    
+    .page-header {
+        padding-top: max(1.5rem, env(safe-area-inset-top)) !important;
+    }
+}
+
+/* Loading animations */
+@keyframes buttonPulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(0.98);
+    }
+}
+
+.btn-primary:disabled {
+    animation: buttonPulse 1s infinite;
+}
+
+/* Touch feedback for mobile */
+@media (hover: none) and (pointer: coarse) {
+    .goal-type-option:hover,
+    .badge-card:hover {
+        transform: none !important;
+    }
+    
+    .goal-type-option:active,
+    .badge-card:active {
+        transform: scale(0.98) !important;
+    }
+    
+    .btn-primary:hover {
+        transform: none !important;
+    }
+    
+    .btn-primary:active {
+        transform: scale(0.98) !important;
+    }
+}
+
+/* Custom scrollbar for mobile webkit */
+@media (max-width: 767.98px) {
+    ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+    
+    ::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+        background: linear-gradient(135deg, #3a86ff, #8338ec);
+        border-radius: 10px;
+    }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    @media (max-width: 767.98px) {
+        body {
+            background: #121826;
+            color: #e2e8f0;
+        }
+        
+        .user-profile-card,
+        .goal-card,
+        .badges-card {
+            background: #1e293b;
+            color: #e2e8f0;
+        }
+        
+        .mobile-nav {
+            background: #1e293b;
+        }
+        
+        .mobile-nav-item {
+            color: #94a3b8;
+        }
+        
+        .mobile-nav-item.active {
+            color: #3a86ff;
+            background: rgba(58, 134, 255, 0.15);
+        }
+        
+        .form-control {
+            background: #2d3748;
+            border-color: #374151;
+            color: #e2e8f0;
+        }
+        
+        .form-control:focus {
+            background: #2d3748;
+            border-color: #3a86ff;
+        }
+        
+        .input-unit {
+            background: #2d3748;
+            color: #94a3b8;
+        }
+        
+        .goal-type-option {
+            background: #2d3748;
+            border-color: #374151;
+            color: #e2e8f0;
+        }
+        
+        .goal-type-option.selected {
+            background: rgba(58, 134, 255, 0.2);
+            border-color: #3a86ff;
+        }
+        
+        .goal-type-icon {
+            background: rgba(58, 134, 255, 0.2);
+        }
+        
+        .goal-preview {
+            background: rgba(58, 134, 255, 0.15);
+        }
+        
+        .badge-card {
+            background: #2d3748;
+            border-color: #374151;
+        }
+        
+        .badge-card.earned {
+            background: rgba(56, 176, 0, 0.15);
+            border-color: #38b000;
+        }
+        
+        .badge-icon.locked {
+            background: #374151;
+            color: #64748b;
+        }
+        
+        .stat-label,
+        .user-email,
+        .goal-type-desc,
+        .form-text,
+        .small,
+        .empty-badges,
+        .badge-status.status-locked {
+            color: #94a3b8 !important;
+        }
+        
+        .stat-value,
+        .goal-value,
+        .badge-name {
+            color: #f1f5f9;
+        }
+        
+        .achievement-banner {
+            background: rgba(56, 176, 0, 0.2);
+            color: #e2e8f0;
+        }
+    }
+}
+
+/* Enhanced animations for mobile */
+@keyframes slideInFromLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideInFromRight {
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Column animations */
+.col-lg-8 .user-profile-card,
+.col-lg-8 .goal-card {
+    animation: slideInFromLeft 0.5s ease-out;
+}
+
+.col-lg-4 .badges-card {
+    animation: slideInFromRight 0.5s ease-out;
+}
+
+/* Achievement banner animation */
+@keyframes achievementBounce {
+    0%, 20%, 50%, 80%, 100% {
+        transform: translateY(0);
+    }
+    40% {
+        transform: translateY(-10px);
+    }
+    60% {
+        transform: translateY(-5px);
+    }
+}
+
+.achievement-banner {
+    animation: achievementBounce 0.8s ease-out, slideIn 0.5s ease-out;
+}
+
+/* Form focus states */
+.form-control:focus,
+.goal-type-option.selected {
+    box-shadow: 0 0 0 3px rgba(58, 134, 255, 0.2);
+}
+
+/* Responsive input improvements */
+.input-group {
+    position: relative;
+}
+
+.input-group:focus-within {
+    transform: translateY(-2px);
+    transition: transform 0.3s ease;
+}
+
+/* Interactive badge hover states */
+@media (hover: hover) and (pointer: fine) {
+    .badge-card:hover .badge-icon.earned {
+        transform: scale(1.1);
+        transition: transform 0.3s ease;
+    }
+}
+
+/* Loading state for form submission */
+.btn-primary.loading i.fa-spinner {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Responsive spacing for better mobile readability */
+@media (max-width: 767.98px) {
+    h1, h2, h3, h4, h5, h6 {
+        margin-bottom: 0.75rem !important;
+    }
+    
+    p, div, span {
+        margin-bottom: 0.5rem !important;
+    }
+    
+    .mb-4 {
+        margin-bottom: 1rem !important;
+    }
+    
+    .mb-5 {
+        margin-bottom: 1.5rem !important;
+    }
+    
+    .mt-4 {
+        margin-top: 1rem !important;
+    }
+    
+    .mt-5 {
+        margin-top: 1.5rem !important;
+    }
+}
+
+/* Mobile-specific utility classes */
+@media (max-width: 767.98px) {
+    .mobile-only {
+        display: block !important;
+    }
+    
+    .desktop-only {
+        display: none !important;
+    }
+    
+    .mobile-text-center {
+        text-align: center !important;
+    }
+    
+    .mobile-stack {
+        flex-direction: column !important;
+        gap: 0.75rem !important;
+    }
+}
+
+/* Ensure proper content flow on mobile */
+@media (max-width: 767.98px) {
+    .container.mt-4 {
+        padding-top: 0.5rem !important;
+    }
+    
+    /* Prevent horizontal scrolling */
+    body {
+        overflow-x: hidden;
+        width: 100%;
+    }
+    
+    img, video, iframe {
+        max-width: 100%;
+        height: auto;
+    }
+}
+
+/* Fix for mobile keyboard */
+@media (max-width: 767.98px) {
+    input, textarea, select {
+        font-size: 16px !important; /* Prevents iOS zoom */
+    }
+    
+    .form-control {
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+    }
+}
+
+/* Accessibility improvements for mobile */
+@media (max-width: 767.98px) {
+    .btn, a, input[type="submit"], button {
+        min-height: 44px !important;
+        min-width: 44px !important;
+    }
+    
+    .form-control, select, textarea {
+        min-height: 44px !important;
+    }
+    
+    /* Focus styles for better accessibility */
+    *:focus {
+        outline: 2px solid #3a86ff !important;
+        outline-offset: 2px !important;
+    }
+}
+
+/* Smooth transitions */
+* {
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
     </style>
 </head>
 <body>

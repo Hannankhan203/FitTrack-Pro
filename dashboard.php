@@ -920,6 +920,831 @@ $server_timestamp = $pakistan_timestamp * 1000; // Convert to milliseconds for J
                 grid-template-columns: 1fr;
             }
         }
+
+        /* ============================================
+   PREMIUM MOBILE RESPONSIVE DESIGN - DASHBOARD
+   ============================================ */
+
+/* Base mobile styles */
+@media (max-width: 767.98px) {
+    /* Reset container spacing */
+    .container.mt-4,
+    .container.py-5 {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        max-width: 100%;
+    }
+    
+    /* Body background */
+    body {
+        background: #f5f9ff;
+        padding-bottom: 70px; /* Space for mobile nav */
+    }
+    
+    /* Mobile Navigation - Enhanced */
+    .mobile-nav {
+        display: flex !important;
+        background: white;
+        border-radius: 25px 25px 0 0;
+        padding: 0.75rem 0.5rem;
+        box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.15);
+        position: fixed;
+        bottom: 0;
+        left: 0.5rem;
+        right: 0.5rem;
+        margin: 0 auto;
+        max-width: 500px;
+        z-index: 1000;
+    }
+    
+    .mobile-nav-item {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-decoration: none;
+        color: #94a3b8;
+        font-size: 0.75rem;
+        padding: 0.5rem 0.25rem;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+    }
+    
+    .mobile-nav-item:hover,
+    .mobile-nav-item.active {
+        color: #3a86ff;
+        background: rgba(58, 134, 255, 0.08);
+        transform: translateY(-3px);
+    }
+    
+    .mobile-nav-item i {
+        font-size: 1.3rem;
+        margin-bottom: 0.25rem;
+        transition: all 0.3s ease;
+    }
+    
+    .mobile-nav-item.active i {
+        transform: scale(1.1);
+    }
+    
+    /* Hide desktop navbar on mobile */
+    .navbar-nav {
+        display: none !important;
+    }
+    
+    .navbar-toggler {
+        border: none;
+        padding: 0.5rem;
+    }
+    
+    .navbar-toggler:focus {
+        box-shadow: none;
+    }
+    
+    /* Dashboard Header - Redesigned for mobile */
+    .dashboard-header {
+        border-radius: 0 0 32px 32px;
+        padding: 1.5rem !important;
+        margin: 0 0 1.5rem 0 !important;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .dashboard-header::before {
+        display: none;
+    }
+    
+    .dashboard-header::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 40px;
+        background: linear-gradient(to top, rgba(0,0,0,0.05), transparent);
+    }
+    
+    .dashboard-header h1 {
+        font-size: 1.5rem !important;
+        margin-bottom: 0.5rem;
+        line-height: 1.3;
+    }
+    
+    .greeting {
+        font-size: 0.95rem;
+        margin-bottom: 1rem;
+    }
+    
+    .date-display {
+        flex-direction: column;
+        align-items: flex-start !important;
+        padding: 0.75rem;
+        margin: 1rem 0 0 0 !important;
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 16px;
+        gap: 0.5rem;
+    }
+    
+    .date-display i {
+        font-size: 0.9rem;
+    }
+    
+    .streak-badge {
+        margin: 0.75rem 0 0 0 !important;
+        padding: 0.5rem 0.75rem;
+        align-self: flex-start;
+    }
+    
+    /* Fitness Level box */
+    .dashboard-header .text-md-end {
+        text-align: left !important;
+        margin-top: 1rem;
+    }
+    
+    .dashboard-header .bg-white {
+        width: 100%;
+        max-width: 250px;
+    }
+    
+    /* Today's Exercises Card - Mobile Optimized */
+    .exercises-card {
+        margin: 0 0.75rem 1.5rem 0.75rem !important;
+        padding: 1.25rem !important;
+        border-radius: 20px !important;
+    }
+    
+    .exercises-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+        padding-bottom: 0.75rem;
+        margin-bottom: 1rem;
+    }
+    
+    .exercises-title {
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    .exercises-count {
+        width: 32px !important;
+        height: 32px !important;
+        font-size: 0.85rem !important;
+    }
+    
+    /* Exercise Item - Mobile Optimized */
+    .exercise-item {
+        padding: 1rem !important;
+        margin-bottom: 0.75rem;
+        border-radius: 16px !important;
+        border-left-width: 3px !important;
+    }
+    
+    .exercise-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    
+    .exercise-name {
+        font-size: 1.1rem !important;
+        margin-bottom: 0.5rem;
+    }
+    
+    .exercise-stats {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 0.5rem;
+        margin-top: 0.75rem;
+    }
+    
+    .stat-item {
+        padding: 0.5rem !important;
+        border-radius: 12px !important;
+    }
+    
+    .stat-icon {
+        width: 28px !important;
+        height: 28px !important;
+        margin-bottom: 0.25rem !important;
+    }
+    
+    .stat-value {
+        font-size: 1rem !important;
+    }
+    
+    .stat-label {
+        font-size: 0.7rem !important;
+    }
+    
+    .empty-exercises {
+        padding: 2rem 1rem !important;
+    }
+    
+    .empty-exercises-icon {
+        font-size: 3rem !important;
+        margin-bottom: 1rem !important;
+    }
+    
+    /* Today's Meals Card - Mobile Optimized */
+    .meals-card {
+        margin: 0 0.75rem 1.5rem 0.75rem !important;
+        padding: 1.25rem !important;
+        border-radius: 20px !important;
+    }
+    
+    .meals-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+        padding-bottom: 0.75rem;
+        margin-bottom: 1rem;
+    }
+    
+    .meals-title {
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    .meals-count {
+        width: 32px !important;
+        height: 32px !important;
+        font-size: 0.85rem !important;
+    }
+    
+    /* Meal Item - Mobile Optimized */
+    .meal-item {
+        padding: 1rem !important;
+        margin-bottom: 0.75rem;
+        border-radius: 16px !important;
+        border-left-width: 3px !important;
+    }
+    
+    .meal-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    
+    .meal-name {
+        font-size: 1.1rem !important;
+        margin-bottom: 0.5rem;
+    }
+    
+    .meal-stats {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 0.5rem;
+        margin-top: 0.75rem;
+    }
+    
+    .meal-stat-item {
+        padding: 0.5rem !important;
+        border-radius: 12px !important;
+    }
+    
+    .meal-stat-icon {
+        width: 28px !important;
+        height: 28px !important;
+        margin-bottom: 0.25rem !important;
+    }
+    
+    .meal-stat-value {
+        font-size: 1rem !important;
+    }
+    
+    .meal-stat-label {
+        font-size: 0.7rem !important;
+    }
+    
+    .empty-meals {
+        padding: 2rem 1rem !important;
+    }
+    
+    .empty-meals-icon {
+        font-size: 3rem !important;
+        margin-bottom: 1rem !important;
+    }
+    
+    /* Stats Cards - Mobile Grid */
+    .row.mb-4 {
+        margin: 0 0.75rem 1.5rem 0.75rem !important;
+    }
+    
+    .stats-card {
+        padding: 1.25rem !important;
+        border-radius: 16px !important;
+        margin-bottom: 1rem !important;
+    }
+    
+    .stats-icon {
+        width: 50px !important;
+        height: 50px !important;
+        font-size: 1.25rem !important;
+        margin-bottom: 0.75rem !important;
+    }
+    
+    .stats-value {
+        font-size: 1.75rem !important;
+    }
+    
+    .stats-label {
+        font-size: 0.85rem !important;
+    }
+    
+    /* Weekly Activity Chart */
+    .chart-container {
+        margin: 0 0.75rem 1.5rem 0.75rem !important;
+        padding: 1.25rem !important;
+        border-radius: 20px !important;
+    }
+    
+    .chart-title {
+        font-size: 1rem;
+        margin-bottom: 0.75rem;
+    }
+    
+    /* Quick Actions - Mobile Grid */
+    .col-lg-8.mb-4,
+    .col-lg-4.mb-4 {
+        padding: 0 0.75rem !important;
+        margin-bottom: 1.5rem !important;
+    }
+    
+    h4.mb-3 {
+        padding-left: 0.75rem;
+        margin-bottom: 1rem !important;
+    }
+    
+    .quick-actions {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 0.75rem;
+        margin: 0 !important;
+    }
+    
+    .action-card {
+        padding: 1.25rem !important;
+        border-radius: 16px !important;
+    }
+    
+    .action-icon {
+        width: 60px !important;
+        height: 60px !important;
+        font-size: 1.5rem !important;
+        margin-bottom: 0.75rem !important;
+        border-radius: 16px !important;
+    }
+    
+    .action-title {
+        font-size: 0.95rem;
+    }
+    
+    .action-desc {
+        font-size: 0.8rem;
+    }
+    
+    /* Goal Cards */
+    .goal-card {
+        padding: 1.25rem !important;
+        border-radius: 20px !important;
+        margin-bottom: 1rem !important;
+    }
+    
+    .goal-header {
+        flex-direction: column;
+        align-items: flex-start;
+        text-align: center;
+        gap: 1rem;
+        margin-bottom: 1.25rem;
+    }
+    
+    .goal-icon {
+        width: 50px !important;
+        height: 50px !important;
+        font-size: 1.25rem !important;
+        margin: 0 auto !important;
+    }
+    
+    .goal-stats {
+        flex-direction: column;
+        gap: 1rem;
+        padding: 1rem;
+        border-radius: 16px !important;
+    }
+    
+    .goal-stat {
+        text-align: center;
+    }
+    
+    .goal-value {
+        font-size: 1.4rem;
+    }
+    
+    .goal-label {
+        font-size: 0.85rem;
+    }
+    
+    /* Daily Motivation Card */
+    .goal-card.mt-3 {
+        margin-top: 1rem !important;
+    }
+    
+    /* Footer */
+    .footer {
+        padding: 1.5rem 0.75rem !important;
+        margin-top: 1rem !important;
+        font-size: 0.8rem;
+    }
+    
+    /* Buttons - Mobile Optimized */
+    .btn {
+        padding: 0.625rem 1rem !important;
+        font-size: 0.9rem !important;
+        border-radius: 12px !important;
+        min-height: 48px !important;
+    }
+    
+    .btn-sm {
+        padding: 0.375rem 0.75rem !important;
+        min-height: 36px !important;
+        font-size: 0.8rem !important;
+    }
+    
+    .btn-lg {
+        padding: 0.875rem 1.5rem !important;
+        min-height: 56px !important;
+        font-size: 1rem !important;
+    }
+    
+    /* View All buttons */
+    .view-all-exercises,
+    .view-all-meals {
+        padding-top: 1rem !important;
+        margin-top: 1rem !important;
+    }
+    
+    /* Progress bar */
+    .progress-bar-custom {
+        height: 10px !important;
+        border-radius: 8px !important;
+    }
+    
+    /* Animation for mobile */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .stats-card,
+    .exercise-item,
+    .meal-item,
+    .action-card,
+    .goal-card {
+        animation: fadeInUp 0.5s ease-out;
+    }
+    
+    /* Stagger animations */
+    .stats-card:nth-child(1) { animation-delay: 0.1s; }
+    .stats-card:nth-child(2) { animation-delay: 0.2s; }
+    .stats-card:nth-child(3) { animation-delay: 0.3s; }
+    .stats-card:nth-child(4) { animation-delay: 0.4s; }
+    
+    .exercise-item:nth-child(1) { animation-delay: 0.2s; }
+    .exercise-item:nth-child(2) { animation-delay: 0.3s; }
+    .exercise-item:nth-child(3) { animation-delay: 0.4s; }
+}
+
+/* Extra small devices (phones under 400px) */
+@media (max-width: 399.98px) {
+    .mobile-nav {
+        left: 0.25rem;
+        right: 0.25rem;
+        padding: 0.5rem;
+    }
+    
+    .dashboard-header {
+        padding: 1.25rem !important;
+    }
+    
+    .dashboard-header h1 {
+        font-size: 1.3rem !important;
+    }
+    
+    .greeting {
+        font-size: 0.9rem;
+    }
+    
+    .date-display {
+        padding: 0.625rem;
+        font-size: 0.85rem;
+    }
+    
+    .exercises-card,
+    .meals-card,
+    .stats-card,
+    .chart-container,
+    .goal-card {
+        margin: 0 0.5rem 1rem 0.5rem !important;
+        padding: 1rem !important;
+    }
+    
+    .quick-actions {
+        grid-template-columns: 1fr !important;
+    }
+    
+    .exercise-stats,
+    .meal-stats {
+        grid-template-columns: 1fr !important;
+    }
+    
+    .stat-item,
+    .meal-stat-item {
+        padding: 0.75rem !important;
+    }
+    
+    .empty-exercises-icon,
+    .empty-meals-icon {
+        font-size: 2.5rem !important;
+    }
+    
+    .stats-value {
+        font-size: 1.5rem !important;
+    }
+    
+    .goal-value {
+        font-size: 1.2rem;
+    }
+    
+    .action-card {
+        padding: 1rem !important;
+    }
+}
+
+/* Tablet portrait mode (768px - 991px) */
+@media (min-width: 768px) and (max-width: 991.98px) {
+    .container.mt-4 {
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+    }
+    
+    .mobile-nav {
+        display: flex !important;
+        left: 1rem;
+        right: 1rem;
+    }
+    
+    .navbar-nav {
+        display: none !important;
+    }
+    
+    .quick-actions {
+        grid-template-columns: repeat(3, 1fr) !important;
+    }
+    
+    .exercise-stats {
+        grid-template-columns: repeat(3, 1fr) !important;
+    }
+    
+    .meal-stats {
+        grid-template-columns: repeat(3, 1fr) !important;
+    }
+}
+
+/* Landscape mode optimization */
+@media (max-height: 600px) and (orientation: landscape) {
+    .mobile-nav {
+        padding: 0.5rem;
+    }
+    
+    .mobile-nav-item {
+        font-size: 0.7rem;
+        padding: 0.25rem 0.125rem;
+    }
+    
+    .mobile-nav-item i {
+        font-size: 1.1rem;
+        margin-bottom: 0.125rem;
+    }
+    
+    .dashboard-header {
+        padding: 1rem !important;
+        margin-bottom: 1rem !important;
+    }
+    
+    .dashboard-header h1 {
+        font-size: 1.2rem !important;
+    }
+    
+    .exercises-card,
+    .meals-card {
+        margin-bottom: 1rem !important;
+        padding: 1rem !important;
+    }
+    
+    .exercise-item,
+    .meal-item {
+        padding: 0.75rem !important;
+        margin-bottom: 0.5rem;
+    }
+}
+
+/* iPhone notch and safe area support */
+@supports (padding: max(0px)) {
+    .container.mt-4 {
+        padding-left: max(0.75rem, env(safe-area-inset-left)) !important;
+        padding-right: max(0.75rem, env(safe-area-inset-right)) !important;
+    }
+    
+    .mobile-nav {
+        padding-bottom: max(0.75rem, env(safe-area-inset-bottom)) !important;
+    }
+    
+    .dashboard-header {
+        padding-top: max(1.5rem, env(safe-area-inset-top)) !important;
+    }
+}
+
+/* Loading animations */
+@keyframes shimmer {
+    0% {
+        background-position: -200px 0;
+    }
+    100% {
+        background-position: 200px 0;
+    }
+}
+
+.loading-shimmer {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200px 100%;
+    animation: shimmer 1.5s infinite;
+}
+
+/* Touch feedback for mobile */
+@media (hover: none) and (pointer: coarse) {
+    .stats-card:hover,
+    .action-card:hover,
+    .exercise-item:hover,
+    .meal-item:hover {
+        transform: none !important;
+    }
+    
+    .stats-card:active,
+    .action-card:active,
+    .exercise-item:active,
+    .meal-item:active {
+        transform: scale(0.98) !important;
+    }
+}
+
+/* Custom scrollbar for mobile webkit */
+@media (max-width: 767.98px) {
+    ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+    
+    ::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+        background: linear-gradient(135deg, #3a86ff, #8338ec);
+        border-radius: 10px;
+    }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    @media (max-width: 767.98px) {
+        body {
+            background: #121826;
+            color: #e2e8f0;
+        }
+        
+        .stats-card,
+        .exercises-card,
+        .meals-card,
+        .chart-container,
+        .goal-card,
+        .action-card {
+            background: #1e293b;
+            color: #e2e8f0;
+        }
+        
+        .mobile-nav {
+            background: #1e293b;
+        }
+        
+        .mobile-nav-item {
+            color: #94a3b8;
+        }
+        
+        .mobile-nav-item.active {
+            color: #3a86ff;
+            background: rgba(58, 134, 255, 0.15);
+        }
+        
+        .exercise-item,
+        .meal-item {
+            background: #2d3748;
+        }
+        
+        .stat-item,
+        .meal-stat-item {
+            background: #1e293b;
+            border-color: #374151;
+        }
+        
+        .goal-stats {
+            background: #2d3748;
+        }
+        
+        .stats-label,
+        .action-desc,
+        .stat-label,
+        .meal-stat-label,
+        .goal-label {
+            color: #94a3b8;
+        }
+        
+        .exercise-name,
+        .meal-name {
+            color: #f1f5f9;
+        }
+        
+        .empty-exercises h4,
+        .empty-meals h4 {
+            color: #e2e8f0;
+        }
+        
+        .empty-exercises p,
+        .empty-meals p {
+            color: #94a3b8;
+        }
+        
+        .footer {
+            background: #1e293b;
+            color: #94a3b8;
+        }
+    }
+}
+
+/* Enhanced animations for mobile */
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.exercises-card {
+    animation: slideInLeft 0.5s ease-out;
+}
+
+.meals-card {
+    animation: slideInRight 0.5s ease-out;
+}
+
+/* Swipe indicator for mobile */
+@media (max-width: 767.98px) {
+    .swipe-indicator {
+        text-align: center;
+        margin: 1rem 0;
+        color: #64748b;
+        font-size: 0.8rem;
+    }
+    
+    .swipe-indicator i {
+        animation: bounce 2s infinite;
+    }
+    
+    @keyframes bounce {
+        0%, 20%, 50%, 80%, 100% {transform: translateX(0);}
+        40% {transform: translateX(-10px);}
+        60% {transform: translateX(-5px);}
+    }
+}
     </style>
 </head>
 <body>

@@ -842,6 +842,1100 @@ foreach ($existingMeals as $meal) {
             background: rgba(251, 194, 235, 0.2);
             color: #8338ec;
         }
+
+        /* ============================================
+   PREMIUM MOBILE RESPONSIVE DESIGN - MEAL PLANNER
+   ============================================ */
+
+/* Base mobile styles */
+@media (max-width: 767.98px) {
+    /* Reset container spacing */
+    .container.mt-4 {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        max-width: 100%;
+        margin-top: 0 !important;
+    }
+    
+    /* Body background and padding */
+    body {
+        background: #f5f9ff;
+        padding-bottom: 70px; /* Space for mobile nav */
+    }
+    
+    /* Mobile Navigation - Enhanced */
+    .mobile-nav {
+        display: flex !important;
+        background: white;
+        border-radius: 25px 25px 0 0;
+        padding: 0.75rem 0.5rem;
+        box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.15);
+        position: fixed;
+        bottom: 0;
+        left: 0.5rem;
+        right: 0.5rem;
+        margin: 0 auto;
+        max-width: 500px;
+        z-index: 1000;
+    }
+    
+    .mobile-nav-item {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-decoration: none;
+        color: #94a3b8;
+        font-size: 0.75rem;
+        padding: 0.5rem 0.25rem;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+    }
+    
+    .mobile-nav-item:hover,
+    .mobile-nav-item.active {
+        color: #3a86ff;
+        background: rgba(58, 134, 255, 0.08);
+        transform: translateY(-3px);
+    }
+    
+    .mobile-nav-item i {
+        font-size: 1.3rem;
+        margin-bottom: 0.25rem;
+        transition: all 0.3s ease;
+    }
+    
+    .mobile-nav-item.active i {
+        transform: scale(1.1);
+    }
+    
+    /* Hide desktop navbar on mobile */
+    .navbar-nav {
+        display: none !important;
+    }
+    
+    .navbar-toggler {
+        border: none;
+        padding: 0.5rem;
+    }
+    
+    .navbar-toggler:focus {
+        box-shadow: none;
+    }
+    
+    /* Page Header - Redesigned for mobile */
+    .page-header {
+        border-radius: 0 0 32px 32px !important;
+        padding: 1.5rem !important;
+        margin: 0 0 1.5rem 0 !important;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .page-header::before {
+        display: none;
+    }
+    
+    .page-header::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 40px;
+        background: linear-gradient(to top, rgba(0,0,0,0.05), transparent);
+    }
+    
+    .page-header h1 {
+        font-size: 1.5rem !important;
+        margin-bottom: 0.5rem;
+        line-height: 1.3;
+    }
+    
+    .page-header p {
+        font-size: 0.95rem;
+        margin-bottom: 0;
+    }
+    
+    /* Date Display */
+    .date-display {
+        padding: 0.5rem 1rem !important;
+        font-size: 0.9rem !important;
+        margin-top: 0.75rem !important;
+    }
+    
+    .date-display i {
+        font-size: 0.9rem !important;
+        margin-right: 0.5rem !important;
+    }
+    
+    /* Stats Cards - Mobile Optimized */
+    .row.mb-4 {
+        margin: 0 0.75rem 1rem 0.75rem !important;
+        padding: 0 !important;
+    }
+    
+    .col-md-3.col-sm-6.mb-4 {
+        width: 50% !important;
+        padding: 0.25rem !important;
+        margin-bottom: 0.5rem !important;
+    }
+    
+    .stats-card {
+        padding: 1rem !important;
+        border-radius: 16px !important;
+        margin-bottom: 0.5rem !important;
+    }
+    
+    .stats-icon {
+        width: 45px !important;
+        height: 45px !important;
+        font-size: 1.2rem !important;
+        margin-bottom: 0.75rem !important;
+        border-radius: 12px !important;
+    }
+    
+    .stats-value {
+        font-size: 1.5rem !important;
+        margin-bottom: 0.125rem !important;
+    }
+    
+    .stats-label {
+        font-size: 0.8rem !important;
+    }
+    
+    .stats-card .small.text-muted {
+        font-size: 0.75rem !important;
+        margin-top: 0.25rem !important;
+    }
+    
+    /* Macronutrient Cards */
+    .macronutrient-card {
+        margin: 0 0.75rem 1rem 0.75rem !important;
+        padding: 1.25rem !important;
+        border-radius: 20px !important;
+    }
+    
+    .macronutrient-card h5 {
+        font-size: 1.1rem !important;
+        margin-bottom: 1rem !important;
+    }
+    
+    .macronutrient-card h5 i {
+        font-size: 1rem !important;
+        margin-right: 0.5rem !important;
+    }
+    
+    /* Progress Ring */
+    .progress-ring {
+        width: 100px !important;
+        height: 100px !important;
+        margin: 0 auto 1rem auto !important;
+    }
+    
+    .progress-percent {
+        font-size: 1.5rem !important;
+    }
+    
+    .progress-label {
+        font-size: 0.7rem !important;
+    }
+    
+    .macronutrient-card .text-center .btn {
+        padding: 0.375rem 0.75rem !important;
+        font-size: 0.8rem !important;
+    }
+    
+    /* Macronutrient Items */
+    .macronutrient-item {
+        padding: 0.75rem !important;
+        margin-bottom: 0.75rem !important;
+        border-radius: 10px !important;
+    }
+    
+    .macro-color {
+        width: 10px !important;
+        height: 10px !important;
+        margin-right: 10px !important;
+    }
+    
+    .macro-name {
+        font-size: 0.9rem !important;
+    }
+    
+    .macro-value {
+        font-size: 0.8rem !important;
+    }
+    
+    .macro-amount {
+        font-size: 1rem !important;
+    }
+    
+    /* Chart Container */
+    .macro-chart-container {
+        height: 150px !important;
+        margin-top: 0.5rem !important;
+    }
+    
+    /* Water Tracker */
+    .water-tracker {
+        margin: 0 0.75rem 1rem 0.75rem !important;
+        padding: 1.25rem !important;
+        border-radius: 20px !important;
+    }
+    
+    .water-tracker h5 {
+        font-size: 1.1rem !important;
+        margin-bottom: 1rem !important;
+    }
+    
+    .water-cups {
+        gap: 6px !important;
+        justify-content: center !important;
+    }
+    
+    .water-cup {
+        width: 45px !important;
+        height: 60px !important;
+        font-size: 1.2rem !important;
+        border-radius: 8px !important;
+    }
+    
+    /* Search Section */
+    .search-section {
+        margin: 0 0.75rem 1rem 0.75rem !important;
+        padding: 1.25rem !important;
+        border-radius: 20px !important;
+    }
+    
+    .search-section h5 {
+        font-size: 1.1rem !important;
+        margin-bottom: 1rem !important;
+    }
+    
+    .search-input {
+        padding: 0.875rem 0.875rem 0.875rem 2.5rem !important;
+        font-size: 0.9rem !important;
+        border-radius: 10px !important;
+    }
+    
+    .search-icon {
+        left: 0.875rem !important;
+        font-size: 0.9rem !important;
+    }
+    
+    /* Search Buttons */
+    .d-flex.gap-2.mb-3 {
+        flex-direction: column !important;
+        gap: 0.75rem !important;
+    }
+    
+    #searchBtn,
+    .barcode-simulator {
+        padding: 0.875rem !important;
+        font-size: 0.95rem !important;
+        border-radius: 12px !important;
+        min-height: 52px !important;
+    }
+    
+    .barcode-simulator {
+        justify-content: center !important;
+    }
+    
+    /* Search Results */
+    .search-results {
+        max-height: 200px !important;
+        padding: 0.75rem !important;
+        border-radius: 10px !important;
+    }
+    
+    .food-result {
+        padding: 0.75rem !important;
+        margin-bottom: 0.5rem !important;
+    }
+    
+    .food-result .food-name {
+        font-size: 0.9rem !important;
+        margin-bottom: 0.25rem !important;
+    }
+    
+    .food-result .food-macros {
+        font-size: 0.8rem !important;
+    }
+    
+    .add-food-btn {
+        padding: 0.375rem 0.75rem !important;
+        font-size: 0.8rem !important;
+        border-radius: 8px !important;
+    }
+    
+    /* Meal Sections */
+    .meal-section {
+        margin: 0 0.75rem 1rem 0.75rem !important;
+        padding: 1.25rem !important;
+        border-radius: 20px !important;
+    }
+    
+    .meal-header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 0.75rem;
+        margin-bottom: 1.25rem !important;
+        padding-bottom: 1rem !important;
+    }
+    
+    .meal-icon {
+        width: 45px !important;
+        height: 45px !important;
+        font-size: 1.2rem !important;
+        margin-right: 0.75rem !important;
+        border-radius: 10px !important;
+    }
+    
+    .meal-title {
+        font-size: 1.1rem !important;
+        flex: 0 0 100% !important;
+        margin-bottom: 0.5rem !important;
+    }
+    
+    .meal-calories {
+        padding: 0.375rem 0.875rem !important;
+        font-size: 0.9rem !important;
+        border-radius: 15px !important;
+    }
+    
+    /* Food Items */
+    .food-item {
+        padding: 0.875rem !important;
+        margin-bottom: 0.75rem !important;
+        border-radius: 10px !important;
+    }
+    
+    .food-name {
+        font-size: 0.95rem !important;
+        margin-bottom: 0.375rem !important;
+    }
+    
+    .food-macros {
+        font-size: 0.8rem !important;
+    }
+    
+    .food-calories {
+        font-size: 0.9rem !important;
+        margin-left: 0.75rem !important;
+        font-weight: 600 !important;
+    }
+    
+    /* Delete Buttons */
+    .delete-btn {
+        width: 32px !important;
+        height: 32px !important;
+        margin-left: 0.75rem !important;
+        font-size: 0.8rem !important;
+    }
+    
+    .delete-meal-btn {
+        opacity: 1 !important;
+        width: 28px !important;
+        height: 28px !important;
+        font-size: 0.8rem !important;
+        top: 8px !important;
+        right: 8px !important;
+    }
+    
+    /* Empty States */
+    .empty-meal {
+        padding: 1.5rem 0.5rem !important;
+    }
+    
+    .empty-meal i {
+        font-size: 2.5rem !important;
+        margin-bottom: 0.75rem !important;
+    }
+    
+    .empty-meal p {
+        font-size: 1rem !important;
+        margin-bottom: 0.25rem !important;
+    }
+    
+    .empty-meal .text-muted {
+        font-size: 0.85rem !important;
+    }
+    
+    /* Action Buttons */
+    .action-buttons {
+        margin: 0 0.75rem 2rem 0.75rem !important;
+        padding: 0 !important;
+        flex-direction: column !important;
+        gap: 0.75rem !important;
+    }
+    
+    .btn-primary,
+    .btn-danger {
+        padding: 1rem !important;
+        font-size: 1rem !important;
+        border-radius: 12px !important;
+        min-height: 56px !important;
+    }
+    
+    .btn-danger {
+        order: 2;
+    }
+    
+    /* Modal Adjustments */
+    .modal-content {
+        margin: 1rem !important;
+        border-radius: 20px !important;
+    }
+    
+    .meal-option {
+        padding: 0.875rem !important;
+        margin-bottom: 0.75rem !important;
+    }
+    
+    .meal-option-icon {
+        width: 45px !important;
+        height: 45px !important;
+        font-size: 1.1rem !important;
+        margin-right: 0.75rem !important;
+    }
+    
+    .meal-option-name {
+        font-size: 0.95rem !important;
+    }
+    
+    .meal-option-calories {
+        font-size: 0.8rem !important;
+    }
+    
+    /* Meal Badges */
+    .meal-badge {
+        padding: 0.2rem 0.5rem !important;
+        font-size: 0.7rem !important;
+        margin-right: 0.375rem !important;
+    }
+    
+    /* Animation for mobile */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .stats-card,
+    .macronutrient-card,
+    .water-tracker,
+    .search-section,
+    .meal-section {
+        animation: fadeInUp 0.5s ease-out;
+    }
+    
+    /* Stagger animations */
+    .stats-card:nth-child(1) { animation-delay: 0.1s; }
+    .stats-card:nth-child(2) { animation-delay: 0.15s; }
+    .stats-card:nth-child(3) { animation-delay: 0.2s; }
+    .stats-card:nth-child(4) { animation-delay: 0.25s; }
+    .macronutrient-card { animation-delay: 0.3s; }
+    .water-tracker { animation-delay: 0.35s; }
+    .search-section { animation-delay: 0.4s; }
+    
+    /* Food item entrance animation */
+    @keyframes foodItemEntrance {
+        from {
+            opacity: 0;
+            transform: translateX(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+    
+    .food-item {
+        animation: foodItemEntrance 0.3s ease-out;
+    }
+}
+
+/* Extra small devices (phones under 400px) */
+@media (max-width: 399.98px) {
+    .mobile-nav {
+        left: 0.25rem;
+        right: 0.25rem;
+        padding: 0.5rem;
+    }
+    
+    .page-header {
+        padding: 1.25rem !important;
+    }
+    
+    .page-header h1 {
+        font-size: 1.3rem !important;
+    }
+    
+    .page-header p {
+        font-size: 0.9rem;
+    }
+    
+    .col-md-3.col-sm-6.mb-4 {
+        width: 50% !important;
+        padding: 0.125rem !important;
+    }
+    
+    .stats-card {
+        padding: 0.875rem !important;
+    }
+    
+    .stats-value {
+        font-size: 1.3rem !important;
+    }
+    
+    .stats-label {
+        font-size: 0.75rem !important;
+    }
+    
+    .macronutrient-card,
+    .water-tracker,
+    .search-section,
+    .meal-section {
+        margin: 0 0.5rem 0.75rem 0.5rem !important;
+        padding: 1rem !important;
+    }
+    
+    .water-cup {
+        width: 40px !important;
+        height: 55px !important;
+        font-size: 1.1rem !important;
+    }
+    
+    .action-buttons {
+        margin: 0 0.5rem 1.5rem 0.5rem !important;
+    }
+    
+    .btn-primary,
+    .btn-danger {
+        padding: 0.875rem !important;
+        font-size: 0.95rem !important;
+        min-height: 52px !important;
+    }
+    
+    .food-name {
+        font-size: 0.9rem !important;
+    }
+    
+    .food-macros {
+        font-size: 0.75rem !important;
+    }
+    
+    .empty-meal {
+        padding: 1rem 0.5rem !important;
+    }
+    
+    .empty-meal i {
+        font-size: 2rem !important;
+    }
+}
+
+/* Tablet portrait mode (768px - 991px) */
+@media (min-width: 768px) and (max-width: 991.98px) {
+    .container.mt-4 {
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+    }
+    
+    .mobile-nav {
+        display: flex !important;
+        left: 1rem;
+        right: 1rem;
+    }
+    
+    .navbar-nav {
+        display: none !important;
+    }
+    
+    .col-md-3.col-sm-6.mb-4 {
+        width: 50% !important;
+    }
+    
+    .food-item:hover .delete-meal-btn {
+        opacity: 1 !important;
+    }
+}
+
+/* Landscape mode optimization */
+@media (max-height: 600px) and (orientation: landscape) {
+    .mobile-nav {
+        padding: 0.5rem;
+    }
+    
+    .mobile-nav-item {
+        font-size: 0.7rem;
+        padding: 0.25rem 0.125rem;
+    }
+    
+    .mobile-nav-item i {
+        font-size: 1.1rem;
+        margin-bottom: 0.125rem;
+    }
+    
+    .page-header {
+        padding: 1rem !important;
+        margin-bottom: 1rem !important;
+    }
+    
+    .page-header h1 {
+        font-size: 1.2rem !important;
+    }
+    
+    .stats-card,
+    .macronutrient-card,
+    .water-tracker,
+    .search-section,
+    .meal-section {
+        margin-bottom: 0.75rem !important;
+        padding: 1rem !important;
+    }
+    
+    .stats-icon {
+        width: 40px !important;
+        height: 40px !important;
+        font-size: 1rem !important;
+    }
+    
+    .stats-value {
+        font-size: 1.2rem !important;
+    }
+    
+    .water-cup {
+        width: 35px !important;
+        height: 50px !important;
+        font-size: 1rem !important;
+    }
+    
+    .btn-primary,
+    .btn-danger {
+        min-height: 52px !important;
+        padding: 0.75rem !important;
+    }
+    
+    .food-item {
+        padding: 0.75rem !important;
+        margin-bottom: 0.5rem !important;
+    }
+}
+
+/* iPhone notch and safe area support */
+@supports (padding: max(0px)) {
+    .container.mt-4 {
+        padding-left: max(0.75rem, env(safe-area-inset-left)) !important;
+        padding-right: max(0.75rem, env(safe-area-inset-right)) !important;
+    }
+    
+    .mobile-nav {
+        padding-bottom: max(0.75rem, env(safe-area-inset-bottom)) !important;
+    }
+    
+    .page-header {
+        padding-top: max(1.5rem, env(safe-area-inset-top)) !important;
+    }
+}
+
+/* Loading animations */
+@keyframes buttonPulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(0.98);
+    }
+}
+
+#saveMealPlanBtn:disabled {
+    animation: buttonPulse 1s infinite;
+}
+
+/* Touch feedback for mobile */
+@media (hover: none) and (pointer: coarse) {
+    .stats-card:hover,
+    .macronutrient-item:hover,
+    .food-result:hover,
+    .meal-option:hover {
+        transform: none !important;
+    }
+    
+    .stats-card:active,
+    .macronutrient-item:active,
+    .food-result:active,
+    .meal-option:active {
+        transform: scale(0.98) !important;
+    }
+    
+    .water-cup:active {
+        transform: scale(1.1) !important;
+    }
+    
+    .btn-primary:hover,
+    .btn-danger:hover,
+    .add-food-btn:hover,
+    .barcode-simulator:hover {
+        transform: none !important;
+    }
+    
+    .btn-primary:active,
+    .btn-danger:active,
+    .add-food-btn:active,
+    .barcode-simulator:active {
+        transform: scale(0.98) !important;
+    }
+    
+    .delete-btn:active,
+    .delete-meal-btn:active {
+        transform: scale(1.1) !important;
+    }
+}
+
+/* Custom scrollbar for mobile webkit */
+@media (max-width: 767.98px) {
+    ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+    
+    ::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+        background: linear-gradient(135deg, #3a86ff, #8338ec);
+        border-radius: 10px;
+    }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    @media (max-width: 767.98px) {
+        body {
+            background: #121826;
+            color: #e2e8f0;
+        }
+        
+        .stats-card,
+        .macronutrient-card,
+        .search-section,
+        .meal-section {
+            background: #1e293b;
+            color: #e2e8f0;
+            border-color: #374151 !important;
+        }
+        
+        .mobile-nav {
+            background: #1e293b;
+        }
+        
+        .mobile-nav-item {
+            color: #94a3b8;
+        }
+        
+        .mobile-nav-item.active {
+            color: #3a86ff;
+            background: rgba(58, 134, 255, 0.15);
+        }
+        
+        .stats-card {
+            background: #2d3748 !important;
+        }
+        
+        .macronutrient-item,
+        .food-item,
+        .food-result,
+        .meal-option {
+            background: #2d3748 !important;
+        }
+        
+        .macronutrient-item:hover,
+        .food-item:hover,
+        .food-result:hover,
+        .meal-option:hover {
+            background: #374151 !important;
+        }
+        
+        .text-muted {
+            color: #94a3b8 !important;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #2563eb, #3730a3) !important;
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #dc2626, #991b1b) !important;
+        }
+        
+        .water-tracker {
+            background: linear-gradient(135deg, #1e3a8a, #1e40af) !important;
+        }
+        
+        .water-cup {
+            background: rgba(255, 255, 255, 0.1) !important;
+        }
+        
+        .water-cup.filled {
+            background: rgba(59, 130, 246, 0.8) !important;
+        }
+        
+        .search-input {
+            background: #2d3748 !important;
+            border-color: #374151 !important;
+            color: #e2e8f0 !important;
+        }
+        
+        .search-results {
+            background: #2d3748 !important;
+        }
+        
+        .progress-ring-bg {
+            stroke: #374151 !important;
+        }
+        
+        .progress-percent {
+            color: #3a86ff !important;
+        }
+        
+        .delete-btn {
+            background: #dc2626 !important;
+        }
+        
+        .add-food-btn {
+            background: linear-gradient(135deg, #059669, #065f46) !important;
+        }
+        
+        .barcode-simulator {
+            background: linear-gradient(135deg, #d97706, #92400e) !important;
+        }
+    }
+}
+
+/* Enhanced animations for mobile */
+@keyframes slideInFromLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideInFromRight {
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Section animations */
+.macronutrient-card,
+.water-tracker {
+    animation: slideInFromLeft 0.5s ease-out;
+}
+
+.search-section,
+.meal-section {
+    animation: slideInFromRight 0.5s ease-out;
+}
+
+/* Food item animations */
+@keyframes foodItemAdd {
+    0% {
+        opacity: 0;
+        transform: translateY(-10px) scale(0.95);
+    }
+    70% {
+        transform: translateY(2px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.food-item:last-child {
+    animation: foodItemAdd 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Form focus states */
+.search-input:focus,
+.btn-primary:focus,
+.btn-danger:focus,
+.add-food-btn:focus,
+.barcode-simulator:focus {
+    box-shadow: 0 0 0 3px rgba(58, 134, 255, 0.2) !important;
+}
+
+/* Upload button loading animation */
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+#saveMealPlanBtn i.fa-spinner {
+    animation: spin 1s linear infinite;
+}
+
+/* Responsive typography */
+@media (max-width: 767.98px) {
+    h1, h2, h3, h4, h5, h6 {
+        margin-bottom: 0.75rem !important;
+    }
+    
+    p, div, span {
+        margin-bottom: 0.5rem !important;
+    }
+    
+    .mb-3 {
+        margin-bottom: 1rem !important;
+    }
+    
+    .mb-4 {
+        margin-bottom: 1.5rem !important;
+    }
+    
+    .mt-3 {
+        margin-top: 1rem !important;
+    }
+    
+    .mt-4 {
+        margin-top: 1.5rem !important;
+    }
+}
+
+/* Mobile-specific utility classes */
+@media (max-width: 767.98px) {
+    .mobile-only {
+        display: block !important;
+    }
+    
+    .desktop-only {
+        display: none !important;
+    }
+    
+    .mobile-text-center {
+        text-align: center !important;
+    }
+    
+    .mobile-stack {
+        flex-direction: column !important;
+        gap: 0.75rem !important;
+    }
+}
+
+/* Ensure proper content flow on mobile */
+@media (max-width: 767.98px) {
+    body {
+        overflow-x: hidden;
+        width: 100%;
+    }
+    
+    /* Prevent horizontal scrolling */
+    * {
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+    
+    img, video, iframe {
+        max-width: 100%;
+        height: auto;
+    }
+}
+
+/* Fix for mobile keyboard */
+@media (max-width: 767.98px) {
+    input, textarea, select {
+        font-size: 16px !important; /* Prevents iOS zoom */
+    }
+}
+
+/* Accessibility improvements for mobile */
+@media (max-width: 767.98px) {
+    .btn, a, input[type="submit"], button {
+        min-height: 44px !important;
+        min-width: 44px !important;
+    }
+    
+    input, select, textarea {
+        min-height: 44px !important;
+    }
+    
+    .delete-btn,
+    .delete-meal-btn {
+        min-height: 44px !important;
+        min-width: 44px !important;
+    }
+    
+    /* Focus styles for better accessibility */
+    *:focus {
+        outline: 2px solid #3a86ff !important;
+        outline-offset: 2px !important;
+    }
+}
+
+/* Smooth transitions */
+* {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Modal adjustments for mobile */
+@media (max-width: 767.98px) {
+    .modal-dialog {
+        margin: 0.5rem !important;
+        max-height: 80vh;
+        overflow-y: auto;
+    }
+    
+    .modal-body {
+        max-height: 50vh;
+        overflow-y: auto;
+    }
+}
+
+/* Grid layout adjustments */
+@media (max-width: 767.98px) {
+    .row {
+        margin: 0 !important;
+    }
+    
+    .col-lg-4,
+    .col-lg-8 {
+        width: 100% !important;
+        padding: 0 !important;
+    }
+}
+
+/* Water tracker responsive adjustments */
+@media (max-width: 480px) {
+    .water-cup {
+        width: 35px !important;
+        height: 50px !important;
+    }
+    
+    .water-cups {
+        gap: 4px !important;
+    }
+}
     </style>
 </head>
 
