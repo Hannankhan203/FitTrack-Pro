@@ -126,7 +126,7 @@ fitness-tracker/
 └── README.md
 ```
 
-<!-- ---
+---
 
 ## 🗄 Database Schema
 
@@ -197,7 +197,7 @@ CREATE TABLE progress (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     INDEX user_date_idx (user_id, date)
-); -->
+);
 
 ```
 
@@ -304,13 +304,9 @@ http://localhost/fitness-tracker/
 
 ## Admin
 
+- Username: Admin User
 - Email: admin@wtp.com
-- Password: admin123
-
-## Demo User
-
-- Email: user@example.com
-- Password: User123
+- Password: Admin123
 
 ### 🔄 Version Control
 
