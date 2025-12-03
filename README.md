@@ -1,162 +1,119 @@
 # FitTrack Pro - Fitness & Nutrition Tracker
 
-FitTrack Pro is a comprehensive web-based fitness tracking application that helps users monitor their workouts, nutrition, and progress towards fitness goals.
+## 🏋️‍♂️ Overview
 
-## Tech Stack
+FitTrack Pro is a comprehensive, web-based fitness tracking platform designed to help users monitor workouts, track nutrition, and achieve fitness goals through data-driven insights and intuitive interfaces.
+
+![FitTrack Pro](https://img.shields.io/badge/FitTrack-Pro-brightgreen)  
+![PHP](https://img.shields.io/badge/PHP-7.4+-777BB4)  
+![MySQL](https://img.shields.io/badge/MySQL-8.0+-4479A1)  
+![Bootstrap](https://img.shields.io/badge/Bootstrap-5.3-7952B3)  
+![PWA](https://img.shields.io/badge/PWA-Enabled-5A0FC8)
+
+---
+
+## ✨ Features
+
+### 🎯 Core Functionalities
+
+- **Personalized Dashboard** – Real-time fitness metrics and progress visualization
+- **Workout Logging** – Track strength and cardio exercises with intelligent form fields
+- **Meal Planning** – Comprehensive nutrition tracking with food database
+- **Progress Monitoring** – Weight tracking, photo comparisons, and goal achievement
+- **User Management** – Role-based access control (Admin/User)
+
+### 📊 Advanced Features
+
+- **Data Visualization** – Interactive charts for progress
+- **Goal Setting** – SMART goal configuration
+- **Achievement System** – Badges and milestones
+- **PWA Support** – Installable with offline mode
+- **Responsive Design** – Mobile-first UI
+
+---
+
+## 🛠 Tech Stack
 
 ### Frontend
 
-- **HTML5** - Semantic markup
-- **CSS3** - Custom styling with CSS variables and gradients
-- **Bootstrap 5** - Responsive framework
-- **JavaScript (ES6+)** - Interactive functionality
-- **Chart.js** - Data visualization for progress charts
-- **Font Awesome** - Icon library
-- **Google Fonts** - Typography (Poppins, Montserrat)
+- **HTML5**
+- **CSS3** (variables, gradients, animations)
+- **Bootstrap 5.3**
+- **JavaScript ES6+**
+- **Chart.js 4.0**
+- **Font Awesome 6.4**
+- **Select2**
+- **Lightbox2**
 
 ### Backend
 
-- **PHP 7.4+** - Server-side scripting
-- **MySQL** - Database management
-- **PDO** - Database interaction with prepared statements
-- **Sessions** - User authentication and state management
+- **PHP 7.4+**
+- **MySQL 8.0+**
+- **PDO**
+- **Session Management**
 
-### Additional Features
+### DevOps & Performance
 
-- **PWA Support** - Service Worker for offline functionality
-- **RESTful API** - For data operations
-- **Responsive Design** - Mobile-first approach
-- **Drag & Drop** - For meal planning
+- **Service Workers**
+- **REST API**
+- **Caching Strategy**
+- **Responsive Images**
 
-## Features
+---
 
-### User Authentication
-
-- User registration with password validation
-- Secure login system with session management
-- Admin/user role-based access control
-
-### Dashboard
-
-- Overview of daily/weekly fitness metrics
-- Progress visualization with charts
-- Quick access to all features
-- Goal tracking with progress indicators
-
-### Workout Management
-
-- Log strength and cardio exercises
-- Exercise library with icons
-- Intelligent form fields (removes weight for bodyweight exercises)
-- Workout history tracking
-- Delete functionality for exercises
-
-### Nutrition Tracking
-
-- Meal planning by time (breakfast, lunch, dinner, snacks)
-- Food database with nutritional information
-- Macronutrient breakdown
-- Water intake tracking
-- Meal history with delete functionality
-
-### Progress Monitoring
-
-- Weight tracking with chart visualization
-- Progress photos with comparison view
-- Goal setting and progress calculation
-- Achievement badges system
-
-### Admin Features
-
-- User management dashboard
-- View all registered users
-- Admin-only access control
-
-## Database Schema
-
-The application uses a MySQL database with the following tables:
-
-### Users
-
-- User authentication and profile information
-- Fitness goals and preferences
-
-### Workouts
-
-- Exercise logs with sets, reps, weight, and duration
-- Date-based tracking
-
-### Meals
-
-- Food items with nutritional information
-- Categorized by meal time
-
-### Progress
-
-- Weight tracking over time
-- Progress photos metadata
-
-### Achievements
-
-- User badges and accomplishments
-
-## Installation
-
-1. Clone the repository to your web server directory
-2. Import the database schema from `/database/fitness-tracker.sql`
-3. Configure database connection in `/includes/db.php`
-4. Set up your web server (Apache recommended with mod_rewrite)
-5. Access the application through your web browser
-
-## Default Admin Account
-
-- Email: admin@wtp.com
-- Password: admin123
-
-## File Structure
+## 📁 Project Structure
 
 ```bash
-/fitness-tracker
+fitness-tracker/
 ├── admin/
-│   └── dashboard.php
+│ └── dashboard.php
+│
 ├── api/
-│   ├── clear-meals.php
-│   ├── debug-workout.php
-│   ├── delete-meal.php
-│   ├── log-weight.php
-│   ├── nutrition.php
-│   ├── save-meal.php
-│   ├── workout-delete.php
-│   └── workout-save.php
+│ ├── clear-meals.php
+│ ├── delete-meal.php
+│ ├── nutrition.php
+│ ├── save-meal.php
+│ ├── workout-delete.php
+│ ├── workout-save.php
+│ └── log-weight.php
+│
 ├── assets/
-│   ├── css/
-│   │   └── style.css
-│   ├── img/
-│   │   ├── favicon-16x16.png
-│   │   └── favicon-32x32.png
-│   └── js/
-│       ├── chart-config.js
-│       └── main.js
+│ ├── css/
+│ │ └── style.css
+│ ├── img/
+│       ├── favicon-16x16.png
+│       └── favicon-32x32.png
+│ └── js/
+│ ├── chart-config.js
+│ └── main.js
+│
 ├── database/
-│   └── fitness-tracker.sql
+│ └── fitness-tracker.sql
+│
 ├── includes/
-│   ├── db.php
-│   ├── footer.php
-│   ├── functions.php
-│   └── header.php
+│ ├── db.php
+│ ├── functions.php
+│ ├── header.php
+│ └── footer.php
+│
 ├── meals/
-│   ├── log-meal.php
-│   ├── planner.php
-│   └── search-food.php
+│ ├── planner.php
+│ ├── log-meal.php
+│ └── search-food.php
+│
 ├── progress/
-│   ├── charts.php
-│   ├── photos.php
-│   └── weight.php
+│ ├── charts.php
+│ ├── photos.php
+│ └── weight.php
+│
 ├── uploads/
+│ └── user_photos/
+│
 ├── workouts/
-│   ├── exercise.json
-│   ├── history.php
-│   └── log.php
+│ ├── log.php
+│ ├── history.php
+│ └── exercise.json
+│
 ├── .htaccess
 ├── dashboard.php
 ├── index.php
@@ -164,38 +121,210 @@ The application uses a MySQL database with the following tables:
 ├── logout.php
 ├── manifest.json
 ├── profile.php
-├── README.md
 ├── register.php
-└── sw.js
+├── sw.js
+└── README.md
 ```
 
-## Security Features
+---
 
-- Password hashing with bcrypt
-- SQL injection prevention using PDO prepared statements
-- Session-based authentication
-- Input validation and sanitization
-- File upload restrictions
+## 🗄 Database Schema
 
-## Performance Optimizations
+### Users Table
 
-- PWA for offline functionality
-- Caching strategies
-- Optimized database queries
-- Lazy loading for images
+```sql
+CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    height DECIMAL(5,2),
+    weight DECIMAL(5,2),
+    age INT,
+    goal_weight DECIMAL(5,2),
+    goal_type ENUM('lose', 'gain', 'maintain'),
+    role ENUM('user', 'admin') DEFAULT 'user',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+### Workouts Table
+
+```sql
+CREATE TABLE workouts (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    exercise VARCHAR(100) NOT NULL,
+    sets INT DEFAULT NULL,
+    reps INT DEFAULT NULL,
+    weight DECIMAL(5,2) DEFAULT NULL,
+    duration DECIMAL(5,2) DEFAULT NULL,
+    distance DECIMAL(5,2) DEFAULT NULL,
+    date DATETIME NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX user_date_idx (user_id, date)
+);
+```
+
+### Meals Table
+
+```sql
+CREATE TABLE meals (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    food_name VARCHAR(200) NOT NULL,
+    calories INT NOT NULL,
+    protein DECIMAL(6,2),
+    carbs DECIMAL(6,2),
+    fat DECIMAL(6,2),
+    meal_time ENUM('breakfast','lunch','dinner','snack'),
+    date DATE NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX user_date_idx (user_id, date)
+);
+```
+
+### Progress Table
+
+```sql
+CREATE TABLE progress (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    weight DECIMAL(5,2) NOT NULL,
+    date DATE NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX user_date_idx (user_id, date)
+);
+
+```
+
+### 🚀 Installation
+
+- Prerequisites
+- Apache / Nginx
+- PHP 7.4+
+- MySQL 8.0+
+- Composer (optional)
+
+### Setup
+
+1. Clone Repository
+
+```bash
+git clone https://github.com/yourusername/fitness-tracker.git
+cd fitness-tracker
+```
+
+2. Import Database
+
+```bash
+mysql -u root -p < database/fitness-tracker.sql
+```
+
+3. Configure Database
+
+```bash
+# includes/db.php
+$host = 'localhost';
+$db   = 'fitness_tracker';
+$user = 'your_username';
+$pass = 'your_password';
+```
+
+4. Set Permissions
+
+```bash
+chmod 755 uploads/
+chmod 644 includes/db.php
+```
+
+5. Run App
+
+```bash
+http://localhost/fitness-tracker/
+```
+
+### 🔐 Security Features
+
+- bcrypt hashing (password_hash)
+- PDO prepared statements
+- XSS prevention with htmlspecialchars()
+- Secure sessions (ID regeneration)
+- Validated file uploads
+- CSRF tokens
+- Robust input validation
+
+### 📱 PWA Configuration
+
+- Service Worker (sw.js)
+- Manifest File
+- Responsive UI
+- Offline Caching
+
+### 🔧 API Endpoints
+
+| Method | Endpoint                | Description    |
+| ------ | ----------------------- | -------------- |
+| POST   | /api/save-meal.php      | Save meal      |
+| DELETE | /api/delete-meal.php    | Delete meal    |
+| POST   | /api/workout-save.php   | Log workout    |
+| DELETE | /api/workout-delete.php | Delete workout |
+| POST   | /api/log-weight.php     | Log weight     |
+
+### 🎨 UI/UX Features
+
+- Dynamic themes with CSS variables
+- Smooth CSS animations
+- ARIA accessible components
+- Skeleton loaders
+- Toast notifications
+
+### 📊 Performance Optimizations
+
+- Lazy loaded images
+- Browser & SW caching
 - Minified assets
+- Indexed DB queries
+- Compressed images
 
-## Browser Support
+### 🧪 Testing Checklist
 
-- Chrome 60+
-- Firefox 55+
-- Safari 11+
-- Edge 79+
+- Register & login
+- Log workouts
+- Add & delete meals
+- Track weight
+- Admin panel
+- Mobile responsiveness
+- PWA offline functionality
 
-## License
+### 👥 Default Accounts
 
-This project is for educational purposes.
+## Admin
 
-## Contact
+- Email: admin@wtp.com
+- Password: admin123
 
-For support or inquiries, please use the contact form in the application.
+## Demo User
+
+- Email: user@example.com
+- Password: User123
+
+### 🔄 Version Control
+
+```bash
+v1.0.0 – Initial Release
+- Authentication
+- Workout tracking
+- Meal tracking
+- Progress charts
+- Admin dashboard
+
+v1.1.0 – Planned
+- Social sharing
+- Workout templates
+- Barcode scanner
+- Mobile app (React Native)
+```
