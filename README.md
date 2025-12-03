@@ -1,4 +1,4 @@
-# FitTrack Pro - Fitness & Nutrition Tracker
+# FitTrack Pro - Fitness & Nutrition Tracker (Web Technologies Project)
 
 ## 🏋️‍♂️ Overview
 
@@ -126,7 +126,7 @@ fitness-tracker/
 └── README.md
 ```
 
----
+<!-- ---
 
 ## 🗄 Database Schema
 
@@ -197,7 +197,7 @@ CREATE TABLE progress (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     INDEX user_date_idx (user_id, date)
-);
+); -->
 
 ```
 
