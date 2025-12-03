@@ -1,5 +1,8 @@
 # FitTrack Pro - Fitness & Nutrition Tracker (Web Technologies Project)
 
+[![Live Demo](https://img.shields.io/badge/Live-Demo-brightgreen?style=for-the-badge)](https://fittrack-pro.wuaze.com/fitness-tracker/)
+
+
 ## 🏋️‍♂️ Overview
 
 FitTrack Pro is a comprehensive, web-based fitness tracking platform designed to help users monitor workouts, track nutrition, and achieve fitness goals through data-driven insights and intuitive interfaces.
