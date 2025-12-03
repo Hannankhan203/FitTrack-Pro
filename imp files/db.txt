@@ -1,0 +1,23 @@
+<?php
+$host = 'sql100.infinityfree.com';
+$db   = 'if0_40589941_fittrack_pro_db';
+$user = 'if0_40589941';
+$pass = 'FitTrackPro007'; // default XAMPP has no password
+$host = 3306;
+
+try {
+    // Connect with specific host
+    $dsn = "mysql:host=$host;port=$port;dbname=$db;charset=utf8mb4";
+    
+    $pdo = new PDO($dsn, $user, $pass);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    
+    // Optional: Test connection silently
+    // $pdo->query("SELECT 1");
+    
+} catch(PDOException $e) {
+    // Friendly error message
+    error_log("Database Connection Error: " . $e->getMessage());
+    die("Sorry, the site is experiencing technical difficulties. Please try again later.");
+}
+?>
