@@ -1,6 +1,6 @@
 # FitTrack Pro - Fitness & Nutrition Tracker (Web Technologies Project)
 
-[![Live Demo](https://img.shields.io/badge/Live-Demo-brightgreen?style=for-the-badge)](https://fittrack-pro.wuaze.com/fitness-tracker/)
+[![Live Demo](https://img.shields.io/badge/Live-Demo-brightgreen?style=for-the-badge)](https://fittrack-pro.wuaze.com/fitness-tracker/index.html)
 
 
 ## 🏋️‍♂️ Overview
