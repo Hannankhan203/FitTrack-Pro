@@ -1,5 +1,12 @@
-<?php require '../includes/functions.php';
-require_login();
+<?php 
+// Set timezone to Pakistan/Islamabad
+date_default_timezone_set('Asia/Karachi');
+
+require '../includes/functions.php';
+require_login(); 
+?>
+<?php
+$user_id = get_user_id();
 
 // Handle photo deletion
 if (isset($_GET['delete'])) {
@@ -10,14 +17,6 @@ if (isset($_GET['delete'])) {
     if (file_exists($filepath) && strpos($filename, "user_" . get_user_id() . "_") === 0) {
         // Delete the file from server
         unlink($filepath);
-        
-        // Delete from database if you have a photos table
-        // Uncomment the following lines if you have a database table for photos
-        
-        // global $conn;
-        // $stmt = $conn->prepare("DELETE FROM photos WHERE filename = ? AND user_id = ?");
-        // $stmt->bind_param("si", $filename, get_user_id());
-        // $stmt->execute();
         
         // Redirect to refresh the page
         header("Location: photos.php?deleted=1");
@@ -42,14 +41,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['photo'])) {
 
         // Move uploaded file
         move_uploaded_file($file['tmp_name'], $uploadDir . $name);
-        
-        // Save to database if you have a photos table
-        // Uncomment the following lines if you have a database table for photos
-        
-        // global $conn;
-        // $stmt = $conn->prepare("INSERT INTO photos (user_id, filename, uploaded_at) VALUES (?, ?, NOW())");
-        // $stmt->bind_param("is", get_user_id(), $name);
-        // $stmt->execute();
 
         // Refresh the page to show the new photo
         echo '<script>window.location.href = "photos.php";</script>';
@@ -62,12 +53,13 @@ $photos = glob("../uploads/user_" . get_user_id() . "_*");
 rsort($photos);
 $photoCount = count($photos);
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     <title>Progress Photos - FitTrack Pro</title>
 
     <!-- Bootstrap 5 CSS -->
@@ -83,112 +75,200 @@ $photoCount = count($photos);
 
     <style>
         :root {
-            --primary-color: #3a86ff;
-            --primary-dark: #2667cc;
-            --secondary-color: #ff006e;
-            --accent-color: #8338ec;
-            --success-color: #38b000;
-            --warning-color: #ffbe0b;
-            --danger-color: #dc3545;
-            --light-color: #f8f9fa;
-            --dark-color: #212529;
-            --gradient-primary: linear-gradient(135deg, #3a86ff, #8338ec);
-            --gradient-secondary: linear-gradient(135deg, #ff006e, #fb5607);
-            --gradient-success: linear-gradient(135deg, #38b000, #70e000);
-            --gradient-warning: linear-gradient(135deg, #ffbe0b, #ff9100);
-            --gradient-danger: linear-gradient(135deg, #dc3545, #c82333);
-            --shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-            --border-radius: 16px;
+            --primary: #00d4ff;
+            --primary-dark: #0099cc;
+            --secondary: #ff2d75;
+            --accent: #9d4edd;
+            --success: #00e676;
+            --warning: #ffc107;
+            --error: #ff4757;
+            --dark: #0a0f23;
+            --darker: #070a17;
+            --light: #f8fafc;
+            --gray: #64748b;
+            --card-bg: rgba(255, 255, 255, 0.03);
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --gradient: linear-gradient(135deg, #00d4ff 0%, #9d4edd 50%, #ff2d75 100%);
+            --gradient-primary: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
+            --gradient-secondary: linear-gradient(135deg, #ff2d75 0%, #ff006e 100%);
+            --gradient-accent: linear-gradient(135deg, #9d4edd 0%, #8338ec 100%);
+            --gradient-success: linear-gradient(135deg, #00e676 0%, #00b894 100%);
+            --neon-shadow: 0 0 30px rgba(0, 212, 255, 0.4);
+            --glow: drop-shadow(0 0 10px rgba(0, 212, 255, 0.5));
         }
 
         * {
-            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
         body {
-            background-color: #f5f9ff;
-            color: var(--dark-color);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--darker);
+            color: var(--light);
             min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+            padding-top: 80px;
         }
 
-        .logo {
-            font-family: 'Montserrat', sans-serif;
-            font-weight: 900;
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background:
+                radial-gradient(circle at 10% 20%, rgba(0, 212, 255, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(255, 45, 117, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 50% 50%, rgba(157, 78, 221, 0.1) 0%, transparent 60%);
+            z-index: -2;
+        }
+
+        /* ==================== NAVIGATION ==================== */
+        .navbar {
+            background: rgba(10, 15, 35, 0.98) !important;
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 0.8rem 0;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+            height: 80px;
+        }
+
+        .navbar-brand.logo {
             font-size: 1.8rem;
-            background: var(--gradient-secondary);
+            font-weight: 900;
+            background: var(--gradient);
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            filter: var(--glow);
+            letter-spacing: -0.5px;
+            margin-left: 1rem;
         }
 
-        .navbar {
-            background: white;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-            padding: 1rem 0;
+        .navbar-toggler {
+            border: 1px solid rgba(255, 255, 255, 0.2) !important;
+            padding: 0.5rem 0.8rem;
+            margin-right: 1rem;
+            background: transparent !important;
+            transition: all 0.3s ease;
+            display: none;
         }
 
-        .nav-link {
-            color: #495057;
+        .navbar-toggler:focus {
+            box-shadow: 0 0 0 2px rgba(0, 212, 255, 0.3) !important;
+            outline: none !important;
+        }
+
+        .navbar-toggler-icon {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 0.8%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") !important;
+            width: 1.5em;
+            height: 1.5em;
+            transition: transform 0.3s ease;
+        }
+
+        .navbar-collapse {
+            background: rgba(10, 15, 35, 0.98);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border-radius: 0 0 15px 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-top: none;
+        }
+
+        .navbar-nav {
+            gap: 0.5rem;
+        }
+
+        .navbar-nav .nav-link {
+            padding: 12px 20px;
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             font-weight: 500;
-            padding: 0.5rem 1rem;
-            border-radius: 10px;
-            transition: all 0.3s;
-        }
-
-        .nav-link:hover,
-        .nav-link.active {
-            background: var(--gradient-primary);
-            color: white;
-        }
-
-        .nav-link i {
-            margin-right: 8px;
-        }
-
-        .page-header {
-            background: var(--gradient-primary);
-            color: white;
-            border-radius: var(--border-radius);
-            padding: 2rem;
-            margin-bottom: 2rem;
             position: relative;
             overflow: hidden;
         }
 
-        .page-header::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            right: -10%;
-            width: 300px;
-            height: 300px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 50%;
+        .navbar-nav .nav-link.active {
+            background: var(--gradient-primary);
+            color: white;
+            box-shadow: 0 4px 20px rgba(0, 212, 255, 0.3);
+        }
+
+        .navbar-nav .nav-link:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-2px);
+        }
+
+        .navbar-nav .nav-link i {
+            font-size: 1.2rem;
+            width: 20px;
+        }
+
+        /* Page Header */
+        .page-header {
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(157, 78, 221, 0.1));
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 28px;
+            padding: 2.5rem;
+            margin: 2rem 0;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 212, 255, 0.3);
         }
 
         .page-header h1 {
-            font-size: 2.2rem;
-            margin-bottom: 0.5rem;
+            font-size: 2.5rem;
+            font-weight: 900;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #ffffff 0%, var(--primary) 50%, var(--accent) 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            line-height: 1.2;
+            letter-spacing: -0.5px;
         }
 
         .page-header p {
-            font-size: 1.1rem;
-            opacity: 0.9;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 1.2rem;
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
         }
 
+        /* Upload Card */
         .upload-card {
-            background: white;
-            border-radius: var(--border-radius);
-            padding: 2rem;
-            box-shadow: var(--shadow);
-            border: none;
+            background: linear-gradient(145deg, rgba(0, 212, 255, 0.05), rgba(0, 212, 255, 0.02));
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(0, 212, 255, 0.15);
+            border-radius: 28px;
+            padding: 2.5rem;
             margin-bottom: 2rem;
-            border: 3px dashed #e9ecef;
-            transition: all 0.3s;
-        }
-
-        .upload-card:hover {
-            border-color: var(--primary-color);
+            box-shadow: 0 20px 60px rgba(0, 212, 255, 0.1);
+            text-align: center;
         }
 
         .upload-icon {
@@ -202,6 +282,15 @@ $photoCount = count($photos);
             font-size: 2rem;
             color: white;
             margin: 0 auto 1.5rem;
+        }
+
+        /* Form Elements */
+        .form-label {
+            font-weight: 600;
+            margin-bottom: 0.8rem;
+            color: white;
+            display: block;
+            font-size: 1.1rem;
         }
 
         .file-input-wrapper {
@@ -226,74 +315,100 @@ $photoCount = count($photos);
             align-items: center;
             justify-content: center;
             padding: 1rem;
-            background: #f8f9fa;
-            border: 2px dashed #dee2e6;
-            border-radius: 10px;
-            transition: all 0.3s;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px dashed rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            transition: all 0.3s ease;
             cursor: pointer;
             min-height: 60px;
+            color: rgba(255, 255, 255, 0.7);
         }
 
         .file-input-label:hover {
-            background: #e9ecef;
-            border-color: var(--primary-color);
+            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--primary);
+            color: white;
         }
 
         .file-name {
             margin-top: 1rem;
             font-size: 0.9rem;
-            color: #6c757d;
+            color: rgba(255, 255, 255, 0.7);
             text-align: center;
-            padding: 0.5rem;
-            background: #f8f9fa;
+            padding: 0.75rem;
+            background: rgba(255, 255, 255, 0.03);
             border-radius: 8px;
-            border-left: 4px solid var(--primary-color);
+            border-left: 4px solid var(--primary);
         }
 
         .file-name i {
             margin-right: 0.5rem;
-            color: var(--primary-color);
+            color: var(--primary);
+        }
+
+        /* Buttons */
+        .btn {
+            border: none;
+            padding: 0.875rem 1.75rem;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            text-decoration: none;
         }
 
         .btn-primary {
             background: var(--gradient-primary);
-            border: none;
-            padding: 0.75rem 1.5rem;
-            font-weight: 600;
-            border-radius: 10px;
-            transition: all 0.3s;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
+            color: white;
         }
 
         .btn-primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 7px 15px rgba(58, 134, 255, 0.3);
+            box-shadow: 0 10px 30px rgba(0, 212, 255, 0.3);
         }
 
         .btn-secondary {
-            background: #6c757d;
-            color: white;
-            border: none;
-            padding: 0.75rem 1.5rem;
-            font-weight: 600;
-            border-radius: 10px;
-            transition: all 0.3s;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.8);
         }
 
         .btn-secondary:hover {
-            background: #5a6268;
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--primary);
+            color: white;
             transform: translateY(-2px);
         }
 
+        .btn-success {
+            background: var(--gradient-success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 230, 118, 0.3);
+        }
+
+        .btn-w-100 {
+            width: 100%;
+        }
+
+        /* Gallery Section */
         .gallery-section {
-            background: white;
-            border-radius: var(--border-radius);
-            padding: 2rem;
-            box-shadow: var(--shadow);
-            border: none;
+            background: linear-gradient(145deg, rgba(157, 78, 221, 0.05), rgba(157, 78, 221, 0.02));
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(157, 78, 221, 0.15);
+            border-radius: 28px;
+            padding: 2.5rem;
             margin-bottom: 2rem;
+            box-shadow: 0 20px 60px rgba(157, 78, 221, 0.1);
         }
 
         .section-header {
@@ -302,19 +417,20 @@ $photoCount = count($photos);
             align-items: center;
             margin-bottom: 2rem;
             padding-bottom: 1rem;
-            border-bottom: 2px solid #e9ecef;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
         }
 
         .section-title {
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: var(--dark-color);
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: white;
             display: flex;
             align-items: center;
+            gap: 10px;
         }
 
         .section-title i {
-            margin-right: 10px;
+            color: var(--accent);
         }
 
         .photo-count {
@@ -327,6 +443,7 @@ $photoCount = count($photos);
             margin-left: 10px;
         }
 
+        /* Gallery Grid */
         .gallery-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -371,25 +488,20 @@ $photoCount = count($photos);
             right: 1rem;
         }
 
+        /* Photo Card */
         .photo-card {
-            background: white;
-            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 20px;
             overflow: hidden;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-            transition: all 0.3s;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         .photo-card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
-        }
-
-        .photo-img {
-            width: 100%;
-            height: 250px;
-            display: block;
-            background-color: #f8f9fa;
+            transform: translateY(-5px);
+            background: rgba(0, 212, 255, 0.08);
+            box-shadow: 0 15px 40px rgba(0, 212, 255, 0.15);
         }
 
         .photo-img-container {
@@ -399,13 +511,18 @@ $photoCount = count($photos);
             align-items: center;
             justify-content: center;
             overflow: hidden;
-            background-color: #f8f9fa;
+            background-color: rgba(255, 255, 255, 0.02);
         }
 
         .photo-img-container img {
             max-width: 100%;
             max-height: 100%;
             object-fit: contain;
+            transition: transform 0.3s ease;
+        }
+
+        .photo-card:hover .photo-img-container img {
+            transform: scale(1.05);
         }
 
         .photo-overlay {
@@ -443,35 +560,40 @@ $photoCount = count($photos);
             background: rgba(255, 255, 255, 0.2);
             border: 1px solid rgba(255, 255, 255, 0.3);
             color: white;
-            border-radius: 6px;
+            border-radius: 8px;
             padding: 0.5rem;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.3s;
+            transition: all 0.3s ease;
             flex: 1;
         }
 
         .photo-btn:hover {
-            background: var(--primary-color);
+            background: var(--primary);
             transform: scale(1.05);
         }
 
         .photo-btn-delete {
-            background: rgba(220, 53, 69, 0.8);
-            border: 1px solid rgba(220, 53, 69, 0.3);
+            background: rgba(255, 45, 117, 0.8);
+            border: 1px solid rgba(255, 45, 117, 0.3);
         }
 
         .photo-btn-delete:hover {
-            background: var(--danger-color);
+            background: var(--secondary);
         }
 
+        /* Comparison Section */
         .comparison-section {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: var(--border-radius);
-            padding: 2rem;
-            color: white;
+            background: linear-gradient(145deg, rgba(255, 45, 117, 0.05), rgba(255, 45, 117, 0.02));
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 45, 117, 0.15);
+            border-radius: 28px;
+            padding: 2.5rem;
             margin-bottom: 2rem;
+            box-shadow: 0 20px 60px rgba(255, 45, 117, 0.1);
+            color: white;
         }
 
         .comparison-header {
@@ -481,12 +603,17 @@ $photoCount = count($photos);
 
         .comparison-title {
             font-size: 1.8rem;
-            font-weight: 700;
+            font-weight: 800;
             margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, #ffffff 0%, var(--secondary) 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
         }
 
         .comparison-subtitle {
-            opacity: 0.9;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 1.1rem;
         }
 
         .comparison-container {
@@ -513,7 +640,7 @@ $photoCount = count($photos);
             border-radius: 12px;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
             transition: transform 0.3s;
-            background-color: #f8f9fa;
+            background-color: rgba(255, 255, 255, 0.02);
             padding: 15px;
         }
 
@@ -539,53 +666,156 @@ $photoCount = count($photos);
             z-index: 2;
         }
 
+        /* Empty State */
         .empty-state {
             text-align: center;
             padding: 4rem 1rem;
-            color: #6c757d;
         }
 
-        .empty-state i {
+        .empty-state-icon {
             font-size: 4rem;
-            color: #dee2e6;
-            margin-bottom: 1rem;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 1.5rem;
+            opacity: 0.5;
         }
 
         .empty-state h4 {
-            margin-bottom: 0.5rem;
-            font-weight: 600;
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            color: white;
+            letter-spacing: -0.5px;
         }
 
-        .mobile-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: white;
-            box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.1);
-            padding: 0.75rem;
-            display: none;
-            z-index: 1000;
+        .empty-state p {
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 2rem;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+            line-height: 1.6;
+            font-size: 1.1rem;
         }
 
-        .mobile-nav-item {
+        .text-muted{
+            color: var(--light) !important;
+        }
+
+        /* Tips Section */
+        .tips-section {
+            background: linear-gradient(145deg, rgba(0, 212, 255, 0.05), rgba(0, 212, 255, 0.02));
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(0, 212, 255, 0.15);
+            border-radius: 28px;
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 20px 60px rgba(0, 212, 255, 0.1);
+        }
+
+        /* Alerts */
+        .alert {
+            position: relative;
+            padding: 1rem 1.5rem;
+            margin-bottom: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .alert-success {
+            background: rgba(0, 230, 118, 0.1);
+            border-color: rgba(0, 230, 118, 0.2);
+            color: var(--success);
+        }
+
+        .alert-danger {
+            background: rgba(255, 45, 117, 0.1);
+            border-color: rgba(255, 45, 117, 0.2);
+            color: var(--secondary);
+        }
+
+        .alert i {
+            margin-right: 0.5rem;
+        }
+
+        .btn-close {
+            filter: invert(1) brightness(2);
+            opacity: 0.7;
+        }
+
+        .btn-close:hover {
+            opacity: 1;
+        }
+
+        /* Mobile navbar close button */
+        .navbar-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
             display: flex;
-            flex-direction: column;
             align-items: center;
-            text-decoration: none;
-            color: #6c757d;
-            font-size: 0.8rem;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 1003;
+            display: none;
         }
 
-        .mobile-nav-item.active {
-            color: var(--primary-color);
+        .navbar-close:hover {
+            background: var(--secondary);
+            transform: rotate(90deg);
         }
 
-        .mobile-nav-item i {
-            font-size: 1.2rem;
-            margin-bottom: 0.25rem;
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 12px;
+            height: 12px;
         }
 
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--gradient);
+            border-radius: 6px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary);
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in {
+            animation: fadeInUp 0.8s ease-out forwards;
+        }
+
+        /* Progress Timeline */
         .progress-timeline {
             display: flex;
             justify-content: center;
@@ -615,22 +845,252 @@ $photoCount = count($photos);
             opacity: 0.8;
         }
 
-        @media (max-width: 768px) {
-            .mobile-nav {
-                display: flex;
-                justify-content: space-around;
+        /* Upload Progress */
+        .upload-progress {
+            display: none;
+            margin-top: 1rem;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--gradient-success);
+            border-radius: 4px;
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        .upload-status {
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.6);
+            text-align: center;
+        }
+
+        /* Mobile Navigation */
+        .mobile-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(10, 15, 35, 0.98);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 0.75rem;
+            display: none;
+            z-index: 1000;
+            box-shadow: 0 -4px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .mobile-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.8rem;
+            padding: 0.5rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .mobile-nav-item.active {
+            background: rgba(0, 212, 255, 0.1);
+            color: var(--primary);
+        }
+
+        .mobile-nav-item i {
+            font-size: 1.2rem;
+            margin-bottom: 0.25rem;
+        }
+
+        /* ==================== RESPONSIVE DESIGN ==================== */
+        /* Large screens (992px and up) - Desktop navigation visible */
+        @media (min-width: 992px) {
+            .navbar-collapse {
+                display: flex !important;
+                background: transparent;
+                border: none;
+                padding: 0;
+                margin: 0;
             }
 
             .navbar-nav {
+                flex-direction: row;
+            }
+
+            .navbar-toggler {
                 display: none;
             }
 
+            .mobile-nav {
+                display: none;
+            }
+
+            .navbar-close {
+                display: none !important;
+            }
+        }
+
+        /* Medium and small screens (below 992px) - Mobile navigation */
+        @media (max-width: 991.98px) {
+            .navbar-collapse {
+                position: fixed;
+                top: 80px;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                backdrop-filter: blur(30px);
+                -webkit-backdrop-filter: blur(30px);
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                border-radius: 0;
+                padding: 2rem;
+                margin: 0;
+                overflow: hidden;
+                opacity: 0;
+                visibility: hidden;
+                transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+                box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+                display: block !important;
+                z-index: 1001;
+                height: 100vh;
+            }
+
+            .navbar-collapse.show {
+                opacity: 1;
+                visibility: visible;
+                transform: translateY(0);
+                overflow-y: auto;
+                height: 100vh;
+            }
+
+            .navbar-nav {
+                flex-direction: column;
+                gap: 1rem;
+                padding: 2rem 0;
+                min-height: 120vh;
+            }
+
+            .navbar-toggler {
+                display: block;
+                z-index: 1002;
+                position: relative;
+            }
+
+            .navbar-collapse.show .navbar-close {
+                display: flex;
+            }
+
+            .navbar-nav .nav-link {
+                padding: 1.2rem 1.5rem;
+                font-size: 1.1rem;
+                border-radius: 16px;
+                background: rgba(255, 255, 255, 0.05);
+                margin-bottom: 0.5rem;
+                text-align: center;
+                justify-content: center;
+            }
+
+            .navbar-nav .nav-link i {
+                font-size: 1.3rem;
+                width: 24px;
+            }
+
+            body {
+                padding-bottom: 70px;
+                overflow-x: hidden;
+            }
+
+            .navbar {
+                height: 80px;
+                z-index: 1000;
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+            }
+
+            .navbar-brand.logo {
+                font-size: 1.5rem;
+                z-index: 1003;
+                position: relative;
+            }
+
+            body.menu-open {
+                overflow: hidden;
+                position: fixed;
+                width: 100%;
+                height: 100%;
+            }
+
+            .navbar-collapse.show::before {
+                content: '';
+                position: fixed;
+                top: 80px;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                backdrop-filter: blur(5px);
+                z-index: -1;
+            }
+        }
+
+        /* Tablet (768px and below) */
+        @media (max-width: 768px) {
             .page-header {
                 padding: 1.5rem;
+                margin: 1rem 0;
+            }
+
+            .page-header h1 {
+                font-size: 1.8rem;
+            }
+
+            .page-header p {
+                font-size: 1rem;
+            }
+
+            .upload-card,
+            .gallery-section,
+            .comparison-section,
+            .tips-section {
+                padding: 1.5rem;
+                border-radius: 24px;
+                margin-bottom: 1.5rem;
+            }
+
+            .upload-icon {
+                width: 60px;
+                height: 60px;
+                font-size: 1.5rem;
+            }
+
+            .section-title {
+                font-size: 1.5rem;
             }
 
             .gallery-grid {
                 grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            }
+
+            .comparison-container {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .comparison-vs {
+                position: relative;
+                top: 0;
+                left: 0;
+                transform: none;
+                margin: 1rem auto;
             }
 
             .gallery-grid.list-view .photo-card {
@@ -655,1186 +1115,151 @@ $photoCount = count($photos);
                 margin-top: 0.5rem;
             }
 
-            .comparison-container {
+            .btn {
+                padding: 0.75rem 1.5rem;
+            }
+        }
+
+        /* Mobile (576px and below) */
+        @media (max-width: 576px) {
+            .navbar {
+                height: 70px;
+            }
+
+            .navbar-brand.logo {
+                font-size: 1.3rem;
+                margin-left: 0.5rem;
+            }
+
+            .navbar-toggler {
+                padding: 0.4rem 0.6rem;
+                margin-right: 0.5rem;
+            }
+
+            .page-header h1 {
+                font-size: 1.5rem;
+            }
+
+            .page-header p {
+                font-size: 0.9rem;
+            }
+
+            .upload-card,
+            .gallery-section,
+            .comparison-section,
+            .tips-section {
+                padding: 1.25rem;
+                margin-bottom: 1.25rem;
+            }
+
+            .upload-icon {
+                width: 50px;
+                height: 50px;
+                font-size: 1.3rem;
+            }
+
+            .section-title {
+                font-size: 1.3rem;
+            }
+
+            .gallery-grid {
                 grid-template-columns: 1fr;
                 gap: 1rem;
             }
 
-            .comparison-vs {
-                position: relative;
-                top: 0;
-                left: 0;
-                transform: none;
-                margin: 1rem auto;
-            }
-        }
-
-        @media (max-width: 576px) {
-            .gallery-grid {
-                grid-template-columns: 1fr;
+            .photo-img-container {
+                height: 200px;
             }
 
             .comparison-image {
                 height: 250px;
             }
+
+            .file-input-label {
+                padding: 0.75rem;
+                min-height: 50px;
+            }
+
+            .btn {
+                padding: 0.75rem 1.25rem;
+                font-size: 0.95rem;
+            }
+
+            .navbar-collapse {
+                top: 70px;
+                padding: 1.5rem;
+            }
+
+            .navbar-close {
+                top: 15px;
+                right: 15px;
+                width: 35px;
+                height: 35px;
+            }
+
+            .navbar-nav .nav-link {
+                padding: 1rem;
+                font-size: 1rem;
+            }
+
+            .photo-count {
+                background: var(--gradient-secondary);
+                color: white;
+                padding: 0.2rem 0.6rem;
+                border-radius: 10px;
+                font-size: 0.7rem;
+                font-weight: 600;
+                margin-left: 10px;
+            }
+
+            .section-header {
+                justify-content: space-between;
+                flex-direction: column;
+                align-items: center;
+                margin-bottom: 2rem;
+                padding-bottom: 1rem;
+                border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+            }
         }
 
-        .upload-progress {
-            display: none;
-            margin-top: 1rem;
-        }
+        /* Very small screens (under 400px) */
+        @media (max-width: 399.98px) {
+            .page-header h1 {
+                font-size: 1.3rem;
+            }
 
-        .progress-bar {
-            height: 8px;
-            background: #e9ecef;
-            border-radius: 4px;
-            overflow: hidden;
-            margin-bottom: 0.5rem;
-        }
+            .upload-card h4 {
+                font-size: 1.1rem;
+            }
 
-        .progress-fill {
-            height: 100%;
-            background: var(--gradient-success);
-            border-radius: 4px;
-            width: 0%;
-            transition: width 0.3s;
-        }
+            .section-title {
+                font-size: 1rem;
+                font-weight: 800;
+                color: white;
+                display: flex;
+                align-items: center;
+                gap: 4px;
+            }
 
-        .upload-status {
-            font-size: 0.85rem;
-            color: #6c757d;
-            text-align: center;
-        }
-        
-        .alert-success {
-            background: var(--gradient-success);
-            color: white;
-            border: none;
-            border-radius: var(--border-radius);
-        }
+            .photo-img-container {
+                height: 180px;
+            }
 
-        /* ============================================
-   PREMIUM MOBILE RESPONSIVE DESIGN - PROGRESS PHOTOS
-   ============================================ */
+            .comparison-image {
+                height: 200px;
+            }
 
-/* Base mobile styles */
-@media (max-width: 767.98px) {
-    /* Reset container spacing */
-    .container.mt-4 {
-        padding-left: 0 !important;
-        padding-right: 0 !important;
-        max-width: 100%;
-        margin-top: 0 !important;
-    }
-    
-    /* Body background and padding */
-    body {
-        background: #f5f9ff;
-        padding-bottom: 70px; /* Space for mobile nav */
-    }
-    
-    /* Mobile Navigation - Enhanced */
-    .mobile-nav {
-        display: flex !important;
-        background: white;
-        border-radius: 25px 25px 0 0;
-        padding: 0.75rem 0.5rem;
-        box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.15);
-        position: fixed;
-        bottom: 0;
-        left: 0.5rem;
-        right: 0.5rem;
-        margin: 0 auto;
-        max-width: 500px;
-        z-index: 1000;
-    }
-    
-    .mobile-nav-item {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        text-decoration: none;
-        color: #94a3b8;
-        font-size: 0.75rem;
-        padding: 0.5rem 0.25rem;
-        border-radius: 12px;
-        transition: all 0.3s ease;
-    }
-    
-    .mobile-nav-item:hover,
-    .mobile-nav-item.active {
-        color: #3a86ff;
-        background: rgba(58, 134, 255, 0.08);
-        transform: translateY(-3px);
-    }
-    
-    .mobile-nav-item i {
-        font-size: 1.3rem;
-        margin-bottom: 0.25rem;
-        transition: all 0.3s ease;
-    }
-    
-    .mobile-nav-item.active i {
-        transform: scale(1.1);
-    }
-    
-    /* Hide desktop navbar on mobile */
-    .navbar-nav {
-        display: none !important;
-    }
-    
-    .navbar-toggler {
-        border: none;
-        padding: 0.5rem;
-    }
-    
-    .navbar-toggler:focus {
-        box-shadow: none;
-    }
-    
-    /* Page Header - Redesigned for mobile */
-    .page-header {
-        border-radius: 0 0 32px 32px !important;
-        padding: 1.5rem !important;
-        margin: 0 0 1.5rem 0 !important;
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .page-header::before {
-        display: none;
-    }
-    
-    .page-header::after {
-        content: '';
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        height: 40px;
-        background: linear-gradient(to top, rgba(0,0,0,0.05), transparent);
-    }
-    
-    .page-header h1 {
-        font-size: 1.5rem !important;
-        margin-bottom: 0.5rem;
-        line-height: 1.3;
-    }
-    
-    .page-header p {
-        font-size: 0.95rem;
-        margin-bottom: 0;
-    }
-    
-    /* Alert Messages */
-    .alert {
-        margin: 0 0.75rem 1rem 0.75rem !important;
-        border-radius: 16px !important;
-        padding: 1rem !important;
-        font-size: 0.9rem;
-    }
-    
-    .alert i {
-        font-size: 1.1rem !important;
-        margin-right: 0.5rem !important;
-    }
-    
-    .alert-success {
-        background: linear-gradient(135deg, #38b000, #70e000) !important;
-        color: white;
-        border: none;
-    }
-    
-    /* Upload Card - Mobile Optimized */
-    .upload-card {
-        margin: 0 0.75rem 1.5rem 0.75rem !important;
-        padding: 1.5rem !important;
-        border-radius: 20px !important;
-    }
-    
-    .upload-icon {
-        width: 70px !important;
-        height: 70px !important;
-        font-size: 1.8rem !important;
-        margin-bottom: 1rem !important;
-    }
-    
-    .upload-card h4 {
-        font-size: 1.2rem !important;
-        margin-bottom: 0.75rem !important;
-    }
-    
-    .upload-card p.text-muted {
-        font-size: 0.9rem !important;
-        margin-bottom: 1.25rem !important;
-        line-height: 1.5;
-    }
-    
-    /* File Input - Mobile Optimized */
-    .file-input-wrapper {
-        margin-bottom: 1rem !important;
-    }
-    
-    .file-input-label {
-        padding: 1rem !important;
-        min-height: 56px !important;
-        border-radius: 14px !important;
-        border-width: 2px !important;
-    }
-    
-    .file-input-label .text-center {
-        font-size: 0.9rem;
-    }
-    
-    .file-input-label i {
-        font-size: 1.1rem !important;
-        margin-right: 0.5rem !important;
-    }
-    
-    #fileName {
-        font-size: 0.9rem !important;
-    }
-    
-    /* Selected file name display */
-    .file-name {
-        margin-top: 0.75rem !important;
-        padding: 0.75rem !important;
-        font-size: 0.85rem !important;
-        border-radius: 12px !important;
-    }
-    
-    .file-name i {
-        font-size: 0.9rem !important;
-        margin-right: 0.5rem !important;
-    }
-    
-    /* Upload Progress */
-    .upload-progress {
-        margin-top: 1rem !important;
-    }
-    
-    .progress-bar {
-        height: 6px !important;
-        border-radius: 8px !important;
-        margin-bottom: 0.375rem !important;
-    }
-    
-    .upload-status {
-        font-size: 0.8rem !important;
-    }
-    
-    /* Upload Button */
-    .btn-primary {
-        padding: 0.875rem !important;
-        font-size: 1rem !important;
-        border-radius: 14px !important;
-        min-height: 56px !important;
-        margin-top: 1rem !important;
-    }
-    
-    .btn-primary i {
-        font-size: 1.1rem !important;
-        margin-right: 0.5rem !important;
-    }
-    
-    /* Gallery Section - Mobile Optimized */
-    .gallery-section {
-        margin: 0 0.75rem 1.5rem 0.75rem !important;
-        padding: 1.5rem !important;
-        border-radius: 20px !important;
-    }
-    
-    .section-header {
-        flex-direction: column !important;
-        align-items: flex-start !important;
-        gap: 1rem;
-        margin-bottom: 1.5rem !important;
-        padding-bottom: 1rem !important;
-    }
-    
-    .section-title {
-        font-size: 1.2rem !important;
-        margin-bottom: 0 !important;
-    }
-    
-    .section-title i {
-        font-size: 1.1rem !important;
-        margin-right: 0.5rem !important;
-    }
-    
-    .photo-count {
-        font-size: 0.8rem !important;
-        padding: 0.2rem 0.625rem !important;
-        margin-left: 0.5rem !important;
-    }
-    
-    /* Toggle View Button */
-    .btn-secondary {
-        padding: 0.625rem 1rem !important;
-        font-size: 0.9rem !important;
-        border-radius: 12px !important;
-        min-height: 40px !important;
-    }
-    
-    .btn-secondary i {
-        font-size: 0.9rem !important;
-        margin-right: 0.25rem !important;
-    }
-    
-    /* Gallery Grid - Mobile Optimized */
-    .gallery-grid {
-        grid-template-columns: 1fr !important;
-        gap: 1rem !important;
-    }
-    
-    /* Photo Card - Mobile Optimized */
-    .photo-card {
-        border-radius: 16px !important;
-        overflow: hidden;
-    }
-    
-    .photo-img-container {
-        height: 280px !important;
-    }
-    
-    .photo-img-container img {
-        max-height: 280px !important;
-    }
-    
-    /* Photo Overlay - Always visible on mobile for better UX */
-    .photo-overlay {
-        opacity: 1 !important;
-        background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent 60%) !important;
-    }
-    
-    .photo-date {
-        font-size: 0.9rem !important;
-        margin-bottom: 0.75rem !important;
-    }
-    
-    .photo-date small {
-        font-size: 0.8rem !important;
-        opacity: 0.9;
-    }
-    
-    .photo-actions {
-        gap: 0.75rem !important;
-    }
-    
-    .photo-btn {
-        padding: 0.5rem !important;
-        border-radius: 10px !important;
-        font-size: 0.9rem !important;
-        min-height: 40px !important;
-        min-width: 40px !important;
-    }
-    
-    .photo-btn i {
-        font-size: 1rem !important;
-    }
-    
-    /* Empty State - Mobile Optimized */
-    .empty-state {
-        padding: 2rem 1rem !important;
-    }
-    
-    .empty-state i {
-        font-size: 3rem !important;
-        margin-bottom: 0.75rem !important;
-    }
-    
-    .empty-state h4 {
-        font-size: 1.2rem !important;
-        margin-bottom: 0.5rem !important;
-    }
-    
-    .empty-state p {
-        font-size: 0.9rem !important;
-        margin-bottom: 1.5rem !important;
-        max-width: 280px;
-        margin-left: auto;
-        margin-right: auto;
-    }
-    
-    /* Comparison Section - Mobile Optimized */
-    .comparison-section {
-        margin: 0 0.75rem 1.5rem 0.75rem !important;
-        padding: 1.5rem !important;
-        border-radius: 20px !important;
-    }
-    
-    .comparison-header {
-        margin-bottom: 1.5rem !important;
-    }
-    
-    .comparison-title {
-        font-size: 1.3rem !important;
-        margin-bottom: 0.25rem !important;
-    }
-    
-    .comparison-subtitle {
-        font-size: 0.9rem !important;
-        opacity: 0.8;
-    }
-    
-    .comparison-container {
-        grid-template-columns: 1fr !important;
-        gap: 1.5rem !important;
-    }
-    
-    .comparison-label {
-        font-size: 1rem !important;
-        margin-bottom: 0.75rem !important;
-        padding: 0.5rem !important;
-        border-radius: 10px !important;
-    }
-    
-    .photo-img-container[style*="height: 350px"] {
-        height: 250px !important;
-    }
-    
-    .comparison-vs {
-        position: relative !important;
-        top: 0 !important;
-        left: 0 !important;
-        transform: none !important;
-        margin: 0 auto 1rem auto !important;
-        width: 50px !important;
-        height: 50px !important;
-        font-size: 1rem !important;
-    }
-    
-    .comparison-container > div {
-        text-align: center;
-    }
-    
-    .comparison-container small {
-        font-size: 0.85rem !important;
-    }
-    
-    /* Progress Timeline - Mobile Optimized */
-    .progress-timeline {
-        margin-top: 1.5rem !important;
-        padding: 0.75rem !important;
-        border-radius: 12px !important;
-        flex-wrap: wrap;
-        gap: 1rem;
-        justify-content: space-around;
-    }
-    
-    .timeline-item {
-        margin: 0 0.5rem !important;
-    }
-    
-    .timeline-dot {
-        width: 10px !important;
-        height: 10px !important;
-        margin-bottom: 0.25rem !important;
-    }
-    
-    .timeline-label {
-        font-size: 0.8rem !important;
-    }
-    
-    /* Tips Section - Mobile Optimized */
-    .gallery-section:last-child {
-        margin-bottom: 2rem !important;
-    }
-    
-    .row {
-        margin: 0 !important;
-    }
-    
-    .col-md-4.mb-3 {
-        width: 100% !important;
-        margin-bottom: 1.25rem !important;
-    }
-    
-    .d-flex.align-items-start {
-        gap: 0.75rem;
-    }
-    
-    .d-flex.align-items-start .me-3 i {
-        font-size: 1.5rem !important;
-        margin-top: 0.125rem;
-    }
-    
-    .d-flex.align-items-start h6 {
-        font-size: 0.95rem !important;
-        margin-bottom: 0.25rem !important;
-    }
-    
-    .d-flex.align-items-start .small {
-        font-size: 0.85rem !important;
-        line-height: 1.4;
-    }
-    
-    /* Animation for mobile */
-    @keyframes fadeInUp {
-        from {
-            opacity: 0;
-            transform: translateY(20px);
+            .file-input-label {
+                font-size: 0.9rem;
+            }
+
+            .btn {
+                padding: 0.6rem 1rem;
+                border-radius: 8px;
+                font-size: 0.7rem;
+                gap: 4px;
+            }
         }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-    
-    .upload-card,
-    .gallery-section,
-    .comparison-section {
-        animation: fadeInUp 0.5s ease-out;
-    }
-    
-    /* Stagger animations */
-    .upload-card { animation-delay: 0.1s; }
-    .gallery-section { animation-delay: 0.2s; }
-    .comparison-section { animation-delay: 0.3s; }
-    
-    /* Photo card entrance animation */
-    @keyframes photoCardEntrance {
-        from {
-            opacity: 0;
-            transform: translateY(20px) scale(0.95);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-        }
-    }
-    
-    .photo-card {
-        animation: photoCardEntrance 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    
-    /* Stagger photo animations */
-    .photo-card:nth-child(1) { animation-delay: 0.1s; }
-    .photo-card:nth-child(2) { animation-delay: 0.2s; }
-    .photo-card:nth-child(3) { animation-delay: 0.3s; }
-    .photo-card:nth-child(4) { animation-delay: 0.4s; }
-    .photo-card:nth-child(5) { animation-delay: 0.5s; }
-    .photo-card:nth-child(6) { animation-delay: 0.6s; }
-}
-
-/* Extra small devices (phones under 400px) */
-@media (max-width: 399.98px) {
-    .mobile-nav {
-        left: 0.25rem;
-        right: 0.25rem;
-        padding: 0.5rem;
-    }
-    
-    .page-header {
-        padding: 1.25rem !important;
-    }
-    
-    .page-header h1 {
-        font-size: 1.3rem !important;
-    }
-    
-    .page-header p {
-        font-size: 0.9rem;
-    }
-    
-    .alert {
-        margin: 0 0.5rem 0.75rem 0.5rem !important;
-        padding: 0.875rem !important;
-        font-size: 0.85rem !important;
-    }
-    
-    .upload-card,
-    .gallery-section,
-    .comparison-section {
-        margin: 0 0.5rem 1rem 0.5rem !important;
-        padding: 1.25rem !important;
-    }
-    
-    .upload-icon {
-        width: 60px !important;
-        height: 60px !important;
-        font-size: 1.5rem !important;
-    }
-    
-    .upload-card h4 {
-        font-size: 1.1rem !important;
-    }
-    
-    .file-input-label {
-        padding: 0.875rem !important;
-        min-height: 52px !important;
-    }
-    
-    #fileName {
-        font-size: 0.85rem !important;
-    }
-    
-    .btn-primary {
-        padding: 0.75rem !important;
-        min-height: 52px !important;
-        font-size: 0.95rem !important;
-    }
-    
-    .photo-img-container {
-        height: 250px !important;
-    }
-    
-    .photo-img-container img {
-        max-height: 250px !important;
-    }
-    
-    .photo-date {
-        font-size: 0.85rem !important;
-    }
-    
-    .photo-btn {
-        min-height: 36px !important;
-        min-width: 36px !important;
-        padding: 0.375rem !important;
-    }
-    
-    .photo-btn i {
-        font-size: 0.9rem !important;
-    }
-    
-    .empty-state {
-        padding: 1.5rem 1rem !important;
-    }
-    
-    .empty-state i {
-        font-size: 2.5rem !important;
-    }
-    
-    .empty-state h4 {
-        font-size: 1.1rem !important;
-    }
-    
-    .comparison-title {
-        font-size: 1.2rem !important;
-    }
-    
-    .photo-img-container[style*="height: 350px"] {
-        height: 220px !important;
-    }
-    
-    .btn-secondary {
-        padding: 0.5rem 0.75rem !important;
-        font-size: 0.85rem !important;
-    }
-}
-
-/* Tablet portrait mode (768px - 991px) */
-@media (min-width: 768px) and (max-width: 991.98px) {
-    .container.mt-4 {
-        padding-left: 1rem !important;
-        padding-right: 1rem !important;
-    }
-    
-    .mobile-nav {
-        display: flex !important;
-        left: 1rem;
-        right: 1rem;
-    }
-    
-    .navbar-nav {
-        display: none !important;
-    }
-    
-    .gallery-grid {
-        grid-template-columns: repeat(2, 1fr) !important;
-    }
-    
-    .photo-img-container {
-        height: 300px !important;
-    }
-    
-    .photo-img-container img {
-        max-height: 300px !important;
-    }
-    
-    .row .col-md-4.mb-3 {
-        width: 33.333% !important;
-        margin-bottom: 0 !important;
-    }
-}
-
-/* Landscape mode optimization */
-@media (max-height: 600px) and (orientation: landscape) {
-    .mobile-nav {
-        padding: 0.5rem;
-    }
-    
-    .mobile-nav-item {
-        font-size: 0.7rem;
-        padding: 0.25rem 0.125rem;
-    }
-    
-    .mobile-nav-item i {
-        font-size: 1.1rem;
-        margin-bottom: 0.125rem;
-    }
-    
-    .page-header {
-        padding: 1rem !important;
-        margin-bottom: 1rem !important;
-    }
-    
-    .page-header h1 {
-        font-size: 1.2rem !important;
-    }
-    
-    .upload-card,
-    .gallery-section,
-    .comparison-section {
-        margin-bottom: 1rem !important;
-        padding: 1rem !important;
-    }
-    
-    .upload-icon {
-        width: 50px !important;
-        height: 50px !important;
-        font-size: 1.2rem !important;
-    }
-    
-    .photo-img-container {
-        height: 200px !important;
-    }
-    
-    .photo-img-container img {
-        max-height: 200px !important;
-    }
-    
-    .photo-img-container[style*="height: 350px"] {
-        height: 180px !important;
-    }
-    
-    .btn-primary {
-        min-height: 52px !important;
-        padding: 0.75rem !important;
-    }
-    
-    .file-input-label {
-        min-height: 48px !important;
-        padding: 0.75rem !important;
-    }
-}
-
-/* iPhone notch and safe area support */
-@supports (padding: max(0px)) {
-    .container.mt-4 {
-        padding-left: max(0.75rem, env(safe-area-inset-left)) !important;
-        padding-right: max(0.75rem, env(safe-area-inset-right)) !important;
-    }
-    
-    .mobile-nav {
-        padding-bottom: max(0.75rem, env(safe-area-inset-bottom)) !important;
-    }
-    
-    .page-header {
-        padding-top: max(1.5rem, env(safe-area-inset-top)) !important;
-    }
-}
-
-/* Loading animations */
-@keyframes buttonPulse {
-    0%, 100% {
-        transform: scale(1);
-    }
-    50% {
-        transform: scale(0.98);
-    }
-}
-
-.btn-primary:disabled {
-    animation: buttonPulse 1s infinite;
-}
-
-/* Touch feedback for mobile */
-@media (hover: none) and (pointer: coarse) {
-    .photo-card:hover {
-        transform: none !important;
-    }
-    
-    .photo-card:active {
-        transform: scale(0.98) !important;
-    }
-    
-    .photo-btn:hover {
-        transform: none !important;
-    }
-    
-    .photo-btn:active {
-        transform: scale(1.1) !important;
-    }
-    
-    .btn-primary:hover,
-    .btn-secondary:hover {
-        transform: none !important;
-    }
-    
-    .btn-primary:active,
-    .btn-secondary:active {
-        transform: scale(0.98) !important;
-    }
-    
-    .file-input-label:hover {
-        transform: none !important;
-    }
-    
-    .file-input-label:active {
-        transform: scale(0.98) !important;
-    }
-}
-
-/* Custom scrollbar for mobile webkit */
-@media (max-width: 767.98px) {
-    ::-webkit-scrollbar {
-        width: 6px;
-        height: 6px;
-    }
-    
-    ::-webkit-scrollbar-track {
-        background: #f1f1f1;
-        border-radius: 10px;
-    }
-    
-    ::-webkit-scrollbar-thumb {
-        background: linear-gradient(135deg, #3a86ff, #8338ec);
-        border-radius: 10px;
-    }
-}
-
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-    @media (max-width: 767.98px) {
-        body {
-            background: #121826;
-            color: #e2e8f0;
-        }
-        
-        .upload-card,
-        .gallery-section {
-            background: #1e293b;
-            color: #e2e8f0;
-            border-color: #374151 !important;
-        }
-        
-        .mobile-nav {
-            background: #1e293b;
-        }
-        
-        .mobile-nav-item {
-            color: #94a3b8;
-        }
-        
-        .mobile-nav-item.active {
-            color: #3a86ff;
-            background: rgba(58, 134, 255, 0.15);
-        }
-        
-        .file-input-label {
-            background: #2d3748 !important;
-            border-color: #374151 !important;
-            color: #e2e8f0 !important;
-        }
-        
-        .file-name {
-            background: #2d3748 !important;
-            color: #94a3b8 !important;
-        }
-        
-        .file-name i.text-primary {
-            color: #3a86ff !important;
-        }
-        
-        .progress-bar {
-            background: #374151 !important;
-        }
-        
-        .photo-card {
-            background: #2d3748 !important;
-        }
-        
-        .photo-img-container {
-            background-color: #1e293b !important;
-        }
-        
-        .photo-overlay {
-            background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent 60%) !important;
-        }
-        
-        .photo-btn {
-            background: rgba(255, 255, 255, 0.15) !important;
-            border-color: rgba(255, 255, 255, 0.2) !important;
-        }
-        
-        .photo-btn-delete {
-            background: rgba(239, 68, 68, 0.8) !important;
-            border-color: rgba(239, 68, 68, 0.3) !important;
-        }
-        
-        .photo-btn-delete:hover {
-            background: rgba(239, 68, 68, 1) !important;
-        }
-        
-        .comparison-section {
-            background: linear-gradient(135deg, #4f46e5, #7c3aed) !important;
-        }
-        
-        .comparison-label {
-            background: rgba(255, 255, 255, 0.15) !important;
-        }
-        
-        .timeline-dot {
-            background: rgba(255, 255, 255, 0.9) !important;
-        }
-        
-        .text-muted {
-            color: #94a3b8 !important;
-        }
-        
-        .btn-secondary {
-            background: #475569 !important;
-            color: #e2e8f0 !important;
-            border: none !important;
-        }
-        
-        .btn-primary {
-            background: linear-gradient(135deg, #2563eb, #3730a3) !important;
-        }
-        
-        .empty-state i {
-            color: #374151 !important;
-        }
-        
-        .alert-success {
-            background: linear-gradient(135deg, #059669, #065f46) !important;
-        }
-    }
-}
-
-/* Enhanced animations for mobile */
-@keyframes slideInFromLeft {
-    from {
-        opacity: 0;
-        transform: translateX(-20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
-}
-
-@keyframes slideInFromRight {
-    from {
-        opacity: 0;
-        transform: translateX(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
-}
-
-/* Section animations */
-.upload-card {
-    animation: slideInFromLeft 0.5s ease-out;
-}
-
-.gallery-section {
-    animation: slideInFromRight 0.5s ease-out;
-}
-
-/* Upload progress animation */
-@keyframes uploadProgress {
-    from {
-        width: 0%;
-    }
-    to {
-        width: 100%;
-    }
-}
-
-.progress-fill {
-    animation: uploadProgress 2s ease-in-out infinite alternate;
-}
-
-/* Photo hover effects */
-@media (hover: hover) and (pointer: fine) {
-    .photo-card:hover {
-        transform: translateY(-8px);
-        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-}
-
-/* Lightbox adjustments for mobile */
-@media (max-width: 767.98px) {
-    .lb-outerContainer {
-        border-radius: 16px !important;
-        overflow: hidden;
-    }
-    
-    .lb-container {
-        padding: 0 !important;
-    }
-    
-    .lb-nav a.lb-prev,
-    .lb-nav a.lb-next {
-        width: 44px !important;
-        height: 44px !important;
-    }
-    
-    .lb-data .lb-close {
-        width: 44px !important;
-        height: 44px !important;
-        top: 10px !important;
-        right: 10px !important;
-    }
-}
-
-/* Upload button loading animation */
-@keyframes spin {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
-}
-
-.btn-primary i.fa-spinner {
-    animation: spin 1s linear infinite;
-}
-
-/* Form focus states */
-.file-input-label:focus-within,
-.btn-primary:focus,
-.btn-secondary:focus {
-    box-shadow: 0 0 0 3px rgba(58, 134, 255, 0.2) !important;
-}
-
-/* Empty state image tips */
-@media (max-width: 767.98px) {
-    .empty-state .d-flex.justify-content-center.gap-2 {
-        gap: 1rem !important;
-        flex-wrap: wrap;
-    }
-    
-    .empty-state .text-center {
-        flex: 1;
-        min-width: 100px;
-    }
-    
-    .empty-state .text-center i {
-        font-size: 1.5rem !important;
-    }
-    
-    .empty-state .text-center small {
-        font-size: 0.8rem !important;
-    }
-}
-
-/* Responsive typography */
-@media (max-width: 767.98px) {
-    h1, h2, h3, h4, h5, h6 {
-        margin-bottom: 0.75rem !important;
-    }
-    
-    p, div, span {
-        margin-bottom: 0.5rem !important;
-    }
-    
-    .mb-3 {
-        margin-bottom: 1rem !important;
-    }
-    
-    .mb-4 {
-        margin-bottom: 1.5rem !important;
-    }
-    
-    .mt-3 {
-        margin-top: 1rem !important;
-    }
-    
-    .mt-4 {
-        margin-top: 1.5rem !important;
-    }
-}
-
-/* Mobile-specific utility classes */
-@media (max-width: 767.98px) {
-    .mobile-only {
-        display: block !important;
-    }
-    
-    .desktop-only {
-        display: none !important;
-    }
-    
-    .mobile-text-center {
-        text-align: center !important;
-    }
-    
-    .mobile-stack {
-        flex-direction: column !important;
-        gap: 0.75rem !important;
-    }
-}
-
-/* Ensure proper content flow on mobile */
-@media (max-width: 767.98px) {
-    body {
-        overflow-x: hidden;
-        width: 100%;
-    }
-    
-    /* Prevent horizontal scrolling */
-    * {
-        max-width: 100%;
-        box-sizing: border-box;
-    }
-    
-    img, video, iframe {
-        max-width: 100%;
-        height: auto;
-    }
-}
-
-/* Fix for mobile keyboard */
-@media (max-width: 767.98px) {
-    input, textarea, select {
-        font-size: 16px !important; /* Prevents iOS zoom */
-    }
-}
-
-/* Accessibility improvements for mobile */
-@media (max-width: 767.98px) {
-    .btn, a, input[type="submit"], button {
-        min-height: 44px !important;
-        min-width: 44px !important;
-    }
-    
-    input, select, textarea {
-        min-height: 44px !important;
-    }
-    
-    .photo-btn {
-        min-height: 44px !important;
-        min-width: 44px !important;
-    }
-    
-    /* Focus styles for better accessibility */
-    *:focus {
-        outline: 2px solid #3a86ff !important;
-        outline-offset: 2px !important;
-    }
-}
-
-/* Smooth transitions */
-* {
-    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
-}
     </style>
 </head>
 
@@ -1843,10 +1268,15 @@ $photoCount = count($photos);
     <nav class="navbar navbar-expand-lg">
         <div class="container">
             <a class="navbar-brand logo" href="../dashboard.php">FitTrack Pro</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
+                <!-- Close button for mobile (hidden on desktop) -->
+                <button class="navbar-close" id="navbarClose" type="button">
+                    <i class="fas fa-times"></i>
+                </button>
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
                         <a class="nav-link" href="../dashboard.php">
@@ -2003,7 +1433,7 @@ $photoCount = count($photos);
 
             <?php else: ?>
                 <div class="empty-state">
-                    <i class="fas fa-images"></i>
+                    <i class="fas fa-images empty-state-icon"></i>
                     <h4>No Photos Yet</h4>
                     <p class="mb-4">Upload your first progress photo to start tracking your visual transformation!</p>
                     <div class="d-flex justify-content-center gap-2">
@@ -2095,7 +1525,7 @@ $photoCount = count($photos);
         <?php endif; ?>
 
         <!-- Tips Section -->
-        <div class="gallery-section">
+        <div class="tips-section">
             <div class="section-header">
                 <div class="section-title">
                     <i class="fas fa-lightbulb"></i>
@@ -2168,171 +1598,321 @@ $photoCount = count($photos);
         </a>
     </div>
 
-    <!-- Bootstrap JS Bundle with Popper -->
+        <!-- Bootstrap JS Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- Lightbox2 -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.3/js/lightbox.min.js"></script>
+    <!-- Use a simpler lightbox library that's more compatible -->
+    <script src="https://cdn.jsdelivr.net/npm/basiclightbox@5.0.4/dist/basicLightbox.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/basiclightbox@5.0.4/dist/basicLightbox.min.css">
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.js"></script>
 
     <script>
-        // Initialize Lightbox
-        lightbox.option({
-            'resizeDuration': 200,
-            'wrapAround': true,
-            'albumLabel': 'Photo %1 of %2',
-            'fadeDuration': 300,
-            'imageFadeDuration': 300
-        });
-
-        // Simple file name display
-        function updateFileName() {
-            const fileInput = document.getElementById('photoInput');
-            const fileNameElement = document.getElementById('fileName');
-            const selectedFileNameElement = document.getElementById('selectedFileName');
-
-            if (fileInput.files.length > 0) {
-                const file = fileInput.files[0];
-                const fileName = file.name;
-                const fileSize = (file.size / 1024 / 1024).toFixed(2); // MB
-
-                // Update button text
-                fileNameElement.textContent = fileName;
-
-                // Update file info display
-                selectedFileNameElement.innerHTML = `
-                    <i class="fas fa-file-image text-primary"></i>
-                    <span><strong>Selected file:</strong> ${fileName} (${fileSize} MB)</span>
-                `;
-            } else {
-                fileNameElement.textContent = 'Choose a photo (JPG, PNG, max 5MB)';
-                selectedFileNameElement.innerHTML = `
-                    <i class="fas fa-info-circle"></i>
-                    <span>No file selected</span>
-                `;
-            }
-        }
-
-        // Attach event listener directly
-        document.getElementById('photoInput').addEventListener('change', updateFileName);
-
-        // Also update on page load in case there's a persisted file (though unlikely)
-        document.addEventListener('DOMContentLoaded', updateFileName);
-
-        // Form submission with progress simulation
-        document.getElementById('uploadForm').addEventListener('submit', function(e) {
-            const fileInput = document.getElementById('photoInput');
-            const uploadBtn = document.getElementById('uploadBtn');
-            const progressBar = document.getElementById('uploadProgress');
-            const progressFill = document.getElementById('progressFill');
-            const uploadStatus = document.getElementById('uploadStatus');
-
-            if (!fileInput.files[0]) {
-                e.preventDefault();
-                alert('Please select a photo to upload.');
-                return;
-            }
-
-            // Validate file size (5MB max)
-            const maxSize = 5 * 1024 * 1024;
-            if (fileInput.files[0].size > maxSize) {
-                e.preventDefault();
-                alert('File size exceeds 5MB limit. Please choose a smaller image.');
-                return;
-            }
-
-            // Validate file type
-            const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
-            if (!allowedTypes.includes(fileInput.files[0].type)) {
-                e.preventDefault();
-                alert('Please select a valid image file (JPG, PNG, or GIF).');
-                return;
-            }
-
-            // Show selected file name in the progress status
-            const fileName = fileInput.files[0].name;
-            uploadStatus.textContent = `Uploading: ${fileName}`;
-
-            // Show progress bar
-            uploadBtn.disabled = true;
-            uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Uploading...';
-            progressBar.style.display = 'block';
-
-            // Simulate upload progress
-            let progress = 0;
-            const interval = setInterval(() => {
-                progress += 10;
-                progressFill.style.width = progress + '%';
-
-                if (progress >= 90) {
-                    clearInterval(interval);
-                    uploadStatus.textContent = `Processing: ${fileName}`;
-                }
-            }, 200);
-
-            // Allow form to submit normally
-            return true;
-        });
-
-        // Toggle gallery view (grid/list) - FIXED VERSION
-        function toggleGalleryView() {
-            const gallery = document.getElementById('photoGallery');
-            const toggleBtn = document.getElementById('toggleViewBtn');
-            
-            if (gallery.classList.contains('list-view')) {
-                // Switch to grid view
-                gallery.classList.remove('list-view');
-                toggleBtn.innerHTML = '<i class="fas fa-th-large me-1"></i> Grid';
-            } else {
-                // Switch to list view
-                gallery.classList.add('list-view');
-                toggleBtn.innerHTML = '<i class="fas fa-list me-1"></i> List';
-            }
-        }
-
-        // Load more photos functionality
-        let loadedPhotos = 6;
-
-        function loadMorePhotos() {
-            const loadBtn = document.querySelector('.btn-primary');
-            loadBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Loading...';
-            loadBtn.disabled = true;
-
-            setTimeout(() => {
-                alert('In a real application, this would load more photos from the server.');
-                loadBtn.innerHTML = '<i class="fas fa-plus me-2"></i>Load More Photos';
-                loadBtn.disabled = false;
-            }, 1000);
-        }
-
-        // Delete photo function with confirmation
-        function deletePhoto(filename, date) {
-            Swal.fire({
-                title: 'Delete Photo?',
-                text: `Are you sure you want to delete the photo from ${date}? This action cannot be undone.`,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#dc3545',
-                cancelButtonColor: '#6c757d',
-                confirmButtonText: 'Yes, delete it!',
-                cancelButtonText: 'Cancel',
-                reverseButtons: true
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    // Redirect to delete the photo
-                    window.location.href = `photos.php?delete=${filename}`;
-                }
-            });
-        }
-
-        // Add some sample interaction for the timeline
+        // Wait for the page to fully load
         document.addEventListener('DOMContentLoaded', function() {
+            // Initialize lightbox functionality
+            function initLightbox() {
+                const lightboxLinks = document.querySelectorAll('a[data-lightbox]');
+                
+                lightboxLinks.forEach(link => {
+                    link.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        
+                        const imgSrc = this.getAttribute('href');
+                        const imgTitle = this.getAttribute('data-title') || 'Progress Photo';
+                        
+                        // Create lightbox instance
+                        const instance = basicLightbox.create(`
+                            <div class="lightbox-container">
+                                <img src="${imgSrc}" alt="${imgTitle}" class="lightbox-image">
+                                <div class="lightbox-caption">${imgTitle}</div>
+                            </div>
+                        `, {
+                            className: 'custom-lightbox',
+                            onShow: () => {
+                                document.body.style.overflow = 'hidden';
+                            },
+                            onClose: () => {
+                                document.body.style.overflow = 'auto';
+                            }
+                        });
+                        
+                        instance.show();
+                    });
+                });
+            }
+
+            // Call lightbox initialization
+            initLightbox();
+
+            // Simple file name display
+            function updateFileName() {
+                const fileInput = document.getElementById('photoInput');
+                const fileNameElement = document.getElementById('fileName');
+                const selectedFileNameElement = document.getElementById('selectedFileName');
+
+                if (fileInput.files.length > 0) {
+                    const file = fileInput.files[0];
+                    const fileName = file.name;
+                    const fileSize = (file.size / 1024 / 1024).toFixed(2); // MB
+
+                    // Update button text
+                    fileNameElement.textContent = fileName;
+
+                    // Update file info display
+                    selectedFileNameElement.innerHTML = `
+                        <i class="fas fa-file-image text-primary"></i>
+                        <span><strong>Selected file:</strong> ${fileName} (${fileSize} MB)</span>
+                    `;
+                } else {
+                    fileNameElement.textContent = 'Choose a photo (JPG, PNG, max 5MB)';
+                    selectedFileNameElement.innerHTML = `
+                        <i class="fas fa-info-circle"></i>
+                        <span>No file selected</span>
+                    `;
+                }
+            }
+
+            // Attach event listener directly
+            document.getElementById('photoInput').addEventListener('change', updateFileName);
+
+            // Also update on page load
+            updateFileName();
+
+            // Form submission with progress simulation
+            document.getElementById('uploadForm').addEventListener('submit', function(e) {
+                const fileInput = document.getElementById('photoInput');
+                const uploadBtn = document.getElementById('uploadBtn');
+                const progressBar = document.getElementById('uploadProgress');
+                const progressFill = document.getElementById('progressFill');
+                const uploadStatus = document.getElementById('uploadStatus');
+
+                if (!fileInput.files[0]) {
+                    e.preventDefault();
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'No file selected',
+                        text: 'Please select a photo to upload.',
+                        confirmButtonColor: '#00d4ff'
+                    });
+                    return;
+                }
+
+                // Validate file size (5MB max)
+                const maxSize = 5 * 1024 * 1024;
+                if (fileInput.files[0].size > maxSize) {
+                    e.preventDefault();
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'File too large',
+                        text: 'File size exceeds 5MB limit. Please choose a smaller image.',
+                        confirmButtonColor: '#ff2d75'
+                    });
+                    return;
+                }
+
+                // Validate file type
+                const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+                if (!allowedTypes.includes(fileInput.files[0].type)) {
+                    e.preventDefault();
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Invalid file type',
+                        text: 'Please select a valid image file (JPG, PNG, or GIF).',
+                        confirmButtonColor: '#ff2d75'
+                    });
+                    return;
+                }
+
+                // Show selected file name in the progress status
+                const fileName = fileInput.files[0].name;
+                uploadStatus.textContent = `Uploading: ${fileName}`;
+
+                // Show progress bar
+                uploadBtn.disabled = true;
+                uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Uploading...';
+                progressBar.style.display = 'block';
+
+                // Simulate upload progress
+                let progress = 0;
+                const interval = setInterval(() => {
+                    progress += 10;
+                    progressFill.style.width = progress + '%';
+
+                    if (progress >= 90) {
+                        clearInterval(interval);
+                        uploadStatus.textContent = `Processing: ${fileName}`;
+                    }
+                }, 200);
+
+                // Allow form to submit normally
+                return true;
+            });
+
+            // Toggle gallery view (grid/list)
+            function toggleGalleryView() {
+                const gallery = document.getElementById('photoGallery');
+                const toggleBtn = document.getElementById('toggleViewBtn');
+                
+                if (gallery.classList.contains('list-view')) {
+                    // Switch to grid view
+                    gallery.classList.remove('list-view');
+                    toggleBtn.innerHTML = '<i class="fas fa-th-large me-1"></i> Grid';
+                } else {
+                    // Switch to list view
+                    gallery.classList.add('list-view');
+                    toggleBtn.innerHTML = '<i class="fas fa-list me-1"></i> List';
+                }
+            }
+
+            // Make toggleGalleryView globally accessible
+            window.toggleGalleryView = toggleGalleryView;
+
+            // Load more photos functionality
+            let loadedPhotos = 6;
+
+            function loadMorePhotos() {
+                const loadBtn = document.querySelector('.btn-primary');
+                loadBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Loading...';
+                loadBtn.disabled = true;
+
+                setTimeout(() => {
+                    alert('In a real application, this would load more photos from the server.');
+                    loadBtn.innerHTML = '<i class="fas fa-plus me-2"></i>Load More Photos';
+                    loadBtn.disabled = false;
+                }, 1000);
+            }
+
+            // Make loadMorePhotos globally accessible
+            window.loadMorePhotos = loadMorePhotos;
+
+            // Delete photo function with confirmation
+            function deletePhoto(filename, date) {
+                Swal.fire({
+                    title: 'Delete Photo?',
+                    text: `Are you sure you want to delete the photo from ${date}? This action cannot be undone.`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#ff2d75',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Yes, delete it!',
+                    cancelButtonText: 'Cancel',
+                    reverseButtons: true
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Redirect to delete the photo
+                        window.location.href = `photos.php?delete=${filename}`;
+                    }
+                });
+            }
+
+            // Make deletePhoto globally accessible
+            window.deletePhoto = deletePhoto;
+
+            // Add some sample interaction for the timeline
             const timelineDots = document.querySelectorAll('.timeline-dot');
             timelineDots.forEach((dot, index) => {
                 dot.addEventListener('click', function() {
                     alert('Viewing photos from ' + (index === 0 ? 'the beginning' : index === 1 ? 'mid-journey' : 'recent') + ' of your transformation.');
                 });
             });
+
+            // Mobile navigation handling (same as charts.php)
+            const navbarToggler = document.querySelector('.navbar-toggler');
+            const navbarClose = document.getElementById('navbarClose');
+
+            if (navbarToggler) {
+                navbarToggler.addEventListener('click', function() {
+                    const icon = this.querySelector('.navbar-toggler-icon');
+                    if (icon) {
+                        if (this.getAttribute('aria-expanded') === 'true') {
+                            icon.style.transform = 'rotate(90deg)';
+                            document.body.classList.add('menu-open');
+                        } else {
+                            icon.style.transform = 'rotate(0deg)';
+                            document.body.classList.remove('menu-open');
+                        }
+                    }
+                });
+            }
+
+            if (navbarClose) {
+                navbarClose.addEventListener('click', function() {
+                    const navbarCollapse = document.querySelector('.navbar-collapse');
+                    if (navbarCollapse.classList.contains('show')) {
+                        navbarToggler.click();
+                    }
+                });
+            }
+
+            // Close menu when clicking on a nav link (on mobile)
+            const navLinks = document.querySelectorAll('.navbar-nav .nav-link');
+            navLinks.forEach(link => {
+                link.addEventListener('click', function() {
+                    if (window.innerWidth < 992) {
+                        const navbarCollapse = document.querySelector('.navbar-collapse');
+                        if (navbarCollapse.classList.contains('show')) {
+                            navbarToggler.click();
+                        }
+                    }
+                });
+            });
+
+            // Close menu when clicking outside (for mobile)
+            document.addEventListener('click', function(event) {
+                if (window.innerWidth < 992) {
+                    const navbarCollapse = document.querySelector('.navbar-collapse');
+                    const isClickInsideNavbar = document.querySelector('.navbar').contains(event.target);
+
+                    if (navbarCollapse && navbarCollapse.classList.contains('show') && !isClickInsideNavbar) {
+                        navbarToggler.click();
+                    }
+                }
+            });
+
+            // Make updateFileName globally accessible
+            window.updateFileName = updateFileName;
+
+            // Add custom styles for the lightbox
+            const style = document.createElement('style');
+            style.textContent = `
+                .custom-lightbox {
+                    background: rgba(0, 0, 0, 0.9) !important;
+                    backdrop-filter: blur(20px) !important;
+                    -webkit-backdrop-filter: blur(20px) !important;
+                }
+                
+                .lightbox-container {
+                    position: relative;
+                    max-width: 90vw;
+                    max-height: 90vh;
+                    margin: auto;
+                }
+                
+                .lightbox-image {
+                    max-width: 100%;
+                    max-height: 80vh;
+                    display: block;
+                    margin: 0 auto;
+                    border-radius: 12px;
+                    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+                }
+                
+                .lightbox-caption {
+                    text-align: center;
+                    color: white;
+                    padding: 1rem;
+                    font-size: 1.1rem;
+                    background: rgba(0, 0, 0, 0.7);
+                    border-radius: 0 0 12px 12px;
+                    margin-top: -5px;
+                }
+                
+                .basicLightbox__placeholder {
+                    max-width: 95vw !important;
+                    max-height: 95vh !important;
+                }
+            `;
+            document.head.appendChild(style);
         });
     </script>
 </body>
