@@ -1,9 +1,22 @@
 <?php
+// Start session at the very beginning
+session_start();
+
+// Error reporting for debugging
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 require_once 'includes/functions.php';
 require_login();
 
 require_once 'includes/db.php';
 $user_id = get_user_id();
+
+// Check if user is logged in and session has user_name
+if (!isset($_SESSION['user_name'])) {
+    header('Location: login.php');
+    exit();
+}
 
 // ==================== PAKISTAN ISLAMABAD TIMEZONE ====================
 // Set timezone to Pakistan (Islamabad) - UTC+5
@@ -40,41 +53,81 @@ $pakistan_hour_js = date('H');
 $pakistan_timestamp = time(); // Current timestamp in Pakistan time
 // ================================================================
 
+// Initialize variables to avoid undefined errors
+$today_workout = ['count' => 0, 'total_duration' => 0];
+$today_exercises = [];
+$today_meals_display = [];
+$today_meals = ['total_calories' => 0];
+$goal_info = null;
+$streak = 0;
+$achievements_count = 0;
+$weekly_data = [];
+
 // Get today's workout stats
-$stmt = $pdo->prepare("SELECT COUNT(*) as count, SUM(duration) as total_duration FROM workouts WHERE user_id = ? AND DATE(CONVERT_TZ(date, '+00:00', '+05:00')) = ?");
-$stmt->execute([$user_id, $today]);
-$today_workout = $stmt->fetch();
+try {
+    $stmt = $pdo->prepare("SELECT COUNT(*) as count, SUM(duration) as total_duration FROM workouts WHERE user_id = ? AND DATE(CONVERT_TZ(date, '+00:00', '+05:00')) = ?");
+    $stmt->execute([$user_id, $today]);
+    $today_workout = $stmt->fetch(PDO::FETCH_ASSOC);
+    if (!$today_workout) {
+        $today_workout = ['count' => 0, 'total_duration' => 0];
+    }
+} catch (PDOException $e) {
+    error_log("Database error (workout stats): " . $e->getMessage());
+}
 
 // Get today's exercises for display
-$stmt = $pdo->prepare("SELECT exercise, sets, reps, weight, duration, distance, date FROM workouts WHERE user_id = ? AND DATE(CONVERT_TZ(date, '+00:00', '+05:00')) = ? ORDER BY date DESC LIMIT 5");
-$stmt->execute([$user_id, $today]);
-$today_exercises = $stmt->fetchAll();
+try {
+    $stmt = $pdo->prepare("SELECT exercise, sets, reps, weight, duration, distance, date FROM workouts WHERE user_id = ? AND DATE(CONVERT_TZ(date, '+00:00', '+05:00')) = ? ORDER BY date DESC LIMIT 5");
+    $stmt->execute([$user_id, $today]);
+    $today_exercises = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    error_log("Database error (today exercises): " . $e->getMessage());
+}
 
 // Get today's meals for display
-$stmt = $pdo->prepare("SELECT meal_time, food_name, calories, protein, carbs, fat, date FROM meals WHERE user_id = ? AND DATE(CONVERT_TZ(date, '+00:00', '+05:00')) = ? ORDER BY 
-    CASE meal_time 
-        WHEN 'breakfast' THEN 1
-        WHEN 'lunch' THEN 2
-        WHEN 'dinner' THEN 3
-        WHEN 'snack' THEN 4
-        ELSE 5
-    END, id DESC LIMIT 5");
-$stmt->execute([$user_id, $today]);
-$today_meals_display = $stmt->fetchAll();
+try {
+    $stmt = $pdo->prepare("SELECT meal_time, food_name, calories, protein, carbs, fat, date FROM meals WHERE user_id = ? AND DATE(CONVERT_TZ(date, '+00:00', '+05:00')) = ? ORDER BY 
+        CASE meal_time 
+            WHEN 'breakfast' THEN 1
+            WHEN 'lunch' THEN 2
+            WHEN 'dinner' THEN 3
+            WHEN 'snack' THEN 4
+            ELSE 5
+        END, id DESC LIMIT 5");
+    $stmt->execute([$user_id, $today]);
+    $today_meals_display = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    error_log("Database error (today meals): " . $e->getMessage());
+}
 
 // Get meal stats
-$stmt = $pdo->prepare("SELECT SUM(calories) as total_calories FROM meals WHERE user_id = ? AND DATE(CONVERT_TZ(date, '+00:00', '+05:00')) = ?");
-$stmt->execute([$user_id, $today]);
-$today_meals = $stmt->fetch();
+try {
+    $stmt = $pdo->prepare("SELECT SUM(calories) as total_calories FROM meals WHERE user_id = ? AND DATE(CONVERT_TZ(date, '+00:00', '+05:00')) = ?");
+    $stmt->execute([$user_id, $today]);
+    $today_meals = $stmt->fetch(PDO::FETCH_ASSOC);
+    if (!$today_meals || $today_meals['total_calories'] === null) {
+        $today_meals = ['total_calories' => 0];
+    }
+} catch (PDOException $e) {
+    error_log("Database error (meal stats): " . $e->getMessage());
+}
 
 // Get goal info
-$stmt = $pdo->prepare("SELECT goal_weight, goal_type, weight FROM users WHERE id = ?");
-$stmt->execute([$user_id]);
-$goal_info = $stmt->fetch();
+try {
+    $stmt = $pdo->prepare("SELECT goal_weight, goal_type, weight FROM users WHERE id = ?");
+    $stmt->execute([$user_id]);
+    $goal_info = $stmt->fetch(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    error_log("Database error (goal info): " . $e->getMessage());
+}
 
 // Calculate goal progress
 $goal_progress = 0;
-if ($goal_info && $goal_info['goal_weight'] && $goal_info['weight']) {
+if (
+    $goal_info && isset($goal_info['goal_weight']) && isset($goal_info['weight']) &&
+    $goal_info['goal_weight'] && $goal_info['weight']
+) {
+
     if ($goal_info['goal_type'] == 'lose') {
         if ($goal_info['weight'] > $goal_info['goal_weight']) {
             $total_to_lose = $goal_info['weight'] - $goal_info['goal_weight'];
@@ -93,41 +146,56 @@ if ($goal_info && $goal_info['goal_weight'] && $goal_info['weight']) {
 }
 
 // Calculate streak manually with Pakistan timezone
-$stmt = $pdo->prepare("SELECT COUNT(DISTINCT DATE(CONVERT_TZ(date, '+00:00', '+05:00'))) as streak FROM (
-    SELECT date FROM workouts WHERE user_id = ? AND DATE(CONVERT_TZ(date, '+00:00', '+05:00')) <= ? 
-    ORDER BY date DESC
-) as recent_workouts WHERE DATE(CONVERT_TZ(date, '+00:00', '+05:00')) >= DATE_SUB(?, INTERVAL 6 DAY)");
-$stmt->execute([$user_id, $today, $today]);
-$streak_data = $stmt->fetch();
-$streak = $streak_data['streak'] ?? 0;
+try {
+    $stmt = $pdo->prepare("SELECT COUNT(DISTINCT DATE(CONVERT_TZ(date, '+00:00', '+05:00'))) as streak FROM (
+        SELECT date FROM workouts WHERE user_id = ? AND DATE(CONVERT_TZ(date, '+00:00', '+05:00')) <= ? 
+        ORDER BY date DESC
+    ) as recent_workouts WHERE DATE(CONVERT_TZ(date, '+00:00', '+05:00')) >= DATE_SUB(?, INTERVAL 6 DAY)");
+    $stmt->execute([$user_id, $today, $today]);
+    $streak_data = $stmt->fetch(PDO::FETCH_ASSOC);
+    $streak = $streak_data['streak'] ?? 0;
+} catch (PDOException $e) {
+    error_log("Database error (streak): " . $e->getMessage());
+}
 
 // Get achievements count
-$stmt = $pdo->prepare("SELECT COUNT(*) as badge_count FROM achievements WHERE user_id = ?");
-$stmt->execute([$user_id]);
-$achievements_data = $stmt->fetch();
-$achievements_count = $achievements_data['badge_count'] ?? 0;
+try {
+    $stmt = $pdo->prepare("SELECT COUNT(*) as badge_count FROM achievements WHERE user_id = ?");
+    $stmt->execute([$user_id]);
+    $achievements_data = $stmt->fetch(PDO::FETCH_ASSOC);
+    $achievements_count = $achievements_data['badge_count'] ?? 0;
+} catch (PDOException $e) {
+    error_log("Database error (achievements): " . $e->getMessage());
+}
 
 // Get weekly workout minutes for chart (Pakistan timezone)
-$weekly_data = [];
-for ($i = 6; $i >= 0; $i--) {
-    $day = date('Y-m-d', strtotime("-$i days"));
-    $stmt = $pdo->prepare("SELECT SUM(duration) as total FROM workouts WHERE user_id = ? AND DATE(CONVERT_TZ(date, '+00:00', '+05:00')) = ?");
-    $stmt->execute([$user_id, $day]);
-    $day_data = $stmt->fetch();
-    $weekly_data[] = [
-        'day' => date('D', strtotime($day)),
-        'minutes' => $day_data['total'] ?? 0
-    ];
+try {
+    for ($i = 6; $i >= 0; $i--) {
+        $day = date('Y-m-d', strtotime("-$i days"));
+        $stmt = $pdo->prepare("SELECT SUM(duration) as total FROM workouts WHERE user_id = ? AND DATE(CONVERT_TZ(date, '+00:00', '+05:00')) = ?");
+        $stmt->execute([$user_id, $day]);
+        $day_data = $stmt->fetch(PDO::FETCH_ASSOC);
+        $weekly_data[] = [
+            'day' => date('D', strtotime($day)),
+            'minutes' => $day_data['total'] ?? 0
+        ];
+    }
+} catch (PDOException $e) {
+    error_log("Database error (weekly data): " . $e->getMessage());
 }
 
 // Function to format datetime in Pakistan timezone
-function formatPakistanTime($datetime) {
+function formatPakistanTime($datetime)
+{
     if (empty($datetime)) return '';
-    
-    // If the datetime is already in Pakistan timezone (from CONVERT_TZ in query)
-    // just format it
-    $date = new DateTime($datetime, new DateTimeZone('Asia/Karachi'));
-    return $date->format('g:i A');
+
+    try {
+        $date = new DateTime($datetime, new DateTimeZone('Asia/Karachi'));
+        return $date->format('g:i A');
+    } catch (Exception $e) {
+        error_log("Date formatting error: " . $e->getMessage());
+        return '';
+    }
 }
 
 // Get server timestamp for JavaScript - in Pakistan timezone
@@ -136,11 +204,12 @@ $server_timestamp = $pakistan_timestamp * 1000; // Convert to milliseconds for J
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Dashboard - FitTrack Pro</title>
-    
+
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome Icons -->
@@ -149,1613 +218,1581 @@ $server_timestamp = $pakistan_timestamp * 1000; // Convert to milliseconds for J
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Montserrat:wght@800;900&display=swap" rel="stylesheet">
     <!-- Chart.js for graphs -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
+
     <style>
         :root {
-            --primary-color: #3a86ff;
-            --primary-dark: #2667cc;
-            --secondary-color: #ff006e;
-            --accent-color: #8338ec;
-            --success-color: #38b000;
-            --warning-color: #ffbe0b;
-            --light-color: #f8f9fa;
-            --dark-color: #212529;
-            --gradient-primary: linear-gradient(135deg, #3a86ff, #8338ec);
-            --gradient-secondary: linear-gradient(135deg, #ff006e, #fb5607);
-            --gradient-success: linear-gradient(135deg, #38b000, #70e000);
-            --shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-            --border-radius: 16px;
+            --primary: #00d4ff;
+            --primary-dark: #0099cc;
+            --secondary: #ff2d75;
+            --accent: #9d4edd;
+            --success: #00e676;
+            --warning: #ffc107;
+            --error: #ff4757;
+            --dark: #0a0f23;
+            --darker: #070a17;
+            --light: #f8fafc;
+            --gray: #64748b;
+            --card-bg: rgba(255, 255, 255, 0.03);
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --gradient: linear-gradient(135deg, #00d4ff 0%, #9d4edd 50%, #ff2d75 100%);
+            --gradient-primary: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
+            --gradient-secondary: linear-gradient(135deg, #ff2d75 0%, #ff006e 100%);
+            --gradient-accent: linear-gradient(135deg, #9d4edd 0%, #8338ec 100%);
+            --gradient-success: linear-gradient(135deg, #00e676 0%, #00b894 100%);
+            --neon-shadow: 0 0 30px rgba(0, 212, 255, 0.4);
+            --glow: drop-shadow(0 0 10px rgba(0, 212, 255, 0.5));
         }
-        
+
         * {
-            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-        
+
         body {
-            background-color: #f5f9ff;
-            color: var(--dark-color);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--darker);
+            color: var(--light);
             min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+            padding-top: 80px;
+            /* Increased padding for better spacing */
         }
-        
-        .logo {
-            font-family: 'Montserrat', sans-serif;
-            font-weight: 900;
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background:
+                radial-gradient(circle at 10% 20%, rgba(0, 212, 255, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(255, 45, 117, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 50% 50%, rgba(157, 78, 221, 0.1) 0%, transparent 60%);
+            z-index: -2;
+        }
+
+        /* ==================== FIXED NAVIGATION ==================== */
+        /* Desktop Navigation (Visible on large screens) */
+        .navbar {
+            background: rgba(10, 15, 35, 0.98) !important;
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 0.8rem 0;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+            height: 80px;
+        }
+
+        .navbar-brand.logo {
             font-size: 1.8rem;
-            background: var(--gradient-secondary);
+            font-weight: 900;
+            background: var(--gradient);
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            filter: var(--glow);
+            letter-spacing: -0.5px;
+            margin-left: 1rem;
         }
-        
-        .navbar {
-            background: white;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-            padding: 1rem 0;
+
+        .navbar-toggler {
+            border: 1px solid rgba(255, 255, 255, 0.2) !important;
+            padding: 0.5rem 0.8rem;
+            margin-right: 1rem;
+            background: transparent !important;
+            transition: all 0.3s ease;
+            display: none;
+            /* Hidden by default, shown only on mobile */
         }
-        
-        .nav-link {
-            color: #495057;
+
+        .navbar-toggler:focus {
+            box-shadow: 0 0 0 2px rgba(0, 212, 255, 0.3) !important;
+            outline: none !important;
+        }
+
+        .navbar-toggler-icon {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 0.8%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") !important;
+            width: 1.5em;
+            height: 1.5em;
+            transition: transform 0.3s ease;
+        }
+
+        .navbar-collapse {
+            background: rgba(10, 15, 35, 0.98);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border-radius: 0 0 15px 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-top: none;
+        }
+
+        .navbar-nav {
+            gap: 0.5rem;
+        }
+
+        .navbar-nav .nav-link {
+            padding: 12px 20px;
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             font-weight: 500;
-            padding: 0.5rem 1rem;
-            border-radius: 10px;
-            transition: all 0.3s;
-        }
-        
-        .nav-link:hover, .nav-link.active {
-            background: var(--gradient-primary);
-            color: white;
-        }
-        
-        .nav-link i {
-            margin-right: 8px;
-        }
-        
-        .dashboard-header {
-            background: var(--gradient-primary);
-            color: white;
-            border-radius: var(--border-radius);
-            padding: 2rem;
-            margin-bottom: 2rem;
             position: relative;
             overflow: hidden;
         }
-        
-        .dashboard-header::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            right: -10%;
-            width: 300px;
-            height: 300px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 50%;
+
+        .navbar-nav .nav-link.active {
+            background: var(--gradient-primary);
+            color: white;
+            box-shadow: 0 4px 20px rgba(0, 212, 255, 0.3);
         }
-        
+
+        .navbar-nav .nav-link:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-2px);
+        }
+
+        .navbar-nav .nav-link i {
+            font-size: 1.2rem;
+            width: 20px;
+        }
+
+        /* ==================== DASHBOARD HEADER ==================== */
+        .dashboard-header {
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(157, 78, 221, 0.1));
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 28px;
+            padding: 2.5rem;
+            margin: 2rem 0;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
         .dashboard-header h1 {
-            font-size: 2.2rem;
-            margin-bottom: 0.5rem;
+            font-size: 2.5rem;
+            font-weight: 900;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #ffffff 0%, var(--primary) 50%, var(--accent) 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            line-height: 1.2;
+            letter-spacing: -0.5px;
         }
-        
-        .greeting {
-            font-size: 1.1rem;
-            opacity: 0.9;
+
+        .dashboard-header .greeting {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 1.2rem;
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
         }
-        
+
         .date-display {
-            background: rgba(255, 255, 255, 0.15);
-            padding: 0.5rem 1.5rem;
-            border-radius: 50px;
-            display: inline-flex;
+            display: flex;
             align-items: center;
-            font-weight: 500;
-            margin-top: 1rem;
+            gap: 1rem;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
         }
-        
+
         .date-display i {
-            margin-right: 10px;
+            color: var(--primary);
         }
-        
+
         .streak-badge {
             background: var(--gradient-secondary);
             color: white;
-            padding: 0.5rem 1rem;
-            border-radius: 50px;
+            padding: 0.8rem 1.8rem;
+            border-radius: 25px;
             display: inline-flex;
             align-items: center;
-            font-weight: 600;
-            margin-left: 1rem;
+            gap: 10px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            box-shadow: 0 5px 20px rgba(255, 45, 117, 0.3);
+            margin-left: 2rem;
         }
-        
-        .stats-card {
-            background: white;
-            border-radius: var(--border-radius);
-            padding: 1.5rem;
-            box-shadow: var(--shadow);
-            border: none;
-            height: 100%;
-            transition: transform 0.3s;
+
+        /* Exercises Card */
+        .exercises-card {
+            background: linear-gradient(145deg, rgba(0, 212, 255, 0.05), rgba(0, 212, 255, 0.02));
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(0, 212, 255, 0.15);
+            border-radius: 28px;
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 20px 60px rgba(0, 212, 255, 0.1);
         }
-        
-        .stats-card:hover {
-            transform: translateY(-5px);
+
+        .exercises-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
-        
-        .stats-icon {
-            width: 60px;
-            height: 60px;
-            border-radius: 15px;
+
+        .exercises-title {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .exercises-title h4 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: white;
+            margin: 0;
+        }
+
+        .exercises-count {
+            background: var(--gradient-primary);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            /* Fixed: Always circle */
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.5rem;
-            margin-bottom: 1rem;
+            font-weight: 800;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+            /* Prevents distortion */
         }
-        
-        .stats-value {
-            font-size: 2rem;
+
+        .exercises-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+        }
+
+        .exercise-item {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 20px;
+            padding: 1.8rem;
+            border-left: 5px solid var(--primary);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .exercise-item:hover {
+            transform: translateY(-5px);
+            background: rgba(0, 212, 255, 0.08);
+            border-left-color: var(--secondary);
+            box-shadow: 0 15px 40px rgba(0, 212, 255, 0.15);
+        }
+
+        .exercise-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1.5rem;
+        }
+
+        .exercise-name {
+            font-size: 1.4rem;
+            font-weight: 800;
+            margin-bottom: 0.8rem;
+            color: white;
+            letter-spacing: -0.3px;
+        }
+
+        .exercise-category {
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
             font-weight: 700;
-            margin-bottom: 0.25rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
-        
-        .stats-label {
-            color: #6c757d;
-            font-size: 0.9rem;
-            font-weight: 500;
-        }
-        
-        .progress-card {
-            background: white;
-            border-radius: var(--border-radius);
-            padding: 1.5rem;
-            box-shadow: var(--shadow);
-            border: none;
-        }
-        
-        .progress-title {
-            font-weight: 600;
-            margin-bottom: 1rem;
+
+        .exercise-time {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.95rem;
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            gap: 8px;
+            font-weight: 500;
         }
-        
-        .progress-bar-custom {
-            height: 12px;
-            border-radius: 10px;
-            background-color: #e9ecef;
-            overflow: hidden;
+
+        .exercise-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+        }
+
+        .stat-item {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 16px;
+            padding: 1.2rem;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .stat-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            transform: translateY(-2px);
+        }
+
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            margin: 0 auto 0.8rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+        }
+
+        .stat-icon.strength-stat {
+            background: rgba(0, 212, 255, 0.1);
+            color: var(--primary);
+        }
+
+        .stat-icon.weight-stat {
+            background: rgba(0, 230, 118, 0.1);
+            color: var(--success);
+        }
+
+        .stat-icon.cardio-stat {
+            background: rgba(255, 45, 117, 0.1);
+            color: var(--secondary);
+        }
+
+        .stat-icon.time-stat {
+            background: rgba(157, 78, 221, 0.1);
+            color: var(--accent);
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 900;
+            margin-bottom: 0.25rem;
+            color: white;
+        }
+
+        .stat-label {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.9rem;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        .view-all-exercises {
+            text-align: center;
+            margin-top: 2rem;
+        }
+
+        .empty-exercises {
+            text-align: center;
+            padding: 4rem 2rem;
+        }
+
+        .empty-exercises-icon {
+            font-size: 5rem;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 1.5rem;
+            opacity: 0.5;
+        }
+
+        .empty-exercises h4 {
+            font-size: 1.8rem;
+            font-weight: 800;
             margin-bottom: 1rem;
+            color: white;
+            letter-spacing: -0.5px;
         }
-        
-        .progress-fill {
+
+        .empty-exercises p {
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 2rem;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+            line-height: 1.6;
+            font-size: 1.1rem;
+        }
+
+        /* Meals Card */
+        .meals-card {
+            background: linear-gradient(145deg, rgba(255, 45, 117, 0.05), rgba(255, 45, 117, 0.02));
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 45, 117, 0.15);
+            border-radius: 28px;
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 20px 60px rgba(255, 45, 117, 0.1);
+        }
+
+        .meals-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .meals-title {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .meals-title h4 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: white;
+            margin: 0;
+        }
+
+        .meals-count {
+            background: var(--gradient-secondary);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            /* Fixed: Always circle */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+            /* Prevents distortion */
+        }
+
+        .meals-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+        }
+
+        .meal-item {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 20px;
+            padding: 1.8rem;
+            border-left: 5px solid var(--secondary);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .meal-item:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 45, 117, 0.08);
+            border-left-color: var(--accent);
+            box-shadow: 0 15px 40px rgba(255, 45, 117, 0.15);
+        }
+
+        .meal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1.5rem;
+        }
+
+        .meal-name {
+            font-size: 1.4rem;
+            font-weight: 800;
+            margin-bottom: 0.8rem;
+            color: white;
+            letter-spacing: -0.3px;
+        }
+
+        .meal-type {
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .meal-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+        }
+
+        .meal-stat-item {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 16px;
+            padding: 1.2rem;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .meal-stat-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            transform: translateY(-2px);
+        }
+
+        .meal-stat-icon {
+            width: 50px;
+            height: 50px;
+            margin: 0 auto 0.8rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+        }
+
+        .meal-stat-icon.calorie-stat {
+            background: rgba(255, 45, 117, 0.1);
+            color: var(--secondary);
+        }
+
+        .meal-stat-icon.protein-stat {
+            background: rgba(0, 212, 255, 0.1);
+            color: var(--primary);
+        }
+
+        .meal-stat-icon.carbs-stat {
+            background: rgba(0, 230, 118, 0.1);
+            color: var(--success);
+        }
+
+        .meal-stat-icon.fat-stat {
+            background: rgba(255, 193, 7, 0.1);
+            color: var(--warning);
+        }
+
+        .meal-stat-value {
+            font-size: 1.8rem;
+            font-weight: 900;
+            margin-bottom: 0.25rem;
+            color: white;
+        }
+
+        .meal-stat-label {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.9rem;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        .view-all-meals {
+            text-align: center;
+            margin-top: 2rem;
+        }
+
+        .empty-meals {
+            text-align: center;
+            padding: 4rem 2rem;
+        }
+
+        .empty-meals-icon {
+            font-size: 5rem;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 1.5rem;
+            opacity: 0.5;
+        }
+
+        .empty-meals h4 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            color: white;
+            letter-spacing: -0.5px;
+        }
+
+        .empty-meals p {
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 2rem;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+            line-height: 1.6;
+            font-size: 1.1rem;
+        }
+
+        /* Stats Cards */
+        .stats-card {
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
             height: 100%;
-            border-radius: 10px;
-            background: var(--gradient-success);
-            transition: width 1s ease-in-out;
         }
-        
+
+        .stats-card:hover {
+            transform: translateY(-10px);
+            border-color: var(--primary);
+            box-shadow: 0 20px 60px rgba(0, 212, 255, 0.2);
+        }
+
+        .stats-icon {
+            width: 70px;
+            height: 70px;
+            margin: 0 auto 1.5rem;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .stats-card:hover .stats-icon {
+            background: var(--gradient);
+            color: white;
+            transform: scale(1.1);
+        }
+
+        .stats-value {
+            font-size: 2.8rem;
+            font-weight: 900;
+            margin-bottom: 0.5rem;
+            position: relative;
+            z-index: 1;
+            line-height: 1;
+            color: white;
+        }
+
+        .stats-label {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 1rem;
+            font-weight: 500;
+            margin-bottom: 1rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Chart Container */
+        .chart-container {
+            background: linear-gradient(145deg, rgba(157, 78, 221, 0.05), rgba(157, 78, 221, 0.02));
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(157, 78, 221, 0.15);
+            border-radius: 28px;
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 20px 60px rgba(157, 78, 221, 0.1);
+        }
+
+        .chart-title {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            letter-spacing: -0.5px;
+            margin-bottom: 2rem;
+        }
+
+        .chart-title i {
+            color: var(--accent);
+            font-size: 1.5rem;
+        }
+
+        /* Quick Actions */
         .quick-actions {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 1rem;
-            margin: 2rem 0;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
         }
-        
+
         .action-card {
-            background: white;
-            border-radius: var(--border-radius);
-            padding: 1.5rem;
+            background: linear-gradient(145deg, rgba(0, 230, 118, 0.05), rgba(0, 230, 118, 0.02));
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(0, 230, 118, 0.15);
+            border-radius: 20px;
+            padding: 2rem;
             text-align: center;
-            box-shadow: var(--shadow);
-            border: none;
-            transition: all 0.3s;
             text-decoration: none;
             color: inherit;
-            display: block;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
-        
+
         .action-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-            color: inherit;
+            transform: translateY(-8px);
+            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--primary);
+            color: white;
+            box-shadow: 0 20px 40px rgba(0, 212, 255, 0.2);
         }
-        
+
         .action-icon {
+            width: 70px;
+            height: 70px;
+            margin-bottom: 1.5rem;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            background: rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .action-card:hover .action-icon {
+            background: var(--gradient);
+            color: white;
+            transform: scale(1.1);
+        }
+
+        .action-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 0.8rem;
+            color: white;
+        }
+
+        .action-desc {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        /* Goal Cards */
+        .goal-card {
+            background: linear-gradient(145deg, rgba(255, 193, 7, 0.05), rgba(255, 193, 7, 0.02));
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 193, 7, 0.15);
+            border-radius: 28px;
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 20px 60px rgba(255, 193, 7, 0.1);
+        }
+
+        .goal-header {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .goal-icon {
             width: 70px;
             height: 70px;
             border-radius: 20px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 2rem;
-            margin: 0 auto 1rem;
+            font-size: 1.8rem;
+            color: white;
+            box-shadow: 0 10px 30px rgba(0, 230, 118, 0.3);
         }
-        
-        .action-title {
-            font-weight: 600;
+
+        .goal-header h5 {
+            font-size: 1.6rem;
+            font-weight: 800;
             margin-bottom: 0.5rem;
+            color: white;
+            letter-spacing: -0.5px;
         }
-        
-        .action-desc {
-            color: #6c757d;
-            font-size: 0.9rem;
+
+        .progress-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.2rem;
         }
-        
-        .goal-card {
-            background: white;
-            border-radius: var(--border-radius);
-            padding: 1.5rem;
-            box-shadow: var(--shadow);
-            border: none;
+
+        .progress-title span {
+            font-weight: 700;
+            color: white;
+            font-size: 1.1rem;
+        }
+
+        .progress-title .fw-bold.text-success {
+            font-weight: 900;
+            font-size: 1.8rem;
+            background: var(--gradient-success);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .progress-bar-custom {
+            height: 14px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 7px;
+            overflow: hidden;
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--gradient-success);
+            border-radius: 7px;
+            width: 0;
+            transition: width 1.5s ease-in-out;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        .goal-stats {
+            display: grid;
+            grid-template-columns: repeat(1, 1fr);
+            gap: 1.5rem;
             margin-bottom: 2rem;
         }
-        
-        .goal-header {
-            display: flex;
-            align-items: center;
-            margin-bottom: 1.5rem;
+
+        .goal-stat {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 16px;
+            padding: 1.5rem;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
         }
-        
-        .goal-icon {
-            width: 50px;
-            height: 50px;
-            border-radius: 12px;
+
+        .goal-stat:hover {
+            background: rgba(255, 255, 255, 0.05);
+            transform: translateY(-3px);
+        }
+
+        .goal-value {
+            font-size: 2rem;
+            font-weight: 900;
+            margin-bottom: 0.5rem;
+            color: white;
+        }
+
+        .goal-label {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.9rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Mobile navbar close button */
+        .navbar-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.5rem;
-            margin-right: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 1003;
+            display: none;
         }
-        
-        .goal-stats {
-            display: flex;
-            justify-content: space-between;
-            background: #f8f9fa;
-            padding: 1rem;
-            border-radius: 12px;
-            margin: 1rem 0;
+
+        .navbar-close:hover {
+            background: var(--secondary);
+            transform: rotate(90deg);
         }
-        
-        .goal-stat {
-            text-align: center;
-            flex: 1;
-        }
-        
-        .goal-value {
-            font-size: 1.5rem;
-            font-weight: 700;
-            margin-bottom: 0.25rem;
-        }
-        
-        .goal-label {
-            color: #6c757d;
-            font-size: 0.85rem;
-        }
-        
-        .chart-container {
-            background: white;
-            border-radius: var(--border-radius);
-            padding: 1.5rem;
-            box-shadow: var(--shadow);
-            border: none;
-            margin-bottom: 2rem;
-        }
-        
-        .chart-title {
-            font-weight: 600;
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-        }
-        
+
+        /* Footer */
         .footer {
             text-align: center;
-            padding: 2rem 0;
-            color: #6c757d;
+            padding: 3rem 0;
+            color: rgba(255, 255, 255, 0.5);
             font-size: 0.9rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
             margin-top: 3rem;
         }
-        
-        .mobile-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: white;
-            box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.1);
-            padding: 0.75rem;
-            display: none;
-            z-index: 1000;
-        }
-        
-        .mobile-nav-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+
+        .footer a {
+            color: rgba(255, 255, 255, 0.6);
             text-decoration: none;
-            color: #6c757d;
-            font-size: 0.8rem;
-        }
-        
-        .mobile-nav-item.active {
-            color: var(--primary-color);
-        }
-        
-        .mobile-nav-item i {
-            font-size: 1.2rem;
-            margin-bottom: 0.25rem;
-        }
-        
-        /* Today's Exercises - IMPROVED STYLES */
-        .exercises-card {
-            background: white;
-            border-radius: var(--border-radius);
-            padding: 1.75rem;
-            box-shadow: var(--shadow);
-            border: none;
-            margin-bottom: 2rem;
-        }
-        
-        .exercises-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.5rem;
-            padding-bottom: 1rem;
-            border-bottom: 2px solid #f0f4ff;
-        }
-        
-        .exercises-title {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-        
-        .exercises-count {
-            background: var(--gradient-primary);
-            color: white;
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.95rem;
-            font-weight: 700;
-        }
-        
-        .exercise-item {
-            background: #f8f9ff;
-            border-radius: 12px;
-            padding: 1.25rem;
-            margin-bottom: 1rem;
-            border-left: 4px solid var(--primary-color);
             transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
+            font-weight: 500;
         }
-        
-        .exercise-item:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(58, 134, 255, 0.15);
+
+        .footer a:hover {
+            color: var(--primary);
+            transform: translateY(-2px);
         }
-        
-        .exercise-item::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 4px;
-            height: 100%;
-            background: var(--primary-color);
-        }
-        
-        .exercise-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 0.75rem;
-        }
-        
-        .exercise-name {
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: var(--dark-color);
-            margin-bottom: 0.25rem;
-        }
-        
-        .exercise-category {
-            display: inline-block;
-            padding: 0.25rem 0.75rem;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        
-        .exercise-time {
-            color: #6c757d;
-            font-size: 0.85rem;
-            display: flex;
-            align-items: center;
-            gap: 0.25rem;
-        }
-        
-        .exercise-stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 0.75rem;
-            margin-top: 1rem;
-        }
-        
-        .stat-item {
-            background: white;
-            border-radius: 10px;
-            padding: 0.75rem;
-            text-align: center;
-            border: 1px solid #e9ecef;
-        }
-        
-        .stat-icon {
-            width: 32px;
-            height: 32px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 0.5rem;
-            font-size: 0.9rem;
-        }
-        
-        .stat-value {
-            font-weight: 700;
-            font-size: 1.1rem;
-            margin-bottom: 0.125rem;
-        }
-        
-        .stat-label {
-            color: #6c757d;
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        
-        .cardio-stat {
-            color: #ff006e;
-            background: rgba(255, 0, 110, 0.1);
-        }
-        
-        .strength-stat {
-            color: #3a86ff;
-            background: rgba(58, 134, 255, 0.1);
-        }
-        
-        .weight-stat {
-            color: #38b000;
-            background: rgba(56, 176, 0, 0.1);
-        }
-        
-        .time-stat {
-            color: #8338ec;
-            background: rgba(131, 56, 236, 0.1);
-        }
-        
-        .empty-exercises {
-            text-align: center;
-            padding: 3rem 2rem;
-        }
-        
-        .empty-exercises-icon {
-            font-size: 4rem;
-            color: #e0e7ff;
-            margin-bottom: 1.5rem;
-        }
-        
-        .empty-exercises h4 {
-            color: #495057;
-            margin-bottom: 0.5rem;
-            font-weight: 600;
-        }
-        
-        .empty-exercises p {
-            color: #6c757d;
-            max-width: 300px;
-            margin: 0 auto 1.5rem;
-        }
-        
-        .view-all-exercises {
-            text-align: center;
-            margin-top: 1.5rem;
-            padding-top: 1.5rem;
-            border-top: 2px solid #f0f4ff;
-        }
-        
-        /* Today's Meals Card - UPDATED STYLES (Time Removed) */
-        .meals-card {
-            background: white;
-            border-radius: var(--border-radius);
-            padding: 1.75rem;
-            box-shadow: var(--shadow);
-            border: none;
-            margin-bottom: 2rem;
-        }
-        
-        .meals-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.5rem;
-            padding-bottom: 1rem;
-            border-bottom: 2px solid #f0f4ff;
-        }
-        
-        .meals-title {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-        
-        .meals-count {
-            background: linear-gradient(135deg, #ff006e, #fb5607);
-            color: white;
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.95rem;
-            font-weight: 700;
-        }
-        
-        .meal-item {
-            background: #fff9fb;
-            border-radius: 12px;
-            padding: 1.25rem;
-            margin-bottom: 1rem;
-            border-left: 4px solid #ff006e;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .meal-item:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(255, 0, 110, 0.15);
-        }
-        
-        .meal-item::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 4px;
-            height: 100%;
-            background: #ff006e;
-        }
-        
-        .meal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 0.75rem;
-        }
-        
-        .meal-name {
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: var(--dark-color);
-            margin-bottom: 0.25rem;
-        }
-        
-        .meal-type {
-            display: inline-block;
-            padding: 0.25rem 0.75rem;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        
-        /* Removed .meal-time styles */
-        
-        .meal-stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 0.75rem;
-            margin-top: 1rem;
-        }
-        
-        .meal-stat-item {
-            background: white;
-            border-radius: 10px;
-            padding: 0.75rem;
-            text-align: center;
-            border: 1px solid #e9ecef;
-        }
-        
-        .meal-stat-icon {
-            width: 32px;
-            height: 32px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 0.5rem;
-            font-size: 0.9rem;
-        }
-        
-        .meal-stat-value {
-            font-weight: 700;
-            font-size: 1.1rem;
-            margin-bottom: 0.125rem;
-        }
-        
-        .meal-stat-label {
-            color: #6c757d;
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        
-        .calorie-stat {
-            color: #ff006e;
-            background: rgba(255, 0, 110, 0.1);
-        }
-        
-        .protein-stat {
-            color: #3a86ff;
-            background: rgba(58, 134, 255, 0.1);
-        }
-        
-        .carbs-stat {
-            color: #38b000;
-            background: rgba(56, 176, 0, 0.1);
-        }
-        
-        .fat-stat {
-            color: #ffbe0b;
-            background: rgba(255, 190, 11, 0.1);
-        }
-        
-        .empty-meals {
-            text-align: center;
-            padding: 3rem 2rem;
-        }
-        
-        .empty-meals-icon {
-            font-size: 4rem;
-            color: #ffe0eb;
-            margin-bottom: 1.5rem;
-        }
-        
-        .empty-meals h4 {
-            color: #495057;
-            margin-bottom: 0.5rem;
-            font-weight: 600;
-        }
-        
-        .empty-meals p {
-            color: #6c757d;
-            max-width: 300px;
-            margin: 0 auto 1.5rem;
-        }
-        
-        .view-all-meals {
-            text-align: center;
-            margin-top: 1.5rem;
-            padding-top: 1.5rem;
-            border-top: 2px solid #f0f4ff;
-        }
-        
-        @media (max-width: 768px) {
-            .mobile-nav {
-                display: flex;
-                justify-content: space-around;
+
+        /* Animations */
+        @keyframes shimmer {
+            0% {
+                transform: translateX(-100%);
             }
-            
+
+            100% {
+                transform: translateX(100%);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in {
+            animation: fadeInUp 0.8s ease-out forwards;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 12px;
+            height: 12px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--gradient);
+            border-radius: 6px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary);
+        }
+
+        /* ==================== RESPONSIVE DESIGN ==================== */
+        /* Large screens (992px and up) - Desktop navigation visible */
+        @media (min-width: 992px) {
+            .navbar-collapse {
+                display: flex !important;
+                /* Force display on large screens */
+                background: transparent;
+                border: none;
+                padding: 0;
+                margin: 0;
+            }
+
             .navbar-nav {
-                display: none;
+                flex-direction: row;
             }
-            
+
+            .navbar-toggler {
+                display: none;
+                /* Hide hamburger on desktop */
+            }
+
+            .mobile-nav {
+                display: none;
+                /* Hide mobile nav on desktop */
+            }
+
+            .navbar-close {
+                display: none !important;
+            }
+        }
+
+        /* Medium and small screens (below 992px) - Mobile navigation */
+        @media (max-width: 991.98px) {
+            .navbar-collapse {
+                position: fixed;
+                top: 80px;
+                /* Start right below the navbar */
+                left: 0;
+                right: 0;
+                bottom: 0;
+                /* Extend to bottom of screen */
+                /* background: rgba(10, 15, 35, 0.98); */
+                backdrop-filter: blur(30px);
+                -webkit-backdrop-filter: blur(30px);
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                border-radius: 0;
+                padding: 2rem;
+                margin: 0;
+                /* max-height: 0; */
+                overflow: hidden;
+                opacity: 0;
+                visibility: hidden;
+                transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+                box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+                display: block !important;
+                z-index: 1001;
+                height: 100vh;
+                /* Start with 0 height */
+            }
+
+            .navbar-collapse.show {
+                /* max-height: calc(100vh - 80px); */
+                /* Full height minus navbar */
+                opacity: 1;
+                visibility: visible;
+                transform: translateY(0);
+                overflow-y: auto;
+                height: 100vh;
+                /* Allow it to grow */
+            }
+
+            .navbar-nav {
+                flex-direction: column;
+                gap: 1rem;
+                padding: 2rem 0;
+                min-height: 120vh;
+                /* Minimum height for nav items */
+            }
+
+            .navbar-toggler {
+                display: block;
+                z-index: 1002;
+                /* Ensure it's above the menu */
+                position: relative;
+            }
+
+            /* Show close button when menu is open */
+            .navbar-collapse.show .navbar-close {
+                display: flex;
+            }
+
+            .navbar-nav .nav-link {
+                padding: 1.2rem 1.5rem;
+                font-size: 1.1rem;
+                border-radius: 16px;
+                background: rgba(255, 255, 255, 0.05);
+                margin-bottom: 0.5rem;
+                text-align: center;
+                justify-content: center;
+            }
+
+            .navbar-nav .nav-link i {
+                font-size: 1.3rem;
+                width: 24px;
+            }
+
+            /* Adjust body padding for mobile navigation */
+            body {
+                padding-bottom: 20px;
+                overflow-x: hidden;
+            }
+
+            .navbar {
+                height: 80px;
+                z-index: 1000;
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+            }
+
+            .navbar-brand.logo {
+                font-size: 1.5rem;
+                z-index: 1003;
+                /* Ensure logo is above menu */
+                position: relative;
+            }
+
+            /* When menu is open, disable body scroll */
+            body.menu-open {
+                overflow: hidden;
+                position: fixed;
+                width: 100%;
+                height: 100%;
+            }
+
+            /* Overlay when menu is open */
+            .navbar-collapse.show::before {
+                content: '';
+                position: fixed;
+                top: 80px;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                backdrop-filter: blur(5px);
+                z-index: -1;
+            }
+        }
+
+        /* Tablet (768px and below) */
+        @media (max-width: 768px) {
             .dashboard-header {
                 padding: 1.5rem;
+                margin-top: 1rem;
             }
-            
-            .stats-card {
-                margin-bottom: 1rem;
+
+            .exercises-card,
+            .meals-card,
+            .chart-container,
+            .goal-card {
+                padding: 1.5rem;
+                border-radius: 24px;
+                margin-bottom: 1.5rem;
             }
-            
+
+            .exercises-header,
+            .meals-header {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: flex-start;
+                margin-bottom: 1.5rem;
+                padding-bottom: 1rem;
+            }
+
+            .exercises-title h4,
+            .meals-title h4 {
+                font-size: 1.4rem;
+            }
+
+            .exercises-count,
+            .meals-count {
+                width: 35px;
+                height: 35px;
+                font-size: 1rem;
+            }
+
+            .exercise-stats,
+            .meal-stats,
+            .goal-stats {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.8rem;
+            }
+
             .quick-actions {
-                grid-template-columns: repeat(2, 1fr);
+                grid-template-columns: 1fr;
+                gap: 1rem;
             }
-            
-            .exercise-stats {
-                grid-template-columns: repeat(2, 1fr);
+
+            .stats-value {
+                font-size: 2rem;
             }
-            
-            .exercise-header {
-                flex-direction: column;
-                gap: 0.5rem;
-            }
-            
-            .meal-stats {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            
-            .meal-header {
-                flex-direction: column;
-                gap: 0.5rem;
-            }
-            
+
             .date-display {
                 flex-direction: column;
                 align-items: flex-start;
                 gap: 0.5rem;
-                padding: 0.75rem 1rem;
             }
-            
-            .date-display i {
-                margin-right: 8px;
+
+            .streak-badge {
+                margin-left: 0;
+                margin-top: 1rem;
+            }
+
+            /* Exercise and meal items */
+            .exercise-item,
+            .meal-item {
+                padding: 1.2rem;
+                border-radius: 18px;
+            }
+
+            .exercise-name,
+            .meal-name {
+                font-size: 1.2rem;
+            }
+
+            .stat-value,
+            .meal-stat-value {
+                font-size: 1.5rem;
+            }
+
+            .stat-label,
+            .meal-stat-label {
+                font-size: 0.8rem;
+            }
+
+            /* Chart adjustments */
+            .chart-title {
+                font-size: 1.3rem;
+                margin-bottom: 1.5rem;
+            }
+
+            /* Goal card adjustments */
+            .goal-card {
+                padding: 1.5rem;
+            }
+
+            .goal-header h5 {
+                font-size: 1.3rem;
+            }
+
+            .goal-value {
+                font-size: 1.6rem;
+            }
+
+            /* Action cards */
+            .action-card {
+                padding: 1.5rem;
+            }
+
+            .action-icon {
+                width: 60px;
+                height: 60px;
+                font-size: 1.5rem;
+                margin-bottom: 1rem;
+            }
+
+            .action-title {
+                font-size: 1.1rem;
+            }
+
+            .action-desc {
+                font-size: 0.9rem;
+            }
+
+            /* Mobile navbar adjustments */
+            .navbar-collapse {
+                top: 70px;
+            }
+
+            .navbar-collapse.show {
+                /* max-height: calc(100vh - 70px); */
+                max-height: 100vh;
+            }
+
+            .navbar-collapse.show::before {
+                top: 70px;
             }
         }
-        
+
+        /* Mobile (576px and below) */
         @media (max-width: 576px) {
-            .quick-actions {
-                grid-template-columns: 1fr;
+            .navbar {
+                height: 70px;
             }
-            
+
+            .navbar-brand.logo {
+                font-size: 1.3rem;
+                margin-left: 0.5rem;
+            }
+
+            .navbar-toggler {
+                padding: 0.4rem 0.6rem;
+                margin-right: 0.5rem;
+            }
+
+            .dashboard-header h1 {
+                font-size: 1rem;
+                margin-bottom: 0.5rem;
+            }
+
+            .dashboard-header .greeting {
+                font-size: 0.7rem;
+                margin-bottom: 0.8rem;
+            }
+
+            .date-display {
+                font-size: 0.7rem;
+            }
+
+            #current-date {
+                /* border: 10px solid black; */
+                font-size: 0.7rem;
+            }
+
+            .streak-badge {
+                font-size: 0.7rem;
+                padding: 0.4rem 1rem;
+            }
+
+            .btn-danger,
+            .btn-primary {
+                font-size: 0.8rem !important;
+                padding: 0.4rem 1rem !important;
+            }
+
+            .text-muted {
+                color: var(--light) !important;
+            }
+
+            .exercises-title h4,
+            .meals-title h4 {
+                font-size: 0.9rem;
+            }
+
+            .exercise-stats,
+            .meal-stats,
             .goal-stats {
-                flex-direction: column;
-                gap: 1rem;
-            }
-            
-            .exercise-stats {
                 grid-template-columns: 1fr;
+                gap: 0.6rem;
             }
-            
-            .meal-stats {
-                grid-template-columns: 1fr;
+
+            .stat-item,
+            .meal-stat-item,
+            .goal-stat {
+                padding: 1rem;
+                border-radius: 14px;
+            }
+
+            .stats-value,
+            .stat-value,
+            .meal-stat-value,
+            .goal-value {
+                font-size: 1.4rem;
+            }
+
+            body {
+                padding-bottom: 20px;
+                padding-top: 70px;
+            }
+
+            /* Exercise and meal items */
+            .exercise-item,
+            .meal-item {
+                padding: 1rem;
+            }
+
+            .exercise-header,
+            .meal-header {
+                margin-bottom: 1rem;
+            }
+
+            .exercise-name,
+            .meal-name {
+                font-size: 0.6rem;
+            }
+
+            .exercise-category,
+            .meal-type {
+                font-size: 0.75rem;
+                padding: 4px 12px;
+            }
+
+            /* Chart adjustments */
+            .chart-container {
+                padding: 1.2rem;
+            }
+
+            .chart-title {
+                font-size: 1.1rem;
+                margin-bottom: 1rem;
+            }
+
+            /* Goal card adjustments */
+            .goal-card {
+                padding: 1.2rem;
+            }
+
+            .goal-header {
+                margin-bottom: 1.5rem;
+            }
+
+            .goal-icon {
+                width: 60px;
+                height: 60px;
+                font-size: 1.5rem;
+            }
+
+            .goal-header h5 {
+                font-size: 1.2rem;
+            }
+
+            /* Action cards */
+            .action-card {
+                padding: 1.2rem;
+            }
+
+            .action-icon {
+                width: 50px;
+                height: 50px;
+                font-size: 1.3rem;
+                margin-bottom: 0.8rem;
+            }
+
+            .action-title {
+                font-size: 1rem;
+            }
+
+            .action-desc {
+                font-size: 0.85rem;
+            }
+
+            /* Fix exercise and meal count circles */
+            .exercises-count,
+            .meals-count {
+                width: 30px;
+                height: 30px;
+                font-size: 0.9rem;
+            }
+
+            /* Footer adjustments */
+            .footer {
+                padding: 2rem 0;
+                margin-top: 2rem;
+                font-size: 0.8rem;
+            }
+
+            /* Mobile navbar adjustments */
+            .navbar-collapse {
+                top: 70px;
+                padding: 1.5rem;
+            }
+
+            .navbar-collapse.show {
+                max-height: 100vh;
+            }
+
+            .navbar-collapse.show::before {
+                top: 70px;
+            }
+
+            .navbar-nav {
+                padding: 1rem 0;
+                gap: 1.5rem;
+            }
+
+            .navbar-nav .nav-link {
+                padding: 1rem;
+                font-size: 1rem;
+            }
+
+            .navbar-close {
+                top: 0px;
+                right: 15px;
+                width: 35px;
+                height: 35px;
             }
         }
 
-        /* ============================================
-   PREMIUM MOBILE RESPONSIVE DESIGN - DASHBOARD
-   ============================================ */
-
-/* Base mobile styles */
-@media (max-width: 767.98px) {
-    /* Reset container spacing */
-    .container.mt-4,
-    .container.py-5 {
-        padding-left: 0 !important;
-        padding-right: 0 !important;
-        max-width: 100%;
-    }
-    
-    /* Body background */
-    body {
-        background: #f5f9ff;
-        padding-bottom: 70px; /* Space for mobile nav */
-    }
-    
-    /* Mobile Navigation - Enhanced */
-    .mobile-nav {
-        display: flex !important;
-        background: white;
-        border-radius: 25px 25px 0 0;
-        padding: 0.75rem 0.5rem;
-        box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.15);
-        position: fixed;
-        bottom: 0;
-        left: 0.5rem;
-        right: 0.5rem;
-        margin: 0 auto;
-        max-width: 500px;
-        z-index: 1000;
-    }
-    
-    .mobile-nav-item {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        text-decoration: none;
-        color: #94a3b8;
-        font-size: 0.75rem;
-        padding: 0.5rem 0.25rem;
-        border-radius: 12px;
-        transition: all 0.3s ease;
-    }
-    
-    .mobile-nav-item:hover,
-    .mobile-nav-item.active {
-        color: #3a86ff;
-        background: rgba(58, 134, 255, 0.08);
-        transform: translateY(-3px);
-    }
-    
-    .mobile-nav-item i {
-        font-size: 1.3rem;
-        margin-bottom: 0.25rem;
-        transition: all 0.3s ease;
-    }
-    
-    .mobile-nav-item.active i {
-        transform: scale(1.1);
-    }
-    
-    /* Hide desktop navbar on mobile */
-    .navbar-nav {
-        display: none !important;
-    }
-    
-    .navbar-toggler {
-        border: none;
-        padding: 0.5rem;
-    }
-    
-    .navbar-toggler:focus {
-        box-shadow: none;
-    }
-    
-    /* Dashboard Header - Redesigned for mobile */
-    .dashboard-header {
-        border-radius: 0 0 32px 32px;
-        padding: 1.5rem !important;
-        margin: 0 0 1.5rem 0 !important;
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .dashboard-header::before {
-        display: none;
-    }
-    
-    .dashboard-header::after {
-        content: '';
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        height: 40px;
-        background: linear-gradient(to top, rgba(0,0,0,0.05), transparent);
-    }
-    
-    .dashboard-header h1 {
-        font-size: 1.5rem !important;
-        margin-bottom: 0.5rem;
-        line-height: 1.3;
-    }
-    
-    .greeting {
-        font-size: 0.95rem;
-        margin-bottom: 1rem;
-    }
-    
-    .date-display {
-        flex-direction: column;
-        align-items: flex-start !important;
-        padding: 0.75rem;
-        margin: 1rem 0 0 0 !important;
-        background: rgba(255, 255, 255, 0.15);
-        border-radius: 16px;
-        gap: 0.5rem;
-    }
-    
-    .date-display i {
-        font-size: 0.9rem;
-    }
-    
-    .streak-badge {
-        margin: 0.75rem 0 0 0 !important;
-        padding: 0.5rem 0.75rem;
-        align-self: flex-start;
-    }
-    
-    /* Fitness Level box */
-    .dashboard-header .text-md-end {
-        text-align: left !important;
-        margin-top: 1rem;
-    }
-    
-    .dashboard-header .bg-white {
-        width: 100%;
-        max-width: 250px;
-    }
-    
-    /* Today's Exercises Card - Mobile Optimized */
-    .exercises-card {
-        margin: 0 0.75rem 1.5rem 0.75rem !important;
-        padding: 1.25rem !important;
-        border-radius: 20px !important;
-    }
-    
-    .exercises-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 1rem;
-        padding-bottom: 0.75rem;
-        margin-bottom: 1rem;
-    }
-    
-    .exercises-title {
-        width: 100%;
-        justify-content: space-between;
-    }
-    
-    .exercises-count {
-        width: 32px !important;
-        height: 32px !important;
-        font-size: 0.85rem !important;
-    }
-    
-    /* Exercise Item - Mobile Optimized */
-    .exercise-item {
-        padding: 1rem !important;
-        margin-bottom: 0.75rem;
-        border-radius: 16px !important;
-        border-left-width: 3px !important;
-    }
-    
-    .exercise-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 0.5rem;
-    }
-    
-    .exercise-name {
-        font-size: 1.1rem !important;
-        margin-bottom: 0.5rem;
-    }
-    
-    .exercise-stats {
-        grid-template-columns: repeat(2, 1fr) !important;
-        gap: 0.5rem;
-        margin-top: 0.75rem;
-    }
-    
-    .stat-item {
-        padding: 0.5rem !important;
-        border-radius: 12px !important;
-    }
-    
-    .stat-icon {
-        width: 28px !important;
-        height: 28px !important;
-        margin-bottom: 0.25rem !important;
-    }
-    
-    .stat-value {
-        font-size: 1rem !important;
-    }
-    
-    .stat-label {
-        font-size: 0.7rem !important;
-    }
-    
-    .empty-exercises {
-        padding: 2rem 1rem !important;
-    }
-    
-    .empty-exercises-icon {
-        font-size: 3rem !important;
-        margin-bottom: 1rem !important;
-    }
-    
-    /* Today's Meals Card - Mobile Optimized */
-    .meals-card {
-        margin: 0 0.75rem 1.5rem 0.75rem !important;
-        padding: 1.25rem !important;
-        border-radius: 20px !important;
-    }
-    
-    .meals-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 1rem;
-        padding-bottom: 0.75rem;
-        margin-bottom: 1rem;
-    }
-    
-    .meals-title {
-        width: 100%;
-        justify-content: space-between;
-    }
-    
-    .meals-count {
-        width: 32px !important;
-        height: 32px !important;
-        font-size: 0.85rem !important;
-    }
-    
-    /* Meal Item - Mobile Optimized */
-    .meal-item {
-        padding: 1rem !important;
-        margin-bottom: 0.75rem;
-        border-radius: 16px !important;
-        border-left-width: 3px !important;
-    }
-    
-    .meal-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 0.5rem;
-    }
-    
-    .meal-name {
-        font-size: 1.1rem !important;
-        margin-bottom: 0.5rem;
-    }
-    
-    .meal-stats {
-        grid-template-columns: repeat(2, 1fr) !important;
-        gap: 0.5rem;
-        margin-top: 0.75rem;
-    }
-    
-    .meal-stat-item {
-        padding: 0.5rem !important;
-        border-radius: 12px !important;
-    }
-    
-    .meal-stat-icon {
-        width: 28px !important;
-        height: 28px !important;
-        margin-bottom: 0.25rem !important;
-    }
-    
-    .meal-stat-value {
-        font-size: 1rem !important;
-    }
-    
-    .meal-stat-label {
-        font-size: 0.7rem !important;
-    }
-    
-    .empty-meals {
-        padding: 2rem 1rem !important;
-    }
-    
-    .empty-meals-icon {
-        font-size: 3rem !important;
-        margin-bottom: 1rem !important;
-    }
-    
-    /* Stats Cards - Mobile Grid */
-    .row.mb-4 {
-        margin: 0 0.75rem 1.5rem 0.75rem !important;
-    }
-    
-    .stats-card {
-        padding: 1.25rem !important;
-        border-radius: 16px !important;
-        margin-bottom: 1rem !important;
-    }
-    
-    .stats-icon {
-        width: 50px !important;
-        height: 50px !important;
-        font-size: 1.25rem !important;
-        margin-bottom: 0.75rem !important;
-    }
-    
-    .stats-value {
-        font-size: 1.75rem !important;
-    }
-    
-    .stats-label {
-        font-size: 0.85rem !important;
-    }
-    
-    /* Weekly Activity Chart */
-    .chart-container {
-        margin: 0 0.75rem 1.5rem 0.75rem !important;
-        padding: 1.25rem !important;
-        border-radius: 20px !important;
-    }
-    
-    .chart-title {
-        font-size: 1rem;
-        margin-bottom: 0.75rem;
-    }
-    
-    /* Quick Actions - Mobile Grid */
-    .col-lg-8.mb-4,
-    .col-lg-4.mb-4 {
-        padding: 0 0.75rem !important;
-        margin-bottom: 1.5rem !important;
-    }
-    
-    h4.mb-3 {
-        padding-left: 0.75rem;
-        margin-bottom: 1rem !important;
-    }
-    
-    .quick-actions {
-        grid-template-columns: repeat(2, 1fr) !important;
-        gap: 0.75rem;
-        margin: 0 !important;
-    }
-    
-    .action-card {
-        padding: 1.25rem !important;
-        border-radius: 16px !important;
-    }
-    
-    .action-icon {
-        width: 60px !important;
-        height: 60px !important;
-        font-size: 1.5rem !important;
-        margin-bottom: 0.75rem !important;
-        border-radius: 16px !important;
-    }
-    
-    .action-title {
-        font-size: 0.95rem;
-    }
-    
-    .action-desc {
-        font-size: 0.8rem;
-    }
-    
-    /* Goal Cards */
-    .goal-card {
-        padding: 1.25rem !important;
-        border-radius: 20px !important;
-        margin-bottom: 1rem !important;
-    }
-    
-    .goal-header {
-        flex-direction: column;
-        align-items: flex-start;
-        text-align: center;
-        gap: 1rem;
-        margin-bottom: 1.25rem;
-    }
-    
-    .goal-icon {
-        width: 50px !important;
-        height: 50px !important;
-        font-size: 1.25rem !important;
-        margin: 0 auto !important;
-    }
-    
-    .goal-stats {
-        flex-direction: column;
-        gap: 1rem;
-        padding: 1rem;
-        border-radius: 16px !important;
-    }
-    
-    .goal-stat {
-        text-align: center;
-    }
-    
-    .goal-value {
-        font-size: 1.4rem;
-    }
-    
-    .goal-label {
-        font-size: 0.85rem;
-    }
-    
-    /* Daily Motivation Card */
-    .goal-card.mt-3 {
-        margin-top: 1rem !important;
-    }
-    
-    /* Footer */
-    .footer {
-        padding: 1.5rem 0.75rem !important;
-        margin-top: 1rem !important;
-        font-size: 0.8rem;
-    }
-    
-    /* Buttons - Mobile Optimized */
-    .btn {
-        padding: 0.625rem 1rem !important;
-        font-size: 0.9rem !important;
-        border-radius: 12px !important;
-        min-height: 48px !important;
-    }
-    
-    .btn-sm {
-        padding: 0.375rem 0.75rem !important;
-        min-height: 36px !important;
-        font-size: 0.8rem !important;
-    }
-    
-    .btn-lg {
-        padding: 0.875rem 1.5rem !important;
-        min-height: 56px !important;
-        font-size: 1rem !important;
-    }
-    
-    /* View All buttons */
-    .view-all-exercises,
-    .view-all-meals {
-        padding-top: 1rem !important;
-        margin-top: 1rem !important;
-    }
-    
-    /* Progress bar */
-    .progress-bar-custom {
-        height: 10px !important;
-        border-radius: 8px !important;
-    }
-    
-    /* Animation for mobile */
-    @keyframes fadeInUp {
-        from {
-            opacity: 0;
-            transform: translateY(20px);
+        /* Buttons */
+        .btn {
+            border: none;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
         }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-    
-    .stats-card,
-    .exercise-item,
-    .meal-item,
-    .action-card,
-    .goal-card {
-        animation: fadeInUp 0.5s ease-out;
-    }
-    
-    /* Stagger animations */
-    .stats-card:nth-child(1) { animation-delay: 0.1s; }
-    .stats-card:nth-child(2) { animation-delay: 0.2s; }
-    .stats-card:nth-child(3) { animation-delay: 0.3s; }
-    .stats-card:nth-child(4) { animation-delay: 0.4s; }
-    
-    .exercise-item:nth-child(1) { animation-delay: 0.2s; }
-    .exercise-item:nth-child(2) { animation-delay: 0.3s; }
-    .exercise-item:nth-child(3) { animation-delay: 0.4s; }
-}
 
-/* Extra small devices (phones under 400px) */
-@media (max-width: 399.98px) {
-    .mobile-nav {
-        left: 0.25rem;
-        right: 0.25rem;
-        padding: 0.5rem;
-    }
-    
-    .dashboard-header {
-        padding: 1.25rem !important;
-    }
-    
-    .dashboard-header h1 {
-        font-size: 1.3rem !important;
-    }
-    
-    .greeting {
-        font-size: 0.9rem;
-    }
-    
-    .date-display {
-        padding: 0.625rem;
-        font-size: 0.85rem;
-    }
-    
-    .exercises-card,
-    .meals-card,
-    .stats-card,
-    .chart-container,
-    .goal-card {
-        margin: 0 0.5rem 1rem 0.5rem !important;
-        padding: 1rem !important;
-    }
-    
-    .quick-actions {
-        grid-template-columns: 1fr !important;
-    }
-    
-    .exercise-stats,
-    .meal-stats {
-        grid-template-columns: 1fr !important;
-    }
-    
-    .stat-item,
-    .meal-stat-item {
-        padding: 0.75rem !important;
-    }
-    
-    .empty-exercises-icon,
-    .empty-meals-icon {
-        font-size: 2.5rem !important;
-    }
-    
-    .stats-value {
-        font-size: 1.5rem !important;
-    }
-    
-    .goal-value {
-        font-size: 1.2rem;
-    }
-    
-    .action-card {
-        padding: 1rem !important;
-    }
-}
-
-/* Tablet portrait mode (768px - 991px) */
-@media (min-width: 768px) and (max-width: 991.98px) {
-    .container.mt-4 {
-        padding-left: 1rem !important;
-        padding-right: 1rem !important;
-    }
-    
-    .mobile-nav {
-        display: flex !important;
-        left: 1rem;
-        right: 1rem;
-    }
-    
-    .navbar-nav {
-        display: none !important;
-    }
-    
-    .quick-actions {
-        grid-template-columns: repeat(3, 1fr) !important;
-    }
-    
-    .exercise-stats {
-        grid-template-columns: repeat(3, 1fr) !important;
-    }
-    
-    .meal-stats {
-        grid-template-columns: repeat(3, 1fr) !important;
-    }
-}
-
-/* Landscape mode optimization */
-@media (max-height: 600px) and (orientation: landscape) {
-    .mobile-nav {
-        padding: 0.5rem;
-    }
-    
-    .mobile-nav-item {
-        font-size: 0.7rem;
-        padding: 0.25rem 0.125rem;
-    }
-    
-    .mobile-nav-item i {
-        font-size: 1.1rem;
-        margin-bottom: 0.125rem;
-    }
-    
-    .dashboard-header {
-        padding: 1rem !important;
-        margin-bottom: 1rem !important;
-    }
-    
-    .dashboard-header h1 {
-        font-size: 1.2rem !important;
-    }
-    
-    .exercises-card,
-    .meals-card {
-        margin-bottom: 1rem !important;
-        padding: 1rem !important;
-    }
-    
-    .exercise-item,
-    .meal-item {
-        padding: 0.75rem !important;
-        margin-bottom: 0.5rem;
-    }
-}
-
-/* iPhone notch and safe area support */
-@supports (padding: max(0px)) {
-    .container.mt-4 {
-        padding-left: max(0.75rem, env(safe-area-inset-left)) !important;
-        padding-right: max(0.75rem, env(safe-area-inset-right)) !important;
-    }
-    
-    .mobile-nav {
-        padding-bottom: max(0.75rem, env(safe-area-inset-bottom)) !important;
-    }
-    
-    .dashboard-header {
-        padding-top: max(1.5rem, env(safe-area-inset-top)) !important;
-    }
-}
-
-/* Loading animations */
-@keyframes shimmer {
-    0% {
-        background-position: -200px 0;
-    }
-    100% {
-        background-position: 200px 0;
-    }
-}
-
-.loading-shimmer {
-    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-    background-size: 200px 100%;
-    animation: shimmer 1.5s infinite;
-}
-
-/* Touch feedback for mobile */
-@media (hover: none) and (pointer: coarse) {
-    .stats-card:hover,
-    .action-card:hover,
-    .exercise-item:hover,
-    .meal-item:hover {
-        transform: none !important;
-    }
-    
-    .stats-card:active,
-    .action-card:active,
-    .exercise-item:active,
-    .meal-item:active {
-        transform: scale(0.98) !important;
-    }
-}
-
-/* Custom scrollbar for mobile webkit */
-@media (max-width: 767.98px) {
-    ::-webkit-scrollbar {
-        width: 6px;
-        height: 6px;
-    }
-    
-    ::-webkit-scrollbar-track {
-        background: #f1f1f1;
-        border-radius: 10px;
-    }
-    
-    ::-webkit-scrollbar-thumb {
-        background: linear-gradient(135deg, #3a86ff, #8338ec);
-        border-radius: 10px;
-    }
-}
-
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-    @media (max-width: 767.98px) {
-        body {
-            background: #121826;
-            color: #e2e8f0;
+        .btn-primary {
+            background: var(--gradient-primary);
+            color: white;
         }
-        
-        .stats-card,
-        .exercises-card,
-        .meals-card,
-        .chart-container,
-        .goal-card,
-        .action-card {
-            background: #1e293b;
-            color: #e2e8f0;
-        }
-        
-        .mobile-nav {
-            background: #1e293b;
-        }
-        
-        .mobile-nav-item {
-            color: #94a3b8;
-        }
-        
-        .mobile-nav-item.active {
-            color: #3a86ff;
-            background: rgba(58, 134, 255, 0.15);
-        }
-        
-        .exercise-item,
-        .meal-item {
-            background: #2d3748;
-        }
-        
-        .stat-item,
-        .meal-stat-item {
-            background: #1e293b;
-            border-color: #374151;
-        }
-        
-        .goal-stats {
-            background: #2d3748;
-        }
-        
-        .stats-label,
-        .action-desc,
-        .stat-label,
-        .meal-stat-label,
-        .goal-label {
-            color: #94a3b8;
-        }
-        
-        .exercise-name,
-        .meal-name {
-            color: #f1f5f9;
-        }
-        
-        .empty-exercises h4,
-        .empty-meals h4 {
-            color: #e2e8f0;
-        }
-        
-        .empty-exercises p,
-        .empty-meals p {
-            color: #94a3b8;
-        }
-        
-        .footer {
-            background: #1e293b;
-            color: #94a3b8;
-        }
-    }
-}
 
-/* Enhanced animations for mobile */
-@keyframes slideInLeft {
-    from {
-        opacity: 0;
-        transform: translateX(-20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
-}
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 212, 255, 0.3);
+        }
 
-@keyframes slideInRight {
-    from {
-        opacity: 0;
-        transform: translateX(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
-}
+        .btn-outline-primary {
+            background: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+        }
 
-.exercises-card {
-    animation: slideInLeft 0.5s ease-out;
-}
+        .btn-outline-primary:hover {
+            background: var(--primary);
+            color: white;
+        }
 
-.meals-card {
-    animation: slideInRight 0.5s ease-out;
-}
+        .btn-danger {
+            background: var(--gradient-secondary);
+            color: white;
+        }
 
-/* Swipe indicator for mobile */
-@media (max-width: 767.98px) {
-    .swipe-indicator {
-        text-align: center;
-        margin: 1rem 0;
-        color: #64748b;
-        font-size: 0.8rem;
-    }
-    
-    .swipe-indicator i {
-        animation: bounce 2s infinite;
-    }
-    
-    @keyframes bounce {
-        0%, 20%, 50%, 80%, 100% {transform: translateX(0);}
-        40% {transform: translateX(-10px);}
-        60% {transform: translateX(-5px);}
-    }
-}
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(255, 45, 117, 0.3);
+        }
+
+        .btn-outline-danger {
+            background: transparent;
+            border: 2px solid var(--secondary);
+            color: var(--secondary);
+        }
+
+        .btn-outline-danger:hover {
+            background: var(--secondary);
+            color: white;
+        }
+
+        .btn-sm {
+            padding: 8px 16px;
+            font-size: 0.85rem;
+        }
+
+        .btn-lg {
+            padding: 1.2rem 2.5rem;
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        .w-100 {
+            width: 100% !important;
+        }
     </style>
 </head>
+
 <body>
     <!-- Desktop Navigation -->
     <nav class="navbar navbar-expand-lg">
         <div class="container">
             <a class="navbar-brand logo" href="dashboard.php">FitTrack Pro</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
+                <!-- Close button for mobile (hidden on desktop) -->
+                <button class="navbar-close" id="navbarClose" type="button">
+                    <i class="fas fa-times"></i>
+                </button>
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
                         <a class="nav-link active" href="dashboard.php">
@@ -1802,20 +1839,20 @@ $server_timestamp = $pakistan_timestamp * 1000; // Convert to milliseconds for J
         <div class="dashboard-header">
             <div class="row align-items-center">
                 <div class="col-md-8">
-                    <h1 id="dynamic-greeting"><?= $greeting ?>, <?= htmlspecialchars($_SESSION['user_name']) ?>! 👋</h1>
+                    <h1 id="dynamic-greeting"><?= htmlspecialchars($greeting) ?>, <?= htmlspecialchars($_SESSION['user_name']) ?>! 👋</h1>
                     <p class="greeting">Keep pushing towards your fitness goals. You're doing great!</p>
                     <div class="d-flex align-items-center mt-3">
                         <div class="date-display">
                             <i class="fas fa-calendar-alt"></i>
-                            <span id="current-date"><?= $display_date ?></span>
+                            <span id="current-date"><?= htmlspecialchars($display_date) ?></span>
                             <i class="fas fa-clock ms-3"></i>
-                            <span id="current-time"><?= $display_time ?></span>
+                            <span id="current-time"><?= htmlspecialchars($display_time) ?></span>
                             <span class="ms-2 small">PKT (Islamabad)</span>
                         </div>
-                        <?php if($streak > 0): ?>
-                        <div class="streak-badge">
-                            <i class="fas fa-fire me-2"></i><?= $streak ?> Day Streak
-                        </div>
+                        <?php if ($streak > 0): ?>
+                            <div class="streak-badge">
+                                <i class="fas fa-fire me-2"></i><?= htmlspecialchars($streak) ?> Day Streak
+                            </div>
                         <?php endif; ?>
                     </div>
                 </div>
@@ -1840,13 +1877,13 @@ $server_timestamp = $pakistan_timestamp * 1000; // Convert to milliseconds for J
                     <h4 class="mb-0">Today's Exercises</h4>
                     <div class="exercises-count"><?= count($today_exercises) ?></div>
                 </div>
-                <?php if(!empty($today_exercises)): ?>
-                <a href="/fitness-tracker/workouts/log.php" class="btn btn-sm btn-outline-primary">
-                    <i class="fas fa-plus me-1"></i>Add More
-                </a>
+                <?php if (!empty($today_exercises)): ?>
+                    <a href="/fitness-tracker/workouts/log.php" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-plus me-1"></i>Add More
+                    </a>
                 <?php endif; ?>
             </div>
-            
+
             <?php if (!empty($today_exercises)): ?>
                 <div class="exercises-list">
                     <?php foreach ($today_exercises as $exercise): ?>
@@ -1854,16 +1891,16 @@ $server_timestamp = $pakistan_timestamp * 1000; // Convert to milliseconds for J
                         // Determine exercise type and styling
                         $exercise_name = htmlspecialchars($exercise['exercise']);
                         $is_cardio = in_array(strtolower($exercise_name), ['running', 'cycling', 'swimming', 'jump rope', 'elliptical', 'burpees', 'rowing', 'stair climber', 'walking', 'jogging']);
-                        
+
                         // Set category and color
                         $category = 'Strength';
                         $category_color = '#3a86ff';
-                        
+
                         if ($is_cardio) {
                             $category = 'Cardio';
                             $category_color = '#ff006e';
                         }
-                        
+
                         // Format time in Pakistan timezone
                         $time_display = '';
                         if (!empty($exercise['date'])) {
@@ -1871,7 +1908,7 @@ $server_timestamp = $pakistan_timestamp * 1000; // Convert to milliseconds for J
                             $time_display = '<div class="exercise-time"><i class="far fa-clock"></i> ' . $time . '</div>';
                         }
                         ?>
-                        
+
                         <div class="exercise-item">
                             <div class="exercise-header">
                                 <div>
@@ -1882,61 +1919,61 @@ $server_timestamp = $pakistan_timestamp * 1000; // Convert to milliseconds for J
                                 </div>
                                 <?= $time_display ?>
                             </div>
-                            
+
                             <div class="exercise-stats">
                                 <?php if (!$is_cardio && !empty($exercise['sets'])): ?>
                                     <div class="stat-item">
                                         <div class="stat-icon strength-stat">
                                             <i class="fas fa-redo"></i>
                                         </div>
-                                        <div class="stat-value"><?= $exercise['sets'] ?></div>
+                                        <div class="stat-value"><?= htmlspecialchars($exercise['sets']) ?></div>
                                         <div class="stat-label">Sets</div>
                                     </div>
                                 <?php endif; ?>
-                                
+
                                 <?php if (!$is_cardio && !empty($exercise['reps'])): ?>
                                     <div class="stat-item">
                                         <div class="stat-icon strength-stat">
                                             <i class="fas fa-sync-alt"></i>
                                         </div>
-                                        <div class="stat-value"><?= $exercise['reps'] ?></div>
+                                        <div class="stat-value"><?= htmlspecialchars($exercise['reps']) ?></div>
                                         <div class="stat-label">Reps</div>
                                     </div>
                                 <?php endif; ?>
-                                
+
                                 <?php if (!$is_cardio && !empty($exercise['weight']) && $exercise['weight'] > 0): ?>
                                     <div class="stat-item">
                                         <div class="stat-icon weight-stat">
                                             <i class="fas fa-weight-hanging"></i>
                                         </div>
-                                        <div class="stat-value"><?= $exercise['weight'] ?> kg</div>
+                                        <div class="stat-value"><?= htmlspecialchars($exercise['weight']) ?> kg</div>
                                         <div class="stat-label">Weight</div>
                                     </div>
                                 <?php endif; ?>
-                                
+
                                 <?php if ($is_cardio && !empty($exercise['distance']) && $exercise['distance'] > 0): ?>
                                     <div class="stat-item">
                                         <div class="stat-icon cardio-stat">
                                             <i class="fas fa-route"></i>
                                         </div>
-                                        <div class="stat-value"><?= $exercise['distance'] ?> km</div>
+                                        <div class="stat-value"><?= htmlspecialchars($exercise['distance']) ?> km</div>
                                         <div class="stat-label">Distance</div>
                                     </div>
                                 <?php endif; ?>
-                                
+
                                 <?php if (!empty($exercise['duration']) && $exercise['duration'] > 0): ?>
                                     <div class="stat-item">
                                         <div class="stat-icon time-stat">
                                             <i class="fas fa-stopwatch"></i>
                                         </div>
-                                        <div class="stat-value"><?= $exercise['duration'] ?> min</div>
+                                        <div class="stat-value"><?= htmlspecialchars($exercise['duration']) ?> min</div>
                                         <div class="stat-label">Duration</div>
                                     </div>
                                 <?php endif; ?>
                             </div>
                         </div>
                     <?php endforeach; ?>
-                    
+
                     <?php if (count($today_exercises) >= 5): ?>
                         <div class="view-all-exercises">
                             <a href="/fitness-tracker/workouts/log.php" class="btn btn-primary">
@@ -1967,13 +2004,13 @@ $server_timestamp = $pakistan_timestamp * 1000; // Convert to milliseconds for J
                     <h4 class="mb-0">Today's Meals</h4>
                     <div class="meals-count"><?= count($today_meals_display) ?></div>
                 </div>
-                <?php if(!empty($today_meals_display)): ?>
-                <a href="/fitness-tracker/meals/planner.php" class="btn btn-sm btn-outline-danger" style="border-color: #ff006e; color: #ff006e;">
-                    <i class="fas fa-plus me-1"></i>Add More
-                </a>
+                <?php if (!empty($today_meals_display)): ?>
+                    <a href="/fitness-tracker/meals/planner.php" class="btn btn-sm btn-outline-danger" style="border-color: #ff006e; color: #ff006e;">
+                        <i class="fas fa-plus me-1"></i>Add More
+                    </a>
                 <?php endif; ?>
             </div>
-            
+
             <?php if (!empty($today_meals_display)): ?>
                 <div class="meals-list">
                     <?php foreach ($today_meals_display as $meal): ?>
@@ -1981,12 +2018,12 @@ $server_timestamp = $pakistan_timestamp * 1000; // Convert to milliseconds for J
                         // Format meal type
                         $meal_type = htmlspecialchars($meal['meal_time']);
                         $meal_name = htmlspecialchars($meal['food_name']);
-                        
+
                         // Set color based on meal type
                         $meal_type_color = '#ff006e';
                         $meal_type_bg = 'rgba(255, 0, 110, 0.1)';
-                        
-                        switch($meal_type) {
+
+                        switch ($meal_type) {
                             case 'breakfast':
                                 $meal_type_color = '#ff9a9e';
                                 $meal_type_bg = 'rgba(255, 154, 158, 0.1)';
@@ -2005,7 +2042,7 @@ $server_timestamp = $pakistan_timestamp * 1000; // Convert to milliseconds for J
                                 break;
                         }
                         ?>
-                        
+
                         <div class="meal-item">
                             <div class="meal-header">
                                 <div>
@@ -2016,49 +2053,49 @@ $server_timestamp = $pakistan_timestamp * 1000; // Convert to milliseconds for J
                                 </div>
                                 <!-- Time display has been removed -->
                             </div>
-                            
+
                             <div class="meal-stats">
                                 <div class="meal-stat-item">
                                     <div class="meal-stat-icon calorie-stat">
                                         <i class="fas fa-fire"></i>
                                     </div>
-                                    <div class="meal-stat-value"><?= $meal['calories'] ?></div>
+                                    <div class="meal-stat-value"><?= htmlspecialchars($meal['calories']) ?></div>
                                     <div class="meal-stat-label">Calories</div>
                                 </div>
-                                
+
                                 <?php if (!empty($meal['protein']) && $meal['protein'] > 0): ?>
                                     <div class="meal-stat-item">
                                         <div class="meal-stat-icon protein-stat">
                                             <i class="fas fa-drumstick-bite"></i>
                                         </div>
-                                        <div class="meal-stat-value"><?= $meal['protein'] ?>g</div>
+                                        <div class="meal-stat-value"><?= htmlspecialchars($meal['protein']) ?>g</div>
                                         <div class="meal-stat-label">Protein</div>
                                     </div>
                                 <?php endif; ?>
-                                
+
                                 <?php if (!empty($meal['carbs']) && $meal['carbs'] > 0): ?>
                                     <div class="meal-stat-item">
                                         <div class="meal-stat-icon carbs-stat">
                                             <i class="fas fa-bread-slice"></i>
                                         </div>
-                                        <div class="meal-stat-value"><?= $meal['carbs'] ?>g</div>
+                                        <div class="meal-stat-value"><?= htmlspecialchars($meal['carbs']) ?>g</div>
                                         <div class="meal-stat-label">Carbs</div>
                                     </div>
                                 <?php endif; ?>
-                                
+
                                 <?php if (!empty($meal['fat']) && $meal['fat'] > 0): ?>
                                     <div class="meal-stat-item">
                                         <div class="meal-stat-icon fat-stat">
                                             <i class="fas fa-oil-can"></i>
                                         </div>
-                                        <div class="meal-stat-value"><?= $meal['fat'] ?>g</div>
+                                        <div class="meal-stat-value"><?= htmlspecialchars($meal['fat']) ?>g</div>
                                         <div class="meal-stat-label">Fat</div>
                                     </div>
                                 <?php endif; ?>
                             </div>
                         </div>
                     <?php endforeach; ?>
-                    
+
                     <?php if (count($today_meals_display) >= 5): ?>
                         <div class="view-all-meals">
                             <a href="/fitness-tracker/meals/planner.php" class="btn btn-danger">
@@ -2088,35 +2125,35 @@ $server_timestamp = $pakistan_timestamp * 1000; // Convert to milliseconds for J
                     <div class="stats-icon" style="background: linear-gradient(135deg, #ff9a9e, #fad0c4); color: #ff6b6b;">
                         <i class="fas fa-dumbbell"></i>
                     </div>
-                    <div class="stats-value"><?= $today_workout['count'] ?? 0 ?></div>
+                    <div class="stats-value"><?= htmlspecialchars($today_workout['count'] ?? 0) ?></div>
                     <div class="stats-label">Today's Workouts</div>
                     <div class="small text-muted mt-2">
-                        <?php if(($today_workout['total_duration'] ?? 0) > 0): ?>
-                        <i class="fas fa-clock me-1"></i><?= number_format($today_workout['total_duration'], 1) ?> min total
+                        <?php if (($today_workout['total_duration'] ?? 0) > 0): ?>
+                            <i class="fas fa-clock me-1"></i><?= number_format($today_workout['total_duration'], 1) ?> min total
                         <?php else: ?>
-                        <i class="fas fa-info-circle me-1"></i>No workouts today
+                            <i class="fas fa-info-circle me-1"></i>No workouts today
                         <?php endif; ?>
                     </div>
                 </div>
             </div>
-            
+
             <div class="col-md-3 col-sm-6 mb-4">
                 <div class="stats-card">
                     <div class="stats-icon" style="background: linear-gradient(135deg, #a1c4fd, #c2e9fb); color: #4d96ff;">
                         <i class="fas fa-apple-alt"></i>
                     </div>
-                    <div class="stats-value"><?= $today_meals['total_calories'] ?? 0 ?></div>
+                    <div class="stats-value"><?= htmlspecialchars($today_meals['total_calories'] ?? 0) ?></div>
                     <div class="stats-label">Calories Today</div>
                     <div class="small text-muted mt-2">
-                        <?php if(($today_meals['total_calories'] ?? 0) > 0): ?>
-                        <i class="fas fa-fire me-1"></i>Calories consumed
+                        <?php if (($today_meals['total_calories'] ?? 0) > 0): ?>
+                            <i class="fas fa-fire me-1"></i>Calories consumed
                         <?php else: ?>
-                        <i class="fas fa-info-circle me-1"></i>No meals logged
+                            <i class="fas fa-info-circle me-1"></i>No meals logged
                         <?php endif; ?>
                     </div>
                 </div>
             </div>
-            
+
             <div class="col-md-3 col-sm-6 mb-4">
                 <div class="stats-card">
                     <div class="stats-icon" style="background: linear-gradient(135deg, #84fab0, #8fd3f4); color: #38b000;">
@@ -2125,21 +2162,21 @@ $server_timestamp = $pakistan_timestamp * 1000; // Convert to milliseconds for J
                     <div class="stats-value"><?= round($goal_progress) ?>%</div>
                     <div class="stats-label">Goal Progress</div>
                     <div class="small text-muted mt-2">
-                        <?php if($goal_info && $goal_info['goal_type']): ?>
-                        <i class="fas fa-<?= $goal_info['goal_type'] == 'lose' ? 'arrow-down' : 'arrow-up' ?> me-1"></i><?= ucfirst($goal_info['goal_type']) ?> weight
+                        <?php if ($goal_info && isset($goal_info['goal_type'])): ?>
+                            <i class="fas fa-<?= $goal_info['goal_type'] == 'lose' ? 'arrow-down' : 'arrow-up' ?> me-1"></i><?= ucfirst($goal_info['goal_type']) ?> weight
                         <?php else: ?>
-                        <i class="fas fa-info-circle me-1"></i>Set a goal in profile
+                            <i class="fas fa-info-circle me-1"></i>Set a goal in profile
                         <?php endif; ?>
                     </div>
                 </div>
             </div>
-            
+
             <div class="col-md-3 col-sm-6 mb-4">
                 <div class="stats-card">
                     <div class="stats-icon" style="background: linear-gradient(135deg, #fbc2eb, #a6c1ee); color: #8338ec;">
                         <i class="fas fa-trophy"></i>
                     </div>
-                    <div class="stats-value"><?= $achievements_count ?></div>
+                    <div class="stats-value"><?= htmlspecialchars($achievements_count) ?></div>
                     <div class="stats-label">Achievements</div>
                     <div class="small text-muted mt-2">
                         <i class="fas fa-award me-1"></i>Badges earned
@@ -2168,7 +2205,7 @@ $server_timestamp = $pakistan_timestamp * 1000; // Convert to milliseconds for J
                         <div class="action-title">Log Workout</div>
                         <div class="action-desc">Add today's workout session</div>
                     </a>
-                    
+
                     <a href="/fitness-tracker/meals/planner.php" class="action-card">
                         <div class="action-icon" style="background: linear-gradient(135deg, #a1c4fd, #c2e9fb); color: #4d96ff;">
                             <i class="fas fa-utensils"></i>
@@ -2176,7 +2213,7 @@ $server_timestamp = $pakistan_timestamp * 1000; // Convert to milliseconds for J
                         <div class="action-title">Plan Meals</div>
                         <div class="action-desc">Create your meal plan</div>
                     </a>
-                    
+
                     <a href="/fitness-tracker/progress/charts.php" class="action-card">
                         <div class="action-icon" style="background: linear-gradient(135deg, #84fab0, #8fd3f4); color: #38b000;">
                             <i class="fas fa-chart-line"></i>
@@ -2184,7 +2221,7 @@ $server_timestamp = $pakistan_timestamp * 1000; // Convert to milliseconds for J
                         <div class="action-title">View Progress</div>
                         <div class="action-desc">Track your fitness journey</div>
                     </a>
-                    
+
                     <a href="/fitness-tracker/progress/photos.php" class="action-card">
                         <div class="action-icon" style="background: linear-gradient(135deg, #fbc2eb, #a6c1ee); color: #8338ec;">
                             <i class="fas fa-camera"></i>
@@ -2192,7 +2229,7 @@ $server_timestamp = $pakistan_timestamp * 1000; // Convert to milliseconds for J
                         <div class="action-title">Progress Photos</div>
                         <div class="action-desc">Visual transformation</div>
                     </a>
-                    
+
                     <a href="/fitness-tracker/profile.php" class="action-card">
                         <div class="action-icon" style="background: linear-gradient(135deg, #ffd1ff, #fad0c4); color: #ff6b6b;">
                             <i class="fas fa-bullseye"></i>
@@ -2202,96 +2239,100 @@ $server_timestamp = $pakistan_timestamp * 1000; // Convert to milliseconds for J
                     </a>
                 </div>
             </div>
-            
+
             <!-- Goal Progress -->
             <div class="col-lg-4 mb-4">
-                <?php if($goal_info && $goal_info['goal_type'] && $goal_info['goal_weight'] && $goal_info['weight']): ?>
-                <div class="goal-card">
-                    <div class="goal-header">
-                        <div class="goal-icon" style="background: var(--gradient-success); color: white;">
-                            <i class="fas fa-<?= $goal_info['goal_type'] == 'lose' ? 'arrow-down' : 'arrow-up' ?>"></i>
+                <?php if (
+                    $goal_info && isset($goal_info['goal_type']) && $goal_info['goal_type'] &&
+                    isset($goal_info['goal_weight']) && $goal_info['goal_weight'] &&
+                    isset($goal_info['weight']) && $goal_info['weight']
+                ): ?>
+                    <div class="goal-card">
+                        <div class="goal-header">
+                            <div class="goal-icon" style="background: var(--gradient-success); color: white;">
+                                <i class="fas fa-<?= $goal_info['goal_type'] == 'lose' ? 'arrow-down' : 'arrow-up' ?>"></i>
+                            </div>
+                            <div>
+                                <h5 class="mb-0">Goal Progress</h5>
+                                <p class="text-muted mb-0"><?= ucfirst($goal_info['goal_type']) ?> Weight</p>
+                            </div>
                         </div>
-                        <div>
-                            <h5 class="mb-0">Goal Progress</h5>
-                            <p class="text-muted mb-0"><?= ucfirst($goal_info['goal_type']) ?> Weight</p>
+
+                        <div class="progress-title">
+                            <span>Progress</span>
+                            <span class="fw-bold text-success"><?= round($goal_progress) ?>%</span>
+                        </div>
+
+                        <div class="progress-bar-custom">
+                            <div class="progress-fill" id="goalProgressFill" style="width: <?= $goal_progress ?>%"></div>
+                        </div>
+
+                        <div class="goal-stats">
+                            <div class="goal-stat">
+                                <div class="goal-value"><?= htmlspecialchars($goal_info['weight']) ?> kg</div>
+                                <div class="goal-label">Current</div>
+                            </div>
+                            <div class="goal-stat">
+                                <div class="goal-value"><?= htmlspecialchars($goal_info['goal_weight']) ?> kg</div>
+                                <div class="goal-label">Target</div>
+                            </div>
+                            <div class="goal-stat">
+                                <div class="goal-value"><?= abs($goal_info['weight'] - $goal_info['goal_weight']) ?> kg</div>
+                                <div class="goal-label">Remaining</div>
+                            </div>
+                        </div>
+
+                        <div class="text-center mt-3">
+                            <a href="/fitness-tracker/profile.php" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-edit me-1"></i>Update Progress
+                            </a>
                         </div>
                     </div>
-                    
-                    <div class="progress-title">
-                        <span>Progress</span>
-                        <span class="fw-bold text-success"><?= round($goal_progress) ?>%</span>
-                    </div>
-                    
-                    <div class="progress-bar-custom">
-                        <div class="progress-fill" id="goalProgressFill" style="width: <?= $goal_progress ?>%"></div>
-                    </div>
-                    
-                    <div class="goal-stats">
-                        <div class="goal-stat">
-                            <div class="goal-value"><?= $goal_info['weight'] ?> kg</div>
-                            <div class="goal-label">Current</div>
+                <?php elseif ($goal_info && isset($goal_info['goal_type']) && $goal_info['goal_type']): ?>
+                    <div class="goal-card">
+                        <div class="goal-header">
+                            <div class="goal-icon" style="background: var(--gradient-primary); color: white;">
+                                <i class="fas fa-bullseye"></i>
+                            </div>
+                            <div>
+                                <h5 class="mb-0">Your Goal</h5>
+                                <p class="text-muted mb-0">Set your current weight</p>
+                            </div>
                         </div>
-                        <div class="goal-stat">
-                            <div class="goal-value"><?= $goal_info['goal_weight'] ?> kg</div>
-                            <div class="goal-label">Target</div>
-                        </div>
-                        <div class="goal-stat">
-                            <div class="goal-value"><?= abs($goal_info['weight'] - $goal_info['goal_weight']) ?> kg</div>
-                            <div class="goal-label">Remaining</div>
-                        </div>
+
+                        <p class="mb-3">
+                            You have set a goal to <span class="fw-bold"><?= ucfirst($goal_info['goal_type']) ?></span> weight
+                            <?php if (isset($goal_info['goal_weight']) && $goal_info['goal_weight']): ?>
+                                to <span class="fw-bold"><?= htmlspecialchars($goal_info['goal_weight']) ?> kg</span>
+                            <?php endif; ?>
+                        </p>
+
+                        <?php if (!isset($goal_info['weight']) || !$goal_info['weight']): ?>
+                            <a href="/fitness-tracker/profile.php" class="btn btn-primary w-100">
+                                <i class="fas fa-weight me-1"></i>Set Current Weight
+                            </a>
+                        <?php endif; ?>
                     </div>
-                    
-                    <div class="text-center mt-3">
-                        <a href="/fitness-tracker/profile.php" class="btn btn-outline-primary btn-sm">
-                            <i class="fas fa-edit me-1"></i>Update Progress
+                <?php else: ?>
+                    <div class="goal-card">
+                        <div class="goal-header">
+                            <div class="goal-icon" style="background: var(--gradient-secondary); color: white;">
+                                <i class="fas fa-flag"></i>
+                            </div>
+                            <div>
+                                <h5 class="mb-0">Set Your First Goal</h5>
+                                <p class="text-muted mb-0">Start your fitness journey</p>
+                            </div>
+                        </div>
+
+                        <p class="mb-3">Setting goals helps you stay motivated and track progress. Define what you want to achieve!</p>
+
+                        <a href="/fitness-tracker/profile.php" class="btn btn-primary w-100">
+                            <i class="fas fa-bullseye me-1"></i>Set Fitness Goals
                         </a>
                     </div>
-                </div>
-                <?php elseif($goal_info && $goal_info['goal_type']): ?>
-                <div class="goal-card">
-                    <div class="goal-header">
-                        <div class="goal-icon" style="background: var(--gradient-primary); color: white;">
-                            <i class="fas fa-bullseye"></i>
-                        </div>
-                        <div>
-                            <h5 class="mb-0">Your Goal</h5>
-                            <p class="text-muted mb-0">Set your current weight</p>
-                        </div>
-                    </div>
-                    
-                    <p class="mb-3">
-                        You have set a goal to <span class="fw-bold"><?= ucfirst($goal_info['goal_type']) ?></span> weight
-                        <?php if($goal_info['goal_weight']): ?>
-                        to <span class="fw-bold"><?= $goal_info['goal_weight'] ?> kg</span>
-                        <?php endif; ?>
-                    </p>
-                    
-                    <?php if(!$goal_info['weight']): ?>
-                    <a href="/fitness-tracker/profile.php" class="btn btn-primary w-100">
-                        <i class="fas fa-weight me-1"></i>Set Current Weight
-                    </a>
-                    <?php endif; ?>
-                </div>
-                <?php else: ?>
-                <div class="goal-card">
-                    <div class="goal-header">
-                        <div class="goal-icon" style="background: var(--gradient-secondary); color: white;">
-                            <i class="fas fa-flag"></i>
-                        </div>
-                        <div>
-                            <h5 class="mb-0">Set Your First Goal</h5>
-                            <p class="text-muted mb-0">Start your fitness journey</p>
-                        </div>
-                    </div>
-                    
-                    <p class="mb-3">Setting goals helps you stay motivated and track progress. Define what you want to achieve!</p>
-                    
-                    <a href="/fitness-tracker/profile.php" class="btn btn-primary w-100">
-                        <i class="fas fa-bullseye me-1"></i>Set Fitness Goals
-                    </a>
-                </div>
                 <?php endif; ?>
-                
+
                 <!-- Daily Motivation -->
                 <div class="goal-card mt-3">
                     <div class="goal-header">
@@ -2311,31 +2352,7 @@ $server_timestamp = $pakistan_timestamp * 1000; // Convert to milliseconds for J
             </div>
         </div>
     </div>
-    
-    <!-- Mobile Navigation -->
-    <div class="mobile-nav">
-        <a href="dashboard.php" class="mobile-nav-item active">
-            <i class="fas fa-home"></i>
-            <span>Dashboard</span>
-        </a>
-        <a href="/fitness-tracker/workouts/" class="mobile-nav-item">
-            <i class="fas fa-dumbbell"></i>
-            <span>Workouts</span>
-        </a>
-        <a href="/fitness-tracker/meals/" class="mobile-nav-item">
-            <i class="fas fa-utensils"></i>
-            <span>Meals</span>
-        </a>
-        <a href="/fitness-tracker/progress/" class="mobile-nav-item">
-            <i class="fas fa-chart-line"></i>
-            <span>Progress</span>
-        </a>
-        <a href="/fitness-tracker/profile.php" class="mobile-nav-item">
-            <i class="fas fa-user"></i>
-            <span>Profile</span>
-        </a>
-    </div>
-    
+
     <!-- Footer -->
     <div class="footer">
         <p class="mb-0">© 2023 FitTrack Pro. All rights reserved. | <a href="#">Contact Support</a></p>
@@ -2343,7 +2360,7 @@ $server_timestamp = $pakistan_timestamp * 1000; // Convert to milliseconds for J
 
     <!-- Bootstrap JS Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
+
     <script>
         // Initialize Weekly Activity Chart
         const weeklyCtx = document.getElementById('weeklyChart').getContext('2d');
@@ -2402,41 +2419,106 @@ $server_timestamp = $pakistan_timestamp * 1000; // Convert to milliseconds for J
                 }
             }
         });
-        
-        // Animate goal progress bar on page load
+
+        // Simple navbar toggler icon animation
         document.addEventListener('DOMContentLoaded', function() {
+            const navbarToggler = document.querySelector('.navbar-toggler');
+            const navbarClose = document.getElementById('navbarClose');
+
+            // Add rotation animation to hamburger icon
+            if (navbarToggler) {
+                navbarToggler.addEventListener('click', function() {
+                    const icon = this.querySelector('.navbar-toggler-icon');
+                    if (icon) {
+                        if (this.getAttribute('aria-expanded') === 'true') {
+                            // Menu is opening
+                            icon.style.transform = 'rotate(90deg)';
+                            document.body.classList.add('menu-open');
+                        } else {
+                            // Menu is closing
+                            icon.style.transform = 'rotate(0deg)';
+                            document.body.classList.remove('menu-open');
+                        }
+                    }
+                });
+            }
+
+            // Handle close button click
+            if (navbarClose) {
+                navbarClose.addEventListener('click', function() {
+                    const navbarCollapse = document.querySelector('.navbar-collapse');
+                    if (navbarCollapse.classList.contains('show')) {
+                        // Trigger the hamburger button click to close
+                        navbarToggler.click();
+                    }
+                });
+            }
+
+            // Close menu when clicking on a nav link (on mobile)
+            const navLinks = document.querySelectorAll('.navbar-nav .nav-link');
+            navLinks.forEach(link => {
+                link.addEventListener('click', function() {
+                    if (window.innerWidth < 992) {
+                        const navbarCollapse = document.querySelector('.navbar-collapse');
+                        if (navbarCollapse.classList.contains('show')) {
+                            // Close the navbar
+                            navbarToggler.click();
+                        }
+                    }
+                });
+            });
+
+            // Close menu when clicking outside (for mobile)
+            document.addEventListener('click', function(event) {
+                if (window.innerWidth < 992) {
+                    const navbarCollapse = document.querySelector('.navbar-collapse');
+                    const isClickInsideNavbar = document.querySelector('.navbar').contains(event.target);
+
+                    if (navbarCollapse && navbarCollapse.classList.contains('show') && !isClickInsideNavbar) {
+                        // Click was outside navbar, close it
+                        navbarToggler.click();
+                    }
+                }
+            });
+
+            // Animate goal progress bar on page load
             const goalProgressFill = document.getElementById('goalProgressFill');
             if (goalProgressFill) {
                 // Reset width to 0
                 goalProgressFill.style.width = '0%';
-                
+
                 // Animate to actual width after a short delay
                 setTimeout(() => {
                     const targetWidth = goalProgressFill.getAttribute('style').match(/width: (\d+)%/)[1];
                     goalProgressFill.style.width = targetWidth + '%';
                 }, 300);
             }
-            
+
             // Update Pakistan time immediately and set interval
             updatePakistanTime();
             setInterval(updatePakistanTime, 60000); // Update every minute
         });
-        
+
         // Function to update Pakistan time using browser's timezone
         function updatePakistanTime() {
             const now = new Date();
-            
+
             // Get current time in UTC
             const utcTime = now.getTime() + (now.getTimezoneOffset() * 60000);
-            
+
             // Pakistan is UTC+5
             const pakistanOffset = 5 * 60; // 5 hours in minutes
             const pakistanTime = new Date(utcTime + (pakistanOffset * 60000));
-            
+
             // Format date
-            const optionsDate = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            const optionsDate = {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            };
             const dateStr = pakistanTime.toLocaleDateString('en-US', optionsDate);
-            
+
             // Format time
             let hours = pakistanTime.getHours();
             const minutes = pakistanTime.getMinutes().toString().padStart(2, '0');
@@ -2444,15 +2526,15 @@ $server_timestamp = $pakistan_timestamp * 1000; // Convert to milliseconds for J
             hours = hours % 12;
             hours = hours ? hours : 12; // the hour '0' should be '12'
             const timeStr = hours + ':' + minutes + ' ' + ampm;
-            
+
             // Update display
             document.getElementById('current-date').textContent = dateStr;
             document.getElementById('current-time').textContent = timeStr;
-            
+
             // Update greeting based on Pakistan time
             const hour = pakistanTime.getHours();
             let greeting = "Good night";
-            
+
             if (hour >= 5 && hour < 12) {
                 greeting = "Good morning";
             } else if (hour >= 12 && hour < 17) {
@@ -2462,7 +2544,7 @@ $server_timestamp = $pakistan_timestamp * 1000; // Convert to milliseconds for J
             } else {
                 greeting = "Good night";
             }
-            
+
             // Update greeting in header
             const greetingElement = document.getElementById('dynamic-greeting');
             if (greetingElement) {
@@ -2473,4 +2555,5 @@ $server_timestamp = $pakistan_timestamp * 1000; // Convert to milliseconds for J
         }
     </script>
 </body>
+
 </html>
