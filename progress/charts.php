@@ -1,9 +1,9 @@
-<?php 
+<?php
 // Set timezone to Pakistan/Islamabad
 date_default_timezone_set('Asia/Karachi');
 
 require '../includes/functions.php';
-require_login(); 
+require_login();
 ?>
 <?php
 $user_id = get_user_id();
@@ -15,7 +15,7 @@ try {
     $checkTable = $pdo->prepare("SHOW COLUMNS FROM progress LIKE 'created_at'");
     $checkTable->execute();
     $hasCreatedAt = $checkTable->fetch();
-    
+
     if (!$hasCreatedAt) {
         // Add created_at column if it doesn't exist
         $pdo->exec("ALTER TABLE progress ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP");
@@ -29,7 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     if (isset($_POST['weight']) && is_numeric($_POST['weight']) && $_POST['weight'] > 0) {
         $weight = floatval($_POST['weight']);
         $current_time = date('Y-m-d H:i:s');
-        
+
         try {
             // Always insert new weight record
             $stmt = $pdo->prepare("INSERT INTO progress (user_id, weight, date, created_at) VALUES (?, ?, ?, ?)");
@@ -61,7 +61,7 @@ try {
     $stmt = $pdo->prepare("SELECT date, weight, created_at FROM progress WHERE user_id = ? ORDER BY created_at ASC");
     $stmt->execute([$user_id]);
     $progress = $stmt->fetchAll();
-    
+
     foreach ($progress as $p) {
         if (!empty($p['created_at'])) {
             // Format date according to Pakistan timezone
@@ -84,7 +84,7 @@ try {
     $stmt = $pdo->prepare("SELECT weight, created_at FROM progress WHERE user_id = ? ORDER BY created_at DESC LIMIT 1");
     $stmt->execute([$user_id]);
     $latestWeight = $stmt->fetch();
-    
+
     if ($latestWeight) {
         $current_weight = $latestWeight['weight'] ?? 0;
         $last_weight_date = $latestWeight['created_at'] ?? '';
@@ -163,7 +163,7 @@ if ($goal_info && $goal_info['goal_weight'] && $goal_info['weight']) {
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     <title>Progress Dashboard - FitTrack Pro</title>
 
     <!-- Bootstrap 5 CSS -->
@@ -177,112 +177,218 @@ if ($goal_info && $goal_info['goal_weight'] && $goal_info['weight']) {
 
     <style>
         :root {
-            --primary-color: #3a86ff;
-            --primary-dark: #2667cc;
-            --secondary-color: #ff006e;
-            --accent-color: #8338ec;
-            --success-color: #38b000;
-            --warning-color: #ffbe0b;
-            --protein-color: #3a86ff;
-            --carbs-color: #ff006e;
-            --fat-color: #ffbe0b;
-            --light-color: #f8f9fa;
-            --dark-color: #212529;
-            --gradient-primary: linear-gradient(135deg, #3a86ff, #8338ec);
-            --gradient-secondary: linear-gradient(135deg, #ff006e, #fb5607);
-            --gradient-success: linear-gradient(135deg, #38b000, #70e000);
-            --gradient-warning: linear-gradient(135deg, #ffbe0b, #ff9100);
-            --shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-            --border-radius: 16px;
+            --primary: #00d4ff;
+            --primary-dark: #0099cc;
+            --secondary: #ff2d75;
+            --accent: #9d4edd;
+            --success: #00e676;
+            --warning: #ffc107;
+            --error: #ff4757;
+            --dark: #0a0f23;
+            --darker: #070a17;
+            --light: #f8fafc;
+            --gray: #64748b;
+            --card-bg: rgba(255, 255, 255, 0.03);
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --gradient: linear-gradient(135deg, #00d4ff 0%, #9d4edd 50%, #ff2d75 100%);
+            --gradient-primary: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
+            --gradient-secondary: linear-gradient(135deg, #ff2d75 0%, #ff006e 100%);
+            --gradient-accent: linear-gradient(135deg, #9d4edd 0%, #8338ec 100%);
+            --gradient-success: linear-gradient(135deg, #00e676 0%, #00b894 100%);
+            --neon-shadow: 0 0 30px rgba(0, 212, 255, 0.4);
+            --glow: drop-shadow(0 0 10px rgba(0, 212, 255, 0.5));
         }
 
         * {
-            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
         body {
-            background-color: #f5f9ff;
-            color: var(--dark-color);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--darker);
+            color: var(--light);
             min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+            padding-top: 80px;
         }
 
-        .logo {
-            font-family: 'Montserrat', sans-serif;
-            font-weight: 900;
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background:
+                radial-gradient(circle at 10% 20%, rgba(0, 212, 255, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(255, 45, 117, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 50% 50%, rgba(157, 78, 221, 0.1) 0%, transparent 60%);
+            z-index: -2;
+        }
+
+        /* ==================== NAVIGATION ==================== */
+        .navbar {
+            background: rgba(10, 15, 35, 0.98) !important;
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 0.8rem 0;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+            height: 80px;
+        }
+
+        .navbar-brand.logo {
             font-size: 1.8rem;
-            background: var(--gradient-secondary);
+            font-weight: 900;
+            background: var(--gradient);
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            filter: var(--glow);
+            letter-spacing: -0.5px;
+            margin-left: 1rem;
         }
 
-        .navbar {
-            background: white;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-            padding: 1rem 0;
+        .navbar-toggler {
+            border: 1px solid rgba(255, 255, 255, 0.2) !important;
+            padding: 0.5rem 0.8rem;
+            margin-right: 1rem;
+            background: transparent !important;
+            transition: all 0.3s ease;
+            display: none;
         }
 
-        .nav-link {
-            color: #495057;
+        .navbar-toggler:focus {
+            box-shadow: 0 0 0 2px rgba(0, 212, 255, 0.3) !important;
+            outline: none !important;
+        }
+
+        .navbar-toggler-icon {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 0.8%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") !important;
+            width: 1.5em;
+            height: 1.5em;
+            transition: transform 0.3s ease;
+        }
+
+        .navbar-collapse {
+            background: rgba(10, 15, 35, 0.98);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border-radius: 0 0 15px 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-top: none;
+        }
+
+        .navbar-nav {
+            gap: 0.5rem;
+        }
+
+        .navbar-nav .nav-link {
+            padding: 12px 20px;
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             font-weight: 500;
-            padding: 0.5rem 1rem;
-            border-radius: 10px;
-            transition: all 0.3s;
-        }
-
-        .nav-link:hover,
-        .nav-link.active {
-            background: var(--gradient-primary);
-            color: white;
-        }
-
-        .nav-link i {
-            margin-right: 8px;
-        }
-
-        .page-header {
-            background: var(--gradient-primary);
-            color: white;
-            border-radius: var(--border-radius);
-            padding: 2rem;
-            margin-bottom: 2rem;
             position: relative;
             overflow: hidden;
         }
 
-        .page-header::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            right: -10%;
-            width: 300px;
-            height: 300px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 50%;
+        .navbar-nav .nav-link.active {
+            background: var(--gradient-primary);
+            color: white;
+            box-shadow: 0 4px 20px rgba(0, 212, 255, 0.3);
+        }
+
+        .navbar-nav .nav-link:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-2px);
+        }
+
+        .navbar-nav .nav-link i {
+            font-size: 1.2rem;
+            width: 20px;
+        }
+
+        /* Page Header */
+        .page-header {
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(157, 78, 221, 0.1));
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 28px;
+            padding: 2.5rem;
+            margin: 2rem 0;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 212, 255, 0.3);
         }
 
         .page-header h1 {
-            font-size: 2.2rem;
-            margin-bottom: 0.5rem;
+            font-size: 2.5rem;
+            font-weight: 900;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #ffffff 0%, var(--primary) 50%, var(--accent) 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            line-height: 1.2;
+            letter-spacing: -0.5px;
         }
 
         .page-header p {
-            font-size: 1.1rem;
-            opacity: 0.9;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 1.2rem;
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+        }
+
+        /* Stats Container */
+        .stats-container {
+            background: linear-gradient(145deg, rgba(0, 212, 255, 0.05), rgba(0, 212, 255, 0.02));
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(0, 212, 255, 0.15);
+            border-radius: 28px;
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 20px 60px rgba(0, 212, 255, 0.1);
         }
 
         .stats-card {
-            background: white;
-            border-radius: var(--border-radius);
-            padding: 1.5rem;
-            box-shadow: var(--shadow);
-            border: none;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 20px;
+            padding: 2rem;
+            border-left: 5px solid var(--primary);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
             height: 100%;
-            transition: transform 0.3s;
+            margin-bottom: 1.5rem;
         }
 
         .stats-card:hover {
             transform: translateY(-5px);
+            background: rgba(0, 212, 255, 0.08);
+            border-left-color: var(--accent);
+            box-shadow: 0 15px 40px rgba(0, 212, 255, 0.15);
         }
 
         .stats-icon {
@@ -293,80 +399,205 @@ if ($goal_info && $goal_info['goal_weight'] && $goal_info['weight']) {
             align-items: center;
             justify-content: center;
             font-size: 1.5rem;
-            margin-bottom: 1rem;
+            margin-bottom: 1.5rem;
+            background: var(--gradient-primary);
+            color: white;
         }
 
         .stats-value {
-            font-size: 2rem;
-            font-weight: 700;
-            margin-bottom: 0.25rem;
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: white;
+            margin-bottom: 0.5rem;
+            line-height: 1;
         }
 
         .stats-label {
-            color: #6c757d;
-            font-size: 0.9rem;
-            font-weight: 500;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.95rem;
+            margin-bottom: 0.25rem;
         }
 
+        .stats-subtitle {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+        }
+
+        /* Trend Indicators */
+        .trend-indicator {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-left: 0.5rem;
+        }
+
+        .trend-up {
+            background: rgba(0, 230, 118, 0.1);
+            color: var(--success);
+        }
+
+        .trend-down {
+            background: rgba(255, 45, 117, 0.1);
+            color: var(--secondary);
+        }
+
+        .trend-neutral {
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        /* Chart Container - FIXED FOR MOBILE */
         .chart-container {
-            background: white;
-            border-radius: var(--border-radius);
+            background: linear-gradient(145deg, rgba(157, 78, 221, 0.05), rgba(157, 78, 221, 0.02));
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(157, 78, 221, 0.15);
+            border-radius: 28px;
             padding: 2rem;
-            box-shadow: var(--shadow);
-            border: none;
             margin-bottom: 2rem;
-            height: 400px;
+            box-shadow: 0 20px 60px rgba(157, 78, 221, 0.1);
+            height: auto;
+            min-height: 300px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .chart-wrapper {
+            width: 100%;
+            height: 100%;
+            min-height: 250px;
+            position: relative;
+        }
+
+        .chart-canvas-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        #weightChart {
+            width: 100% !important;
+            height: 100% !important;
+            min-height: 250px;
         }
 
         .chart-header {
             display: flex;
             justify-content: space-between;
-            align-items: center;
+            align-items: flex-start;
             margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
         }
 
         .chart-title {
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: var(--dark-color);
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .chart-title i {
+            color: var(--accent);
+            font-size: 1.3rem;
         }
 
         .chart-controls {
             display: flex;
             gap: 0.5rem;
+            flex-wrap: wrap;
+            justify-content: flex-end;
         }
 
         .chart-btn {
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
             border-radius: 8px;
-            padding: 0.25rem 0.75rem;
+            padding: 0.35rem 0.75rem;
             font-size: 0.85rem;
             font-weight: 500;
-            color: #495057;
-            transition: all 0.3s;
+            color: rgba(255, 255, 255, 0.8);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            min-width: 45px;
+            text-align: center;
         }
 
         .chart-btn:hover,
         .chart-btn.active {
             background: var(--gradient-primary);
             color: white;
-            border-color: var(--primary-color);
+            border-color: var(--primary);
+            box-shadow: 0 4px 15px rgba(0, 212, 255, 0.3);
         }
 
-        .macro-card {
-            background: white;
-            border-radius: var(--border-radius);
-            padding: 1.5rem;
-            box-shadow: var(--shadow);
-            border: none;
+        /* Recent Weights Container */
+        .recent-weights {
+            background: linear-gradient(145deg, rgba(255, 45, 117, 0.05), rgba(255, 45, 117, 0.02));
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 45, 117, 0.15);
+            border-radius: 28px;
+            padding: 2rem;
             margin-bottom: 2rem;
+            box-shadow: 0 20px 60px rgba(255, 45, 117, 0.1);
+        }
+
+        /* Table Styles */
+        .recent-weights table {
+            width: 100%;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .recent-weights th {
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.7);
+            padding: 1rem;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+            text-align: left;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .recent-weights td {
+            padding: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            color: white;
+        }
+
+        .recent-weights tr:last-child td {
+            border-bottom: none;
+        }
+
+        .recent-weights tr:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        /* Macronutrient Card */
+        .macro-card {
+            background: linear-gradient(145deg, rgba(0, 212, 255, 0.05), rgba(0, 212, 255, 0.02));
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(0, 212, 255, 0.15);
+            border-radius: 28px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 20px 60px rgba(0, 212, 255, 0.1);
         }
 
         .macro-donut {
             width: 200px;
             height: 200px;
-            margin: 0 auto;
+            margin: 0 auto 2rem auto;
         }
 
         .macro-breakdown {
@@ -379,30 +610,34 @@ if ($goal_info && $goal_info['goal_weight'] && $goal_info['weight']) {
         .macro-item {
             text-align: center;
             padding: 1rem;
-            border-radius: 12px;
-            transition: transform 0.3s;
+            border-radius: 16px;
+            transition: transform 0.3s ease;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         .macro-item:hover {
             transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.05);
         }
 
         .macro-item.protein {
-            background: linear-gradient(135deg, rgba(58, 134, 255, 0.1), rgba(58, 134, 255, 0.05));
+            border-color: rgba(58, 134, 255, 0.2);
         }
 
         .macro-item.carbs {
-            background: linear-gradient(135deg, rgba(255, 0, 110, 0.1), rgba(255, 0, 110, 0.05));
+            border-color: rgba(255, 0, 110, 0.2);
         }
 
         .macro-item.fat {
-            background: linear-gradient(135deg, rgba(255, 190, 11, 0.1), rgba(255, 190, 11, 0.05));
+            border-color: rgba(255, 190, 11, 0.2);
         }
 
         .macro-amount {
             font-size: 1.5rem;
             font-weight: 700;
             margin-bottom: 0.25rem;
+            color: white;
         }
 
         .macro-name {
@@ -413,76 +648,30 @@ if ($goal_info && $goal_info['goal_weight'] && $goal_info['weight']) {
         }
 
         .macro-grams {
-            color: #6c757d;
+            color: rgba(255, 255, 255, 0.6);
             font-size: 0.85rem;
             margin-top: 0.25rem;
         }
 
-        .goal-card {
-            background: white;
-            border-radius: var(--border-radius);
-            padding: 1.5rem;
-            box-shadow: var(--shadow);
-            border: none;
-            margin-bottom: 2rem;
-        }
-
-        .goal-progress {
-            margin: 1.5rem 0;
-        }
-
-        .progress-bar {
-            height: 12px;
-            border-radius: 10px;
-            background-color: #e9ecef;
-            overflow: hidden;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: var(--gradient-success);
-            border-radius: 10px;
-            transition: width 1s ease-in-out;
-        }
-
-        .goal-stats {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 1rem;
-            margin-top: 1.5rem;
-        }
-
-        .goal-stat {
-            text-align: center;
-            padding: 1rem;
-            background: #f8f9fa;
-            border-radius: 12px;
-        }
-
-        .goal-value {
-            font-size: 1.5rem;
-            font-weight: 700;
-            margin-bottom: 0.25rem;
-        }
-
-        .goal-label {
-            color: #6c757d;
-            font-size: 0.85rem;
-        }
-
+        /* Weight Form Card */
         .weight-form-card {
-            background: white;
-            border-radius: var(--border-radius);
-            padding: 1.5rem;
-            box-shadow: var(--shadow);
-            border: none;
+            background: linear-gradient(145deg, rgba(157, 78, 221, 0.05), rgba(157, 78, 221, 0.02));
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(157, 78, 221, 0.15);
+            border-radius: 28px;
+            padding: 2rem;
             margin-bottom: 2rem;
+            box-shadow: 0 20px 60px rgba(157, 78, 221, 0.1);
         }
 
+        /* Form Elements */
         .form-label {
             font-weight: 600;
-            margin-bottom: 0.5rem;
-            color: var(--dark-color);
+            margin-bottom: 0.8rem;
+            color: white;
+            display: block;
+            font-size: 1.1rem;
         }
 
         .input-group {
@@ -490,15 +679,21 @@ if ($goal_info && $goal_info['goal_weight'] && $goal_info['weight']) {
         }
 
         .form-control {
-            padding: 0.75rem 1rem;
-            border-radius: 10px;
-            border: 2px solid #e9ecef;
-            transition: all 0.3s;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: white;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            width: 100%;
         }
 
         .form-control:focus {
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 0.25rem rgba(58, 134, 255, 0.25);
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.2);
+            background: rgba(255, 255, 255, 0.08);
         }
 
         .input-unit {
@@ -506,1247 +701,574 @@ if ($goal_info && $goal_info['goal_weight'] && $goal_info['weight']) {
             right: 1rem;
             top: 50%;
             transform: translateY(-50%);
-            color: #6c757d;
+            color: rgba(255, 255, 255, 0.6);
             font-weight: 500;
-            background: white;
-            padding: 0 0.5rem;
+            pointer-events: none;
+        }
+
+        .form-text {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            display: block;
+        }
+
+        /* Buttons */
+        .btn {
+            border: none;
+            padding: 0.875rem 1.75rem;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            text-decoration: none;
         }
 
         .btn-primary {
             background: var(--gradient-primary);
-            border: none;
-            padding: 0.75rem 1.5rem;
-            font-weight: 600;
-            border-radius: 10px;
-            transition: all 0.3s;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
+            color: white;
         }
 
         .btn-primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 7px 15px rgba(58, 134, 255, 0.3);
+            box-shadow: 0 10px 30px rgba(0, 212, 255, 0.3);
         }
 
-        .last-recorded {
-            background: #f8f9fa;
-            padding: 1rem;
-            border-radius: 10px;
-            margin-top: 1rem;
-            text-align: center;
+        .btn-success {
+            background: var(--gradient-success);
+            color: white;
         }
 
-        .insights-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 1.5rem;
-            margin-top: 2rem;
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 230, 118, 0.3);
         }
 
-        .insight-card {
-            background: white;
-            border-radius: var(--border-radius);
-            padding: 1.5rem;
-            box-shadow: var(--shadow);
-            border: none;
-        }
-
-        .insight-header {
-            display: flex;
-            align-items: center;
-            margin-bottom: 1rem;
-        }
-
-        .insight-icon {
-            width: 50px;
-            height: 50px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            margin-right: 1rem;
-        }
-
-        .insight-title {
-            font-weight: 600;
-            font-size: 1.1rem;
-        }
-
-        .mobile-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: white;
-            box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.1);
-            padding: 0.75rem;
-            display: none;
-            z-index: 1000;
-        }
-
-        .mobile-nav-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-decoration: none;
-            color: #6c757d;
-            font-size: 0.8rem;
-        }
-
-        .mobile-nav-item.active {
-            color: var(--primary-color);
-        }
-
-        .mobile-nav-item i {
-            font-size: 1.2rem;
-            margin-bottom: 0.25rem;
-        }
-
-        @media (max-width: 768px) {
-            .mobile-nav {
-                display: flex;
-                justify-content: space-around;
-            }
-
-            .navbar-nav {
-                display: none;
-            }
-
-            .page-header {
-                padding: 1.5rem;
-            }
-
-            .chart-container {
-                height: 300px;
-            }
-
-            .macro-breakdown,
-            .goal-stats {
-                grid-template-columns: 1fr;
-            }
-
-            .insights-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .trend-indicator {
-            display: inline-flex;
-            align-items: center;
-            padding: 0.25rem 0.75rem;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            margin-left: 0.5rem;
-        }
-
-        .trend-up {
-            background: rgba(56, 176, 0, 0.1);
-            color: var(--success-color);
-        }
-
-        .trend-down {
-            background: rgba(255, 0, 110, 0.1);
-            color: var(--secondary-color);
-        }
-
-        .trend-neutral {
-            background: rgba(108, 117, 125, 0.1);
-            color: #6c757d;
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 3rem 1rem;
-            color: #6c757d;
-        }
-
-        .empty-state i {
-            font-size: 4rem;
-            color: #dee2e6;
-            margin-bottom: 1rem;
-        }
-
-        /* Recent weights table */
-        .recent-weights {
-            background: white;
-            border-radius: var(--border-radius);
-            padding: 1.5rem;
-            box-shadow: var(--shadow);
-            border: none;
-            margin-top: 2rem;
-        }
-
-        .recent-weights table {
+        .btn-w-100 {
             width: 100%;
         }
 
-        .recent-weights th {
-            font-weight: 600;
-            color: #6c757d;
-            padding: 0.75rem;
-            border-bottom: 2px solid #dee2e6;
-            text-align: left;
+        /* Last Recorded Section */
+        .last-recorded {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 1rem;
+            border-radius: 12px;
+            margin-top: 1.5rem;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
-        .recent-weights td {
-            padding: 0.75rem;
-            border-bottom: 1px solid #dee2e6;
+        .last-recorded i {
+            color: var(--primary);
+            margin-right: 0.5rem;
         }
 
-        .recent-weights tr:last-child td {
-            border-bottom: none;
+        /* Empty States */
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
         }
 
-        /* Notification styles */
-        .notification {
-            position: fixed;
+        .empty-state-icon {
+            font-size: 4rem;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 1.5rem;
+            opacity: 0.5;
+        }
+
+        .empty-state h4 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            color: white;
+            letter-spacing: -0.5px;
+        }
+
+        .empty-state p {
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 2rem;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+            line-height: 1.6;
+            font-size: 1rem;
+        }
+
+        /* Alerts */
+        .alert {
+            position: relative;
+            padding: 1rem 1.5rem;
+            margin-bottom: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .alert-success {
+            background: rgba(0, 230, 118, 0.1);
+            border-color: rgba(0, 230, 118, 0.2);
+            color: var(--success);
+        }
+
+        .alert-danger {
+            background: rgba(255, 45, 117, 0.1);
+            border-color: rgba(255, 45, 117, 0.2);
+            color: var(--secondary);
+        }
+
+        .alert i {
+            margin-right: 0.5rem;
+        }
+
+        .btn-close {
+            filter: invert(1) brightness(2);
+            opacity: 0.7;
+        }
+
+        .btn-close:hover {
+            opacity: 1;
+        }
+
+        /* Mobile navbar close button */
+        .navbar-close {
+            position: absolute;
             top: 20px;
             right: 20px;
-            z-index: 1050;
-            min-width: 300px;
-            animation: slideIn 0.3s ease-out;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 1003;
+            display: none;
         }
 
-        @keyframes slideIn {
+        .navbar-close:hover {
+            background: var(--secondary);
+            transform: rotate(90deg);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 12px;
+            height: 12px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--gradient);
+            border-radius: 6px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary);
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
             from {
-                transform: translateX(100%);
                 opacity: 0;
+                transform: translateY(40px);
             }
 
             to {
-                transform: translateX(0);
                 opacity: 1;
+                transform: translateY(0);
             }
         }
 
-        /* ============================================
-   PREMIUM MOBILE RESPONSIVE DESIGN - PROGRESS CHARTS
-   ============================================ */
-
-/* Base mobile styles */
-@media (max-width: 767.98px) {
-    /* Reset container spacing */
-    .container.mt-4 {
-        padding-left: 0 !important;
-        padding-right: 0 !important;
-        max-width: 100%;
-        margin-top: 0 !important;
-    }
-    
-    /* Body background and padding */
-    body {
-        background: #f5f9ff;
-        padding-bottom: 70px; /* Space for mobile nav */
-    }
-    
-    /* Mobile Navigation - Enhanced */
-    .mobile-nav {
-        display: flex !important;
-        background: white;
-        border-radius: 25px 25px 0 0;
-        padding: 0.75rem 0.5rem;
-        box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.15);
-        position: fixed;
-        bottom: 0;
-        left: 0.5rem;
-        right: 0.5rem;
-        margin: 0 auto;
-        max-width: 500px;
-        z-index: 1000;
-    }
-    
-    .mobile-nav-item {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        text-decoration: none;
-        color: #94a3b8;
-        font-size: 0.75rem;
-        padding: 0.5rem 0.25rem;
-        border-radius: 12px;
-        transition: all 0.3s ease;
-    }
-    
-    .mobile-nav-item:hover,
-    .mobile-nav-item.active {
-        color: #3a86ff;
-        background: rgba(58, 134, 255, 0.08);
-        transform: translateY(-3px);
-    }
-    
-    .mobile-nav-item i {
-        font-size: 1.3rem;
-        margin-bottom: 0.25rem;
-        transition: all 0.3s ease;
-    }
-    
-    .mobile-nav-item.active i {
-        transform: scale(1.1);
-    }
-    
-    /* Hide desktop navbar on mobile */
-    .navbar-nav {
-        display: none !important;
-    }
-    
-    .navbar-toggler {
-        border: none;
-        padding: 0.5rem;
-    }
-    
-    .navbar-toggler:focus {
-        box-shadow: none;
-    }
-    
-    /* Page Header - Redesigned for mobile */
-    .page-header {
-        border-radius: 0 0 32px 32px !important;
-        padding: 1.5rem !important;
-        margin: 0 0 1.5rem 0 !important;
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .page-header::before {
-        display: none;
-    }
-    
-    .page-header::after {
-        content: '';
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        height: 40px;
-        background: linear-gradient(to top, rgba(0,0,0,0.05), transparent);
-    }
-    
-    .page-header h1 {
-        font-size: 1.5rem !important;
-        margin-bottom: 0.5rem;
-        line-height: 1.3;
-    }
-    
-    .page-header p {
-        font-size: 0.95rem;
-        margin-bottom: 0;
-    }
-    
-    /* Alerts */
-    .alert {
-        margin: 0 0.75rem 1rem 0.75rem !important;
-        border-radius: 16px !important;
-        padding: 1rem !important;
-        font-size: 0.9rem;
-    }
-    
-    .alert i {
-        font-size: 1.1rem !important;
-        margin-right: 0.5rem !important;
-    }
-    
-    /* Stats Overview - Mobile Grid */
-    .row.mb-4 {
-        margin: 0 0.75rem 1.5rem 0.75rem !important;
-    }
-    
-    .stats-card {
-        padding: 1.25rem !important;
-        border-radius: 16px !important;
-        margin-bottom: 1rem !important;
-    }
-    
-    .stats-icon {
-        width: 50px !important;
-        height: 50px !important;
-        font-size: 1.25rem !important;
-        margin-bottom: 0.75rem !important;
-    }
-    
-    .stats-value {
-        font-size: 1.75rem !important;
-        margin-bottom: 0.125rem !important;
-    }
-    
-    .stats-label {
-        font-size: 0.85rem !important;
-    }
-    
-    .small.text-muted.mt-2 {
-        font-size: 0.8rem !important;
-        margin-top: 0.5rem !important;
-    }
-    
-    .trend-indicator {
-        font-size: 0.75rem !important;
-        padding: 0.2rem 0.5rem !important;
-        margin-left: 0.5rem !important;
-    }
-    
-    /* Main Content Row */
-    .row {
-        margin: 0 !important;
-    }
-    
-    .col-lg-8,
-    .col-lg-4 {
-        padding: 0 !important;
-    }
-    
-    /* Chart Container - Mobile Optimized */
-    .chart-container {
-        margin: 0 0.75rem 1.5rem 0.75rem !important;
-        padding: 1.25rem !important;
-        border-radius: 20px !important;
-        height: 320px !important; /* Fixed height for mobile */
-    }
-    
-    .chart-header {
-        flex-direction: column;
-        align-items: flex-start;
-        margin-bottom: 1rem !important;
-        gap: 1rem;
-    }
-    
-    .chart-title {
-        font-size: 1.1rem !important;
-    }
-    
-    .chart-controls {
-        align-self: flex-start;
-    }
-    
-    .chart-btn {
-        padding: 0.375rem 0.75rem !important;
-        font-size: 0.8rem !important;
-        border-radius: 10px !important;
-    }
-    
-    /* Empty State inside chart */
-    .empty-state {
-        height: 200px !important;
-        padding: 2rem 1rem !important;
-        display: flex !important;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-    }
-    
-    .empty-state i {
-        font-size: 3rem !important;
-        margin-bottom: 0.75rem !important;
-    }
-    
-    .empty-state h4 {
-        font-size: 1.2rem !important;
-        margin-bottom: 0.5rem !important;
-    }
-    
-    .empty-state p {
-        font-size: 0.9rem !important;
-        text-align: center;
-        max-width: 250px;
-    }
-    
-    /* Recent Weights Table - Mobile Optimized */
-    .recent-weights {
-        margin: 0 0.75rem 1.5rem 0.75rem !important;
-        padding: 1.25rem !important;
-        border-radius: 20px !important;
-    }
-    
-    .recent-weights table {
-        font-size: 0.85rem !important;
-    }
-    
-    .recent-weights th,
-    .recent-weights td {
-        padding: 0.625rem !important;
-    }
-    
-    .recent-weights th {
-        font-size: 0.85rem !important;
-    }
-    
-    .recent-weights td .small {
-        font-size: 0.75rem !important;
-    }
-    
-    /* Macronutrients Card - Mobile Optimized */
-    .macro-card {
-        margin: 0 0.75rem 1.5rem 0.75rem !important;
-        padding: 1.25rem !important;
-        border-radius: 20px !important;
-    }
-    
-    .macro-donut {
-        width: 180px !important;
-        height: 180px !important;
-        margin: 0 auto 1rem auto !important;
-    }
-    
-    .macro-breakdown {
-        grid-template-columns: repeat(3, 1fr) !important;
-        gap: 0.75rem !important;
-        margin-top: 1rem !important;
-    }
-    
-    .macro-item {
-        padding: 0.875rem 0.5rem !important;
-        border-radius: 12px !important;
-    }
-    
-    .macro-amount {
-        font-size: 1.3rem !important;
-        margin-bottom: 0.125rem !important;
-    }
-    
-    .macro-name {
-        font-size: 0.8rem !important;
-    }
-    
-    .macro-grams {
-        font-size: 0.75rem !important;
-    }
-    
-    /* Log Weight Form - Mobile Optimized */
-    .weight-form-card {
-        margin: 0 0.75rem 1.5rem 0.75rem !important;
-        padding: 1.25rem !important;
-        border-radius: 20px !important;
-    }
-    
-    /* Form Elements */
-    .mb-3 {
-        margin-bottom: 1rem !important;
-    }
-    
-    .form-label {
-        font-size: 0.95rem !important;
-        margin-bottom: 0.5rem !important;
-    }
-    
-    .input-group {
-        position: relative;
-    }
-    
-    .form-control {
-        padding: 0.875rem !important;
-        font-size: 1rem !important;
-        min-height: 56px !important;
-        border-radius: 14px !important;
-        border-width: 2px !important;
-    }
-    
-    .input-unit {
-        right: 0.875rem !important;
-        font-size: 0.95rem !important;
-    }
-    
-    .form-text {
-        font-size: 0.85rem !important;
-        margin-top: 0.375rem !important;
-    }
-    
-    /* Buttons - Mobile Optimized */
-    .btn-primary {
-        padding: 0.875rem !important;
-        font-size: 1rem !important;
-        border-radius: 14px !important;
-        min-height: 56px !important;
-        margin-top: 0.5rem !important;
-    }
-    
-    .btn-primary i {
-        font-size: 1.1rem !important;
-        margin-right: 0.5rem !important;
-    }
-    
-    /* Last Recorded Section */
-    .last-recorded {
-        padding: 0.875rem !important;
-        border-radius: 12px !important;
-        margin-top: 1rem !important;
-        font-size: 0.9rem !important;
-    }
-    
-    .last-recorded i {
-        font-size: 0.9rem !important;
-        margin-right: 0.375rem !important;
-    }
-    
-    .last-recorded .small.text-muted {
-        font-size: 0.8rem !important;
-        margin-top: 0.25rem !important;
-    }
-    
-    /* Table responsive fix */
-    .table-responsive {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-    }
-    
-    /* Animation for mobile */
-    @keyframes fadeInUp {
-        from {
-            opacity: 0;
-            transform: translateY(20px);
+        .fade-in {
+            animation: fadeInUp 0.8s ease-out forwards;
         }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-    
-    .stats-card,
-    .chart-container,
-    .macro-card,
-    .weight-form-card,
-    .recent-weights {
-        animation: fadeInUp 0.5s ease-out;
-    }
-    
-    /* Stagger animations */
-    .stats-card:nth-child(1) { animation-delay: 0.1s; }
-    .stats-card:nth-child(2) { animation-delay: 0.2s; }
-    .stats-card:nth-child(3) { animation-delay: 0.3s; }
-    .stats-card:nth-child(4) { animation-delay: 0.4s; }
-    
-    .chart-container { animation-delay: 0.2s; }
-    .macro-card { animation-delay: 0.3s; }
-    .weight-form-card { animation-delay: 0.4s; }
-    .recent-weights { animation-delay: 0.5s; }
-}
 
-/* Extra small devices (phones under 400px) */
-@media (max-width: 399.98px) {
-    .mobile-nav {
-        left: 0.25rem;
-        right: 0.25rem;
-        padding: 0.5rem;
-    }
-    
-    .page-header {
-        padding: 1.25rem !important;
-    }
-    
-    .page-header h1 {
-        font-size: 1.3rem !important;
-    }
-    
-    .page-header p {
-        font-size: 0.9rem;
-    }
-    
-    .alert {
-        margin: 0 0.5rem 0.75rem 0.5rem !important;
-        padding: 0.875rem !important;
-        font-size: 0.85rem;
-    }
-    
-    .stats-card,
-    .chart-container,
-    .macro-card,
-    .weight-form-card,
-    .recent-weights {
-        margin: 0 0.5rem 1rem 0.5rem !important;
-        padding: 1rem !important;
-    }
-    
-    .stats-icon {
-        width: 45px !important;
-        height: 45px !important;
-        font-size: 1.1rem !important;
-    }
-    
-    .stats-value {
-        font-size: 1.5rem !important;
-    }
-    
-    .stats-label {
-        font-size: 0.8rem !important;
-    }
-    
-    .chart-container {
-        height: 280px !important;
-    }
-    
-    .chart-title {
-        font-size: 1rem !important;
-    }
-    
-    .chart-btn {
-        padding: 0.25rem 0.5rem !important;
-        font-size: 0.75rem !important;
-    }
-    
-    .macro-donut {
-        width: 160px !important;
-        height: 160px !important;
-    }
-    
-    .macro-breakdown {
-        grid-template-columns: 1fr !important;
-        gap: 0.5rem !important;
-    }
-    
-    .macro-item {
-        padding: 0.75rem !important;
-    }
-    
-    .macro-amount {
-        font-size: 1.2rem !important;
-    }
-    
-    .form-control {
-        padding: 0.75rem !important;
-        min-height: 52px !important;
-        font-size: 0.95rem !important;
-    }
-    
-    .btn-primary {
-        padding: 0.75rem !important;
-        min-height: 52px !important;
-        font-size: 0.95rem !important;
-    }
-    
-    .empty-state {
-        padding: 1.5rem 1rem !important;
-    }
-    
-    .empty-state i {
-        font-size: 2.5rem !important;
-    }
-    
-    .empty-state h4 {
-        font-size: 1.1rem !important;
-    }
-    
-    .recent-weights table {
-        font-size: 0.8rem !important;
-    }
-    
-    .recent-weights th,
-    .recent-weights td {
-        padding: 0.5rem !important;
-    }
-}
+        /* ==================== RESPONSIVE DESIGN ==================== */
+        /* Large screens (992px and up) - Desktop navigation visible */
+        @media (min-width: 992px) {
+            .navbar-collapse {
+                display: flex !important;
+                background: transparent;
+                border: none;
+                padding: 0;
+                margin: 0;
+            }
 
-/* Tablet portrait mode (768px - 991px) */
-@media (min-width: 768px) and (max-width: 991.98px) {
-    .container.mt-4 {
-        padding-left: 1rem !important;
-        padding-right: 1rem !important;
-    }
-    
-    .mobile-nav {
-        display: flex !important;
-        left: 1rem;
-        right: 1rem;
-    }
-    
-    .navbar-nav {
-        display: none !important;
-    }
-    
-    .row.mb-4 {
-        display: grid !important;
-        grid-template-columns: repeat(2, 1fr) !important;
-        gap: 1rem !important;
-        margin: 0 1rem 1.5rem 1rem !important;
-    }
-    
-    .stats-card {
-        margin-bottom: 0 !important;
-    }
-    
-    .macro-breakdown {
-        grid-template-columns: repeat(3, 1fr) !important;
-    }
-}
+            .navbar-nav {
+                flex-direction: row;
+            }
 
-/* Landscape mode optimization */
-@media (max-height: 700px) and (orientation: landscape) {
-    .mobile-nav {
-        padding: 0.5rem;
-    }
-    
-    .mobile-nav-item {
-        font-size: 0.7rem;
-        padding: 0.25rem 0.125rem;
-    }
-    
-    .mobile-nav-item i {
-        font-size: 1.1rem;
-        margin-bottom: 0.125rem;
-    }
-    
-    .page-header {
-        padding: 1rem !important;
-        margin-bottom: 1rem !important;
-    }
-    
-    .page-header h1 {
-        font-size: 1.2rem !important;
-    }
-    
-    .stats-card,
-    .chart-container,
-    .macro-card,
-    .weight-form-card {
-        margin-bottom: 1rem !important;
-        padding: 1rem !important;
-    }
-    
-    .stats-icon {
-        width: 45px !important;
-        height: 45px !important;
-        font-size: 1.1rem !important;
-    }
-    
-    .chart-container {
-        height: 280px !important;
-    }
-    
-    .macro-donut {
-        width: 150px !important;
-        height: 150px !important;
-    }
-    
-    .btn-primary {
-        min-height: 52px !important;
-        padding: 0.75rem !important;
-    }
-    
-    .form-control {
-        min-height: 52px !important;
-        padding: 0.75rem !important;
-    }
-}
+            .navbar-toggler {
+                display: none;
+            }
 
-/* iPhone notch and safe area support */
-@supports (padding: max(0px)) {
-    .container.mt-4 {
-        padding-left: max(0.75rem, env(safe-area-inset-left)) !important;
-        padding-right: max(0.75rem, env(safe-area-inset-right)) !important;
-    }
-    
-    .mobile-nav {
-        padding-bottom: max(0.75rem, env(safe-area-inset-bottom)) !important;
-    }
-    
-    .page-header {
-        padding-top: max(1.5rem, env(safe-area-inset-top)) !important;
-    }
-}
+            .mobile-nav {
+                display: none;
+            }
 
-/* Loading animations */
-@keyframes buttonPulse {
-    0%, 100% {
-        transform: scale(1);
-    }
-    50% {
-        transform: scale(0.98);
-    }
-}
+            .navbar-close {
+                display: none !important;
+            }
 
-.btn-primary:disabled {
-    animation: buttonPulse 1s infinite;
-}
+            .chart-container {
+                height: 400px;
+            }
 
-/* Touch feedback for mobile */
-@media (hover: none) and (pointer: coarse) {
-    .stats-card:hover,
-    .macro-item:hover {
-        transform: none !important;
-    }
-    
-    .stats-card:active,
-    .macro-item:active {
-        transform: scale(0.98) !important;
-    }
-    
-    .btn-primary:hover {
-        transform: none !important;
-    }
-    
-    .btn-primary:active {
-        transform: scale(0.98) !important;
-    }
-    
-    .chart-btn:hover {
-        transform: none !important;
-    }
-    
-    .chart-btn:active {
-        transform: scale(0.95) !important;
-    }
-}
+            .chart-wrapper {
+                height: 300px;
+            }
+        }
 
-/* Custom scrollbar for mobile webkit */
-@media (max-width: 767.98px) {
-    ::-webkit-scrollbar {
-        width: 6px;
-        height: 6px;
-    }
-    
-    ::-webkit-scrollbar-track {
-        background: #f1f1f1;
-        border-radius: 10px;
-    }
-    
-    ::-webkit-scrollbar-thumb {
-        background: linear-gradient(135deg, #3a86ff, #8338ec);
-        border-radius: 10px;
-    }
-}
+        /* Medium and small screens (below 992px) - Mobile navigation */
+        @media (max-width: 991.98px) {
+            .navbar-collapse {
+                position: fixed;
+                top: 80px;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                backdrop-filter: blur(30px);
+                -webkit-backdrop-filter: blur(30px);
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                border-radius: 0;
+                padding: 2rem;
+                margin: 0;
+                overflow: hidden;
+                opacity: 0;
+                visibility: hidden;
+                transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+                box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+                display: block !important;
+                z-index: 1001;
+                height: 100vh;
+            }
 
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-    @media (max-width: 767.98px) {
-        body {
-            background: #121826;
-            color: #e2e8f0;
-        }
-        
-        .stats-card,
-        .chart-container,
-        .macro-card,
-        .weight-form-card,
-        .recent-weights {
-            background: #1e293b;
-            color: #e2e8f0;
-        }
-        
-        .mobile-nav {
-            background: #1e293b;
-        }
-        
-        .mobile-nav-item {
-            color: #94a3b8;
-        }
-        
-        .mobile-nav-item.active {
-            color: #3a86ff;
-            background: rgba(58, 134, 255, 0.15);
-        }
-        
-        .form-control {
-            background: #2d3748 !important;
-            border-color: #374151 !important;
-            color: #e2e8f0 !important;
-        }
-        
-        .form-control:focus {
-            background: #2d3748 !important;
-            border-color: #3a86ff !important;
-        }
-        
-        .input-unit {
-            background: #2d3748 !important;
-            color: #94a3b8 !important;
-        }
-        
-        .chart-btn {
-            background: #2d3748 !important;
-            border-color: #374151 !important;
-            color: #e2e8f0 !important;
-        }
-        
-        .chart-btn.active {
-            background: linear-gradient(135deg, #3a86ff, #8338ec) !important;
-            color: white !important;
-            border-color: transparent !important;
-        }
-        
-        .macro-item {
-            background: #2d3748 !important;
-        }
-        
-        .macro-item.protein {
-            background: rgba(58, 134, 255, 0.15) !important;
-        }
-        
-        .macro-item.carbs {
-            background: rgba(239, 68, 68, 0.15) !important;
-        }
-        
-        .macro-item.fat {
-            background: rgba(251, 191, 36, 0.15) !important;
-        }
-        
-        .last-recorded {
-            background: #2d3748 !important;
-        }
-        
-        .recent-weights th {
-            border-bottom-color: #374151 !important;
-        }
-        
-        .recent-weights td {
-            border-bottom-color: #374151 !important;
-        }
-        
-        .recent-weights tr:last-child td {
-            border-bottom: none;
-        }
-        
-        .stats-label,
-        .small.text-muted,
-        .form-text,
-        .macro-grams,
-        .last-recorded .small.text-muted {
-            color: #94a3b8 !important;
-        }
-        
-        .stats-value,
-        .macro-amount,
-        .macro-name {
-            color: #f1f5f9;
-        }
-        
-        .alert {
-            background: #2d3748 !important;
-            border-color: #374151 !important;
-            color: #e2e8f0 !important;
-        }
-        
-        .empty-state {
-            color: #94a3b8;
-        }
-        
-        .empty-state i {
-            color: #374151 !important;
-        }
-        
-        .trend-indicator {
-            background: #2d3748 !important;
-            border: 1px solid #374151 !important;
-        }
-        
-        .trend-indicator.trend-up {
-            color: #10b981 !important;
-        }
-        
-        .trend-indicator.trend-down {
-            color: #ef4444 !important;
-        }
-        
-        .trend-indicator.trend-neutral {
-            color: #94a3b8 !important;
-        }
-        
-        .btn-primary {
-            background: linear-gradient(135deg, #2563eb, #3730a3) !important;
-        }
-    }
-}
+            .navbar-collapse.show {
+                opacity: 1;
+                visibility: visible;
+                transform: translateY(0);
+                overflow-y: auto;
+                height: 100vh;
+            }
 
-/* Enhanced animations for mobile */
-@keyframes slideInFromLeft {
-    from {
-        opacity: 0;
-        transform: translateX(-20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
-}
+            .navbar-nav {
+                flex-direction: column;
+                gap: 1rem;
+                padding: 2rem 0;
+                min-height: 120vh;
+            }
 
-@keyframes slideInFromRight {
-    from {
-        opacity: 0;
-        transform: translateX(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
-}
+            .navbar-toggler {
+                display: block;
+                z-index: 1002;
+                position: relative;
+            }
 
-/* Column animations */
-.col-lg-8 .chart-container,
-.col-lg-8 .recent-weights {
-    animation: slideInFromLeft 0.5s ease-out;
-}
+            .navbar-collapse.show .navbar-close {
+                display: flex;
+            }
 
-.col-lg-4 .macro-card,
-.col-lg-4 .weight-form-card {
-    animation: slideInFromRight 0.5s ease-out;
-}
+            .navbar-nav .nav-link {
+                padding: 1.2rem 1.5rem;
+                font-size: 1.1rem;
+                border-radius: 16px;
+                background: rgba(255, 255, 255, 0.05);
+                margin-bottom: 0.5rem;
+                text-align: center;
+                justify-content: center;
+            }
 
-/* Form submission loading animation */
-@keyframes spin {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
-}
+            .navbar-nav .nav-link i {
+                font-size: 1.3rem;
+                width: 24px;
+            }
 
-.btn-primary i.fa-spinner {
-    animation: spin 1s linear infinite;
-}
+            body {
+                padding-bottom: 20px;
+                overflow-x: hidden;
+            }
 
-/* Form focus states */
-.form-control:focus,
-.chart-btn.active {
-    box-shadow: 0 0 0 3px rgba(58, 134, 255, 0.2) !important;
-}
+            .navbar {
+                height: 80px;
+                z-index: 1000;
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+            }
 
-/* Chart tooltip adjustments for mobile */
-@media (max-width: 767.98px) {
-    .chartjs-tooltip {
-        font-size: 12px !important;
-        padding: 8px !important;
-        border-radius: 8px !important;
-    }
-}
+            .navbar-brand.logo {
+                font-size: 1.5rem;
+                z-index: 1003;
+                position: relative;
+            }
 
-/* Prevent text selection on interactive elements */
-.chart-btn,
-.btn-primary,
-.form-control {
-    user-select: none;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-}
+            body.menu-open {
+                overflow: hidden;
+                position: fixed;
+                width: 100%;
+                height: 100%;
+            }
 
-/* Responsive typography for charts */
-@media (max-width: 767.98px) {
-    .chartjs-size-monitor,
-    .chartjs-render-monitor {
-        font-size: 12px !important;
-    }
-}
+            .navbar-collapse.show::before {
+                content: '';
+                position: fixed;
+                top: 80px;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                backdrop-filter: blur(5px);
+                z-index: -1;
+            }
 
-/* Ensure charts don't overflow */
-.chart-container {
-    overflow: hidden;
-}
+            /* Chart adjustments for tablet */
+            .chart-container {
+                height: 350px;
+                padding: 1.5rem;
+            }
 
-/* Mobile swipe gestures for charts */
-@media (max-width: 767.98px) {
-    .chart-container {
-        touch-action: pan-x pan-y;
-    }
-}
+            .chart-wrapper {
+                height: 250px;
+            }
+        }
 
-/* Loading skeleton for charts */
-.loading-skeleton {
-    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-    background-size: 200px 100%;
-    animation: shimmer 1.5s infinite;
-    border-radius: 12px;
-    min-height: 300px;
-}
+        /* Tablet (768px and below) */
+        @media (max-width: 768px) {
+            .page-header {
+                padding: 1.5rem;
+                margin: 1rem 0;
+            }
 
-@keyframes shimmer {
-    0% {
-        background-position: -200px 0;
-    }
-    100% {
-        background-position: 200px 0;
-    }
-}
+            .page-header h1 {
+                font-size: 1.8rem;
+            }
 
-/* Responsive spacing for better mobile readability */
-@media (max-width: 767.98px) {
-    h1, h2, h3, h4, h5, h6 {
-        margin-bottom: 0.75rem !important;
-    }
-    
-    p, div, span {
-        margin-bottom: 0.5rem !important;
-    }
-    
-    .mb-3 {
-        margin-bottom: 1rem !important;
-    }
-    
-    .mb-4 {
-        margin-bottom: 1.5rem !important;
-    }
-    
-    .mt-4 {
-        margin-top: 1.5rem !important;
-    }
-    
-    .mt-2 {
-        margin-top: 0.75rem !important;
-    }
-}
+            .page-header p {
+                font-size: 1rem;
+            }
 
-/* Mobile-specific utility classes */
-@media (max-width: 767.98px) {
-    .mobile-only {
-        display: block !important;
-    }
-    
-    .desktop-only {
-        display: none !important;
-    }
-    
-    .mobile-text-center {
-        text-align: center !important;
-    }
-    
-    .mobile-stack {
-        flex-direction: column !important;
-        gap: 0.75rem !important;
-    }
-}
+            .stats-container,
+            .chart-container,
+            .recent-weights,
+            .macro-card,
+            .weight-form-card {
+                padding: 1.5rem;
+                border-radius: 24px;
+                margin-bottom: 1.5rem;
+            }
 
-/* Ensure proper content flow on mobile */
-@media (max-width: 767.98px) {
-    body {
-        overflow-x: hidden;
-        width: 100%;
-    }
-    
-    /* Prevent horizontal scrolling */
-    * {
-        max-width: 100%;
-        box-sizing: border-box;
-    }
-}
+            .stats-card {
+                padding: 1.2rem;
+                border-radius: 18px;
+            }
 
-/* Fix for mobile keyboard */
-@media (max-width: 767.98px) {
-    input, textarea, select {
-        font-size: 16px !important; /* Prevents iOS zoom */
-    }
-}
+            .stats-icon {
+                width: 45px;
+                height: 45px;
+                font-size: 1.2rem;
+            }
 
-/* Accessibility improvements for mobile */
-@media (max-width: 767.98px) {
-    .btn, a, input[type="submit"], button {
-        min-height: 44px !important;
-        min-width: 44px !important;
-    }
-    
-    input, select, textarea {
-        min-height: 44px !important;
-    }
-    
-    /* Focus styles for better accessibility */
-    *:focus {
-        outline: 2px solid #3a86ff !important;
-        outline-offset: 2px !important;
-    }
-}
+            .stats-value {
+                font-size: 1.8rem;
+            }
 
-/* Smooth transitions */
-* {
-    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
-}
+            .chart-container {
+                height: 320px;
+            }
+
+            .chart-wrapper {
+                height: 220px;
+            }
+
+            .chart-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+
+            .chart-controls {
+                align-self: stretch;
+                justify-content: center;
+            }
+
+            .chart-btn {
+                flex: 1;
+                min-width: 60px;
+            }
+
+            .macro-donut {
+                width: 180px;
+                height: 180px;
+            }
+
+            .macro-breakdown {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 0.75rem;
+            }
+
+            .form-control {
+                padding: 0.875rem;
+            }
+
+            .btn {
+                padding: 0.75rem 1.5rem;
+            }
+
+            .trend-indicator {
+                font-size: 0.8rem;
+                padding: 0.2rem 0.5rem;
+            }
+
+            /* Table responsive */
+            .recent-weights .table-responsive {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .recent-weights table {
+                min-width: 500px;
+            }
+        }
+
+        /* Mobile (576px and below) */
+        @media (max-width: 576px) {
+            .navbar {
+                height: 70px;
+            }
+
+            .navbar-brand.logo {
+                font-size: 1.3rem;
+                margin-left: 0.5rem;
+            }
+
+            .navbar-toggler {
+                padding: 0.4rem 0.6rem;
+                margin-right: 0.5rem;
+            }
+
+            .page-header h1 {
+                font-size: 1.5rem;
+            }
+
+            .page-header p {
+                font-size: 0.9rem;
+            }
+
+            .stats-container h5,
+            .chart-container h5,
+            .macro-card h5,
+            .weight-form-card h5 {
+                font-size: 1.2rem;
+            }
+
+            .stats-card {
+                padding: 1rem;
+            }
+
+            .stats-value {
+                font-size: 1.5rem;
+            }
+
+            .chart-container {
+                height: 430px !important;
+                padding: 1.25rem;
+                /* border: 10px solid black; */
+            }
+
+            .chart-wrapper {
+                height: 200px;
+            }
+
+            .chart-btn {
+                padding: 0.4rem 0.6rem;
+                font-size: 0.8rem;
+                min-width: 50px;
+            }
+
+            .chart-title {
+                font-size: 1.3rem;
+            }
+
+            .macro-donut {
+                width: 150px;
+                height: 150px;
+            }
+
+            .macro-breakdown {
+                grid-template-columns: 1fr;
+                gap: 0.5rem;
+            }
+
+            .macro-item {
+                padding: 0.75rem;
+            }
+
+            .form-control {
+                padding: 0.75rem;
+                font-size: 0.95rem;
+            }
+
+            .btn {
+                padding: 0.75rem 1.25rem;
+                font-size: 0.95rem;
+            }
+
+            .navbar-collapse {
+                top: 70px;
+                padding: 1.5rem;
+            }
+
+            .navbar-close {
+                top: 15px;
+                right: 15px;
+                width: 35px;
+                height: 35px;
+            }
+
+            .navbar-nav .nav-link {
+                padding: 1rem;
+                font-size: 1rem;
+            }
+
+            /* Fix for very small screens */
+            @media (max-width: 380px) {
+                .chart-container {
+                    height: 280px;
+                }
+
+                .chart-wrapper {
+                    height: 180px;
+                }
+
+                .chart-controls {
+                    gap: 0.25rem;
+                }
+
+                .chart-btn {
+                    padding: 0.3rem 0.5rem;
+                    font-size: 0.75rem;
+                    min-width: 40px;
+                }
+            }
+        }
     </style>
 </head>
 
@@ -1755,10 +1277,15 @@ if ($goal_info && $goal_info['goal_weight'] && $goal_info['weight']) {
     <nav class="navbar navbar-expand-lg">
         <div class="container">
             <a class="navbar-brand logo" href="../dashboard.php">FitTrack Pro</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
+                <!-- Close button for mobile (hidden on desktop) -->
+                <button class="navbar-close" id="navbarClose" type="button">
+                    <i class="fas fa-times"></i>
+                </button>
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
                         <a class="nav-link" href="../dashboard.php">
@@ -1822,66 +1349,69 @@ if ($goal_info && $goal_info['goal_weight'] && $goal_info['weight']) {
         <?php endif; ?>
 
         <!-- Stats Overview -->
-        <div class="row mb-4">
-            <div class="col-md-3 col-sm-6 mb-4">
-                <div class="stats-card">
-                    <div class="stats-icon" style="background: linear-gradient(135deg, #ff9a9e, #fad0c4); color: #ff6b6b;">
-                        <i class="fas fa-fire"></i>
+        <div class="stats-container">
+            <h4 class="mb-4"><i class="fas fa-chart-bar me-2 text-primary"></i>Today's Progress Summary</h4>
+            <div class="row">
+                <div class="col-md-3 col-sm-6 mb-4">
+                    <div class="stats-card">
+                        <div class="stats-icon">
+                            <i class="fas fa-fire"></i>
+                        </div>
+                        <div class="stats-value"><?= number_format($calories) ?></div>
+                        <div class="stats-label">Calories Today</div>
+                        <div class="stats-subtitle">Total kcal consumed</div>
                     </div>
-                    <div class="stats-value"><?= number_format($calories) ?></div>
-                    <div class="stats-label">Calories Today</div>
-                    <div class="small text-muted mt-2">Total kcal consumed</div>
                 </div>
-            </div>
 
-            <div class="col-md-3 col-sm-6 mb-4">
-                <div class="stats-card">
-                    <div class="stats-icon" style="background: linear-gradient(135deg, #a1c4fd, #c2e9fb); color: #4d96ff;">
-                        <i class="fas fa-weight"></i>
-                    </div>
-                    <div class="stats-value"><?= $current_weight ? number_format($current_weight, 1) : '--' ?></div>
-                    <div class="stats-label">Current Weight</div>
-                    <div class="small text-muted mt-2"><?= count($progress) ?> records</div>
-                    <?php if (count($weights) > 1):
-                        $firstWeight = $weights[0];
-                        $lastWeight = end($weights);
-                        $trend = $lastWeight - $firstWeight;
-                        if ($trend > 0): ?>
-                            <span class="trend-indicator trend-up">
-                                <i class="fas fa-arrow-up me-1"></i>+<?= number_format($trend, 1) ?>kg
-                            </span>
-                        <?php elseif ($trend < 0): ?>
-                            <span class="trend-indicator trend-down">
-                                <i class="fas fa-arrow-down me-1"></i><?= number_format($trend, 1) ?>kg
-                            </span>
-                        <?php else: ?>
-                            <span class="trend-indicator trend-neutral">
-                                <i class="fas fa-minus me-1"></i>No change
-                            </span>
+                <div class="col-md-3 col-sm-6 mb-4">
+                    <div class="stats-card">
+                        <div class="stats-icon">
+                            <i class="fas fa-weight"></i>
+                        </div>
+                        <div class="stats-value"><?= $current_weight ? number_format($current_weight, 1) : '--' ?></div>
+                        <div class="stats-label">Current Weight</div>
+                        <div class="stats-subtitle"><?= count($progress) ?> records</div>
+                        <?php if (count($weights) > 1):
+                            $firstWeight = $weights[0];
+                            $lastWeight = end($weights);
+                            $trend = $lastWeight - $firstWeight;
+                            if ($trend > 0): ?>
+                                <span class="trend-indicator trend-up">
+                                    <i class="fas fa-arrow-up me-1"></i>+<?= number_format($trend, 1) ?>kg
+                                </span>
+                            <?php elseif ($trend < 0): ?>
+                                <span class="trend-indicator trend-down">
+                                    <i class="fas fa-arrow-down me-1"></i><?= number_format($trend, 1) ?>kg
+                                </span>
+                            <?php else: ?>
+                                <span class="trend-indicator trend-neutral">
+                                    <i class="fas fa-minus me-1"></i>No change
+                                </span>
+                            <?php endif; ?>
                         <?php endif; ?>
-                    <?php endif; ?>
-                </div>
-            </div>
-
-            <div class="col-md-3 col-sm-6 mb-4">
-                <div class="stats-card">
-                    <div class="stats-icon" style="background: linear-gradient(135deg, #84fab0, #8fd3f4); color: #38b000;">
-                        <i class="fas fa-dumbbell"></i>
                     </div>
-                    <div class="stats-value"><?= $weeklyWorkouts['count'] ?? 0 ?></div>
-                    <div class="stats-label">Weekly Workouts</div>
-                    <div class="small text-muted mt-2">This week</div>
                 </div>
-            </div>
 
-            <div class="col-md-3 col-sm-6 mb-4">
-                <div class="stats-card">
-                    <div class="stats-icon" style="background: linear-gradient(135deg, #fbc2eb, #a6c1ee); color: #8338ec;">
-                        <i class="fas fa-bullseye"></i>
+                <div class="col-md-3 col-sm-6 mb-4">
+                    <div class="stats-card">
+                        <div class="stats-icon">
+                            <i class="fas fa-dumbbell"></i>
+                        </div>
+                        <div class="stats-value"><?= $weeklyWorkouts['count'] ?? 0 ?></div>
+                        <div class="stats-label">Weekly Workouts</div>
+                        <div class="stats-subtitle">This week</div>
                     </div>
-                    <div class="stats-value"><?= round($goal_progress) ?>%</div>
-                    <div class="stats-label">Goal Progress</div>
-                    <div class="small text-muted mt-2"><?= isset($goal_info['goal_type']) ? ucfirst($goal_info['goal_type']) . ' weight' : 'No goal set' ?></div>
+                </div>
+
+                <div class="col-md-3 col-sm-6 mb-4">
+                    <div class="stats-card">
+                        <div class="stats-icon">
+                            <i class="fas fa-bullseye"></i>
+                        </div>
+                        <div class="stats-value"><?= round($goal_progress) ?>%</div>
+                        <div class="stats-label">Goal Progress</div>
+                        <div class="stats-subtitle"><?= isset($goal_info['goal_type']) ? ucfirst($goal_info['goal_type']) . ' weight' : 'No goal set' ?></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1902,15 +1432,21 @@ if ($goal_info && $goal_info['goal_weight'] && $goal_info['weight']) {
                             <button class="chart-btn" onclick="changeChartView('all')">All</button>
                         </div>
                     </div>
-                    <?php if (!empty($dates) && !empty($weights)): ?>
-                        <canvas id="weightChart"></canvas>
-                    <?php else: ?>
-                        <div class="empty-state" style="height: 300px; display: flex; flex-direction: column; justify-content: center;">
-                            <i class="fas fa-weight-scale"></i>
-                            <h4>No Weight Data</h4>
-                            <p>Start logging your weight to see progress charts</p>
-                        </div>
-                    <?php endif; ?>
+                    <div class="chart-wrapper">
+                        <?php if (!empty($dates) && !empty($weights)): ?>
+                            <div class="chart-canvas-container">
+                                <canvas id="weightChart"></canvas>
+                            </div>
+                        <?php else: ?>
+                            <div class="empty-state" style="height: 250px; display: flex; flex-direction: column; justify-content: center;">
+                                <div class="empty-state-icon">
+                                    <i class="fas fa-weight-scale"></i>
+                                </div>
+                                <h4>No Weight Data</h4>
+                                <p>Start logging your weight to see progress charts</p>
+                            </div>
+                        <?php endif; ?>
+                    </div>
                 </div>
 
                 <!-- Recent Weight Entries -->
@@ -1931,11 +1467,11 @@ if ($goal_info && $goal_info['goal_weight'] && $goal_info['weight']) {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <?php 
+                                    <?php
                                     $previousWeight = null;
                                     // Get latest 10 entries for display
                                     $recentEntries = array_slice(array_reverse($progress), 0, 10);
-                                    foreach ($recentEntries as $entry): 
+                                    foreach ($recentEntries as $entry):
                                         $weight = $entry['weight'];
                                         $dateTime = !empty($entry['created_at']) ? $entry['created_at'] : $entry['date'];
                                         // Format date according to Pakistan timezone
@@ -1950,7 +1486,7 @@ if ($goal_info && $goal_info['goal_weight'] && $goal_info['weight']) {
                                             </td>
                                             <td><strong><?= number_format($weight, 1) ?> kg</strong></td>
                                             <td>
-                                                <?php if ($previousWeight !== null): 
+                                                <?php if ($previousWeight !== null):
                                                     $change = $weight - $previousWeight;
                                                     if ($change > 0): ?>
                                                         <span class="text-danger">
@@ -1995,24 +1531,27 @@ if ($goal_info && $goal_info['goal_weight'] && $goal_info['weight']) {
                         <div class="macro-breakdown">
                             <div class="macro-item protein">
                                 <div class="macro-amount"><?= round($protein) ?></div>
-                                <div class="macro-name" style="color: var(--protein-color);">Protein</div>
+                                <div class="macro-name">Protein</div>
                                 <div class="macro-grams"><?= round($protein) ?>g</div>
                             </div>
                             <div class="macro-item carbs">
                                 <div class="macro-amount"><?= round($carbs) ?></div>
-                                <div class="macro-name" style="color: var(--carbs-color);">Carbs</div>
+                                <div class="macro-name">Carbs</div>
                                 <div class="macro-grams"><?= round($carbs) ?>g</div>
                             </div>
                             <div class="macro-item fat">
                                 <div class="macro-amount"><?= round($fat) ?></div>
-                                <div class="macro-name" style="color: var(--fat-color);">Fat</div>
+                                <div class="macro-name">Fat</div>
                                 <div class="macro-grams"><?= round($fat) ?>g</div>
                             </div>
                         </div>
                     <?php else: ?>
-                        <div class="empty-state" style="padding: 2rem;">
-                            <i class="fas fa-apple-alt"></i>
-                            <p>No nutrition data for today</p>
+                        <div class="empty-state">
+                            <div class="empty-state-icon">
+                                <i class="fas fa-apple-alt"></i>
+                            </div>
+                            <h4>No nutrition data for today</h4>
+                            <p>Track your meals to see nutrition breakdown</p>
                         </div>
                     <?php endif; ?>
                 </div>
@@ -2046,7 +1585,7 @@ if ($goal_info && $goal_info['goal_weight'] && $goal_info['weight']) {
                         <i class="fas fa-history me-2"></i>
                         <?php if (!empty($progress)): ?>
                             Last recorded: <strong><?= number_format($current_weight, 1) ?> kg</strong>
-                            <?php if ($last_weight_date): 
+                            <?php if ($last_weight_date):
                                 $dateObj = new DateTime($last_weight_date, new DateTimeZone('Asia/Karachi'));
                             ?>
                                 <div class="small text-muted"><?= $dateObj->format('M j, g:i A') ?></div>
@@ -2058,30 +1597,6 @@ if ($goal_info && $goal_info['goal_weight'] && $goal_info['weight']) {
                 </div>
             </div>
         </div>
-    </div>
-
-    <!-- Mobile Navigation -->
-    <div class="mobile-nav">
-        <a href="../dashboard.php" class="mobile-nav-item">
-            <i class="fas fa-home"></i>
-            <span>Dashboard</span>
-        </a>
-        <a href="../workouts/" class="mobile-nav-item">
-            <i class="fas fa-dumbbell"></i>
-            <span>Workouts</span>
-        </a>
-        <a href="../meals/" class="mobile-nav-item">
-            <i class="fas fa-utensils"></i>
-            <span>Meals</span>
-        </a>
-        <a href="charts.php" class="mobile-nav-item active">
-            <i class="fas fa-chart-line"></i>
-            <span>Progress</span>
-        </a>
-        <a href="../profile.php" class="mobile-nav-item">
-            <i class="fas fa-user"></i>
-            <span>Profile</span>
-        </a>
     </div>
 
     <!-- Bootstrap JS Bundle with Popper -->
@@ -2131,10 +1646,71 @@ if ($goal_info && $goal_info['goal_weight'] && $goal_info['weight']) {
                     });
             });
 
-            // Initialize tooltips
-            const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-            const tooltipList = tooltipTriggerList.map(function(tooltipTriggerEl) {
-                return new bootstrap.Tooltip(tooltipTriggerEl);
+            // Mobile navigation handling
+            const navbarToggler = document.querySelector('.navbar-toggler');
+            const navbarClose = document.getElementById('navbarClose');
+
+            if (navbarToggler) {
+                navbarToggler.addEventListener('click', function() {
+                    const icon = this.querySelector('.navbar-toggler-icon');
+                    if (icon) {
+                        if (this.getAttribute('aria-expanded') === 'true') {
+                            icon.style.transform = 'rotate(90deg)';
+                            document.body.classList.add('menu-open');
+                        } else {
+                            icon.style.transform = 'rotate(0deg)';
+                            document.body.classList.remove('menu-open');
+                        }
+                    }
+                });
+            }
+
+            if (navbarClose) {
+                navbarClose.addEventListener('click', function() {
+                    const navbarCollapse = document.querySelector('.navbar-collapse');
+                    if (navbarCollapse.classList.contains('show')) {
+                        navbarToggler.click();
+                    }
+                });
+            }
+
+            // Close menu when clicking on a nav link (on mobile)
+            const navLinks = document.querySelectorAll('.navbar-nav .nav-link');
+            navLinks.forEach(link => {
+                link.addEventListener('click', function() {
+                    if (window.innerWidth < 992) {
+                        const navbarCollapse = document.querySelector('.navbar-collapse');
+                        if (navbarCollapse.classList.contains('show')) {
+                            navbarToggler.click();
+                        }
+                    }
+                });
+            });
+
+            // Close menu when clicking outside (for mobile)
+            document.addEventListener('click', function(event) {
+                if (window.innerWidth < 992) {
+                    const navbarCollapse = document.querySelector('.navbar-collapse');
+                    const isClickInsideNavbar = document.querySelector('.navbar').contains(event.target);
+
+                    if (navbarCollapse && navbarCollapse.classList.contains('show') && !isClickInsideNavbar) {
+                        navbarToggler.click();
+                    }
+                }
+            });
+
+            // Handle window resize for chart responsiveness
+            let resizeTimer;
+            window.addEventListener('resize', function() {
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(function() {
+                    if (weightChart) {
+                        weightChart.resize();
+                    }
+                    if (macroChart) {
+                        macroChart.resize();
+                    }
+                }, 250);
             });
         });
 
@@ -2147,23 +1723,35 @@ if ($goal_info && $goal_info['goal_weight'] && $goal_info['weight']) {
                 weightChart.destroy();
             }
 
+            // Determine number of ticks based on screen size
+            const maxTicksLimit = window.innerWidth < 768 ? 5 : window.innerWidth < 992 ? 8 : 10;
+
+            // Format dates for mobile if needed
+            const formattedDates = dates.map(date => {
+                if (window.innerWidth < 576) {
+                    // Shorten date format for mobile
+                    return date.replace(/([A-Za-z]{3}) (\d{1,2}) .*/, '$1 $2');
+                }
+                return date;
+            });
+
             weightChart = new Chart(ctx.getContext('2d'), {
                 type: 'line',
                 data: {
-                    labels: dates,
+                    labels: formattedDates,
                     datasets: [{
                         label: 'Weight (kg)',
                         data: weights,
-                        borderColor: '#3a86ff',
-                        backgroundColor: 'rgba(58, 134, 255, 0.1)',
+                        borderColor: '#00d4ff',
+                        backgroundColor: 'rgba(0, 212, 255, 0.1)',
                         borderWidth: 3,
                         fill: true,
                         tension: 0.4,
-                        pointBackgroundColor: '#3a86ff',
+                        pointBackgroundColor: '#00d4ff',
                         pointBorderColor: 'white',
                         pointBorderWidth: 2,
-                        pointRadius: 5,
-                        pointHoverRadius: 8
+                        pointRadius: window.innerWidth < 768 ? 3 : 5,
+                        pointHoverRadius: window.innerWidth < 768 ? 6 : 8
                     }]
                 },
                 options: {
@@ -2174,12 +1762,16 @@ if ($goal_info && $goal_info['goal_weight'] && $goal_info['weight']) {
                             display: false
                         },
                         tooltip: {
-                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            backgroundColor: 'rgba(10, 15, 35, 0.9)',
+                            borderColor: 'rgba(0, 212, 255, 0.3)',
+                            borderWidth: 1,
+                            titleColor: 'white',
+                            bodyColor: 'white',
                             titleFont: {
-                                size: 14
+                                size: window.innerWidth < 768 ? 12 : 14
                             },
                             bodyFont: {
-                                size: 14
+                                size: window.innerWidth < 768 ? 12 : 14
                             },
                             callbacks: {
                                 label: function(context) {
@@ -2192,19 +1784,41 @@ if ($goal_info && $goal_info['goal_weight'] && $goal_info['weight']) {
                         y: {
                             beginAtZero: false,
                             grid: {
+                                color: 'rgba(255, 255, 255, 0.05)',
                                 drawBorder: false
+                            },
+                            ticks: {
+                                color: 'rgba(255, 255, 255, 0.7)',
+                                font: {
+                                    size: window.innerWidth < 768 ? 10 : 12
+                                }
                             },
                             title: {
                                 display: true,
-                                text: 'Weight (kg)'
+                                text: 'Weight (kg)',
+                                color: 'rgba(255, 255, 255, 0.9)',
+                                font: {
+                                    size: window.innerWidth < 768 ? 11 : 13
+                                }
                             }
                         },
                         x: {
                             grid: {
-                                display: false
+                                color: 'rgba(255, 255, 255, 0.05)'
                             },
                             ticks: {
-                                maxTicksLimit: 10 // Limit number of labels to avoid clutter
+                                color: 'rgba(255, 255, 255, 0.7)',
+                                maxTicksLimit: maxTicksLimit,
+                                font: {
+                                    size: window.innerWidth < 768 ? 9 : 11
+                                },
+                                callback: function(value, index, values) {
+                                    // Show fewer labels on mobile
+                                    if (window.innerWidth < 576 && index % 2 !== 0) {
+                                        return '';
+                                    }
+                                    return this.getLabelForValue(value);
+                                }
                             }
                         }
                     }
@@ -2229,7 +1843,7 @@ if ($goal_info && $goal_info['goal_weight'] && $goal_info['weight']) {
                         data: [protein, carbs, fat],
                         backgroundColor: ['#3a86ff', '#ff006e', '#ffbe0b'],
                         borderWidth: 0,
-                        hoverOffset: 15
+                        hoverOffset: window.innerWidth < 768 ? 10 : 15
                     }]
                 },
                 options: {
@@ -2240,6 +1854,11 @@ if ($goal_info && $goal_info['goal_weight'] && $goal_info['weight']) {
                             display: false
                         },
                         tooltip: {
+                            backgroundColor: 'rgba(10, 15, 35, 0.9)',
+                            borderColor: 'rgba(0, 212, 255, 0.3)',
+                            borderWidth: 1,
+                            titleColor: 'white',
+                            bodyColor: 'white',
                             callbacks: {
                                 label: function(context) {
                                     return `${context.label}: ${context.parsed}g`;
@@ -2247,7 +1866,7 @@ if ($goal_info && $goal_info['goal_weight'] && $goal_info['weight']) {
                             }
                         }
                     },
-                    cutout: '65%'
+                    cutout: window.innerWidth < 768 ? '60%' : '65%'
                 }
             });
         }
