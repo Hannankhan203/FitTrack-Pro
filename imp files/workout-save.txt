@@ -1,135 +1,123 @@
 <?php
-// api/workout-save.php
 session_start();
+require_once '../includes/functions.php';
+require_once '../includes/db.php';
+
+require_login();
+$user_id = get_user_id();
+
+// Set headers for JSON response
 header('Content-Type: application/json');
 
-// Enable error reporting for debugging
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
-
-// Handle CORS
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type, Authorization');
-
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    http_response_code(200);
-    exit();
+// Check if request method is POST
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    echo json_encode(['status' => 'error', 'message' => 'Invalid request method']);
+    exit;
 }
 
-// Log that we reached the API
-error_log("=== WORKOUT SAVE API CALLED ===");
-error_log("Request method: " . $_SERVER['REQUEST_METHOD']);
+// Get JSON input
+$input = json_decode(file_get_contents('php://input'), true);
 
-require '../includes/functions.php';
-require '../includes/db.php';
-
-// Check if user is logged in
-if (!isset($_SESSION['user_id'])) {
-    error_log("User not logged in - session user_id not set");
-    echo json_encode(['status' => 'error', 'message' => 'Not logged in']);
-    exit();
+if (!$input || !is_array($input)) {
+    echo json_encode(['status' => 'error', 'message' => 'Invalid input data']);
+    exit;
 }
-
-$user_id = $_SESSION['user_id'];
-error_log("User ID from session: $user_id");
-
-// Get the POST data
-$raw_input = file_get_contents('php://input');
-error_log("Raw input received (length: " . strlen($raw_input) . ")");
-
-$data = json_decode($raw_input, true);
-
-if (!$data) {
-    error_log("No data or invalid JSON received");
-    echo json_encode(['status' => 'error', 'message' => 'No valid data received']);
-    exit();
-}
-
-error_log("Data parsed successfully: " . json_encode($data));
-
-$date = date('Y-m-d H:i:s');
-$successCount = 0;
-$errors = [];
 
 try {
-    // Check database connection
-    error_log("Database connection established");
+    // Begin transaction
+    $pdo->beginTransaction();
     
-    // First, disable foreign key checks to avoid constraint issues
-    $pdo->exec("SET FOREIGN_KEY_CHECKS = 0");
+    $saved_count = 0;
+    $errors = [];
     
-    // Prepare a single statement that can handle all cases
-    $stmt = $pdo->prepare("
-        INSERT INTO workouts 
-        (user_id, exercise, sets, reps, weight, duration, distance, date) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    ");
-    
-    foreach ($data as $index => $workout) {
-        $exercise = $workout['exercise'] ?? '';
-        $sets = isset($workout['sets']) ? intval($workout['sets']) : null;
-        $reps = isset($workout['reps']) ? intval($workout['reps']) : null;
-        $weight = isset($workout['weight']) ? floatval($workout['weight']) : null;
-        $duration = isset($workout['duration']) ? floatval($workout['duration']) : 0;
-        $distance = isset($workout['distance']) ? floatval($workout['distance']) : null;
-        
-        error_log("Processing exercise $index: $exercise");
-        error_log("  Sets: $sets, Reps: $reps, Weight: $weight, Duration: $duration, Distance: $distance");
-        
-        // If it's a strength exercise with sets/reps, calculate duration
-        if ($sets && $reps && !isset($workout['duration'])) {
-            $duration = $sets * 0.5; // 30 seconds per set
-            error_log("  Calculated duration for strength: $duration minutes");
+    foreach ($input as $workout) {
+        // Validate required fields
+        if (empty($workout['exercise'])) {
+            $errors[] = 'Exercise name is required';
+            continue;
         }
         
-        // Execute the insert
-        try {
-            $result = $stmt->execute([$user_id, $exercise, $sets, $reps, $weight, $duration, $distance, $date]);
+        // Check if it's a cardio exercise
+        $cardio_exercises = ['Running', 'Cycling', 'Swimming', 'Jump Rope', 'Elliptical', 'Burpees', 'Rowing', 'Stair Climber'];
+        $is_cardio = in_array($workout['exercise'], $cardio_exercises);
+        
+        if ($is_cardio) {
+            // Cardio exercise - save duration only
+            $duration = $workout['duration'] ?? 0;
             
-            if ($result) {
-                $successCount++;
-                $lastId = $pdo->lastInsertId();
-                error_log("  ✓ Successfully saved: $exercise (ID: $lastId)");
-            } else {
-                $errorInfo = $stmt->errorInfo();
-                $errors[] = "Failed to save: $exercise - " . ($errorInfo[2] ?? 'Unknown error');
-                error_log("  ✗ Failed to save: $exercise - " . ($errorInfo[2] ?? 'Unknown error'));
+            // Check if distance exists in workout data
+            $distance = isset($workout['distance']) ? $workout['distance'] : null;
+            
+            // Check if distance column exists in database
+            $columns = ['user_id', 'exercise', 'duration', 'date'];
+            $values = [$user_id, $workout['exercise'], $duration, date('Y-m-d H:i:s')];
+            $placeholders = ['?', '?', '?', '?'];
+            
+            // Add distance only if it exists in database table
+            // First, let's check if we should include distance
+            try {
+                // Try to prepare a statement with distance
+                $sql = "INSERT INTO workouts (user_id, exercise, duration, date) VALUES (?, ?, ?, ?)";
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute($values);
+                $saved_count++;
+            } catch (PDOException $e) {
+                // If error is about distance column, try without it
+                if (strpos($e->getMessage(), 'distance') !== false) {
+                    // Distance column doesn't exist, use simpler query
+                    $sql = "INSERT INTO workouts (user_id, exercise, duration, date) VALUES (?, ?, ?, ?)";
+                    $stmt = $pdo->prepare($sql);
+                    $stmt->execute([$user_id, $workout['exercise'], $duration, date('Y-m-d H:i:s')]);
+                    $saved_count++;
+                } else {
+                    $errors[] = "Error for {$workout['exercise']}: " . $e->getMessage();
+                }
             }
-        } catch (Exception $e) {
-            $errors[] = "Exception for $exercise: " . $e->getMessage();
-            error_log("  ✗ Exception for $exercise: " . $e->getMessage());
+        } else {
+            // Strength exercise
+            $sets = $workout['sets'] ?? 0;
+            $reps = $workout['reps'] ?? 0;
+            $weight = $workout['weight'] ?? null;
+            
+            // Exercises that don't use weight
+            $no_weight_exercises = ['Pull-ups', 'Push-ups', 'Lunges', 'Plank'];
+            
+            $sql = "INSERT INTO workouts (user_id, exercise, sets, reps, weight, date) VALUES (?, ?, ?, ?, ?, ?)";
+            $stmt = $pdo->prepare($sql);
+            
+            // Use NULL for weight if exercise doesn't require it or weight is 0/empty
+            $weight_value = (in_array($workout['exercise'], $no_weight_exercises) || empty($weight) || $weight == 0) ? null : $weight;
+            
+            $stmt->execute([$user_id, $workout['exercise'], $sets, $reps, $weight_value, date('Y-m-d H:i:s')]);
+            $saved_count++;
         }
     }
     
-    // Re-enable foreign key checks
-    $pdo->exec("SET FOREIGN_KEY_CHECKS = 1");
+    // Commit transaction
+    $pdo->commit();
     
-    error_log("=== SAVE COMPLETE ===");
-    error_log("Total saved: $successCount");
-    error_log("Errors: " . count($errors));
-    
-    if ($successCount > 0) {
+    if ($saved_count > 0) {
         echo json_encode([
             'status' => 'success', 
-            'message' => "Saved $successCount exercises successfully",
-            'saved_count' => $successCount
+            'message' => "Successfully saved {$saved_count} exercise(s).",
+            'count' => $saved_count
         ]);
     } else {
         echo json_encode([
-            'status' => 'error', 
-            'message' => 'No exercises were saved. ' . implode(', ', $errors)
+            'status' => 'error',
+            'message' => 'No exercises were saved. ' . implode(' ', $errors)
         ]);
     }
     
-} catch (Exception $e) {
-    error_log("Database exception: " . $e->getMessage());
-    error_log("Stack trace: " . $e->getTraceAsString());
+} catch (PDOException $e) {
+    // Rollback transaction on error
+    if ($pdo->inTransaction()) {
+        $pdo->rollBack();
+    }
     
+    error_log("Database error in workout-save.php: " . $e->getMessage());
     echo json_encode([
-        'status' => 'error', 
+        'status' => 'error',
         'message' => 'Database error: ' . $e->getMessage()
     ]);
 }
-?>

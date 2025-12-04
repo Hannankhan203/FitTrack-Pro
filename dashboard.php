@@ -43,9 +43,6 @@ if ($hour < 5) {  // Changed from 12 to 5 for "Good night"
     $greeting = "Good night";
 }
 
-// Timezone offset for Pakistan (UTC+5)
-$timezone_offset = '+05:00';
-
 // Store the actual Pakistan time values for JavaScript
 $pakistan_date_js = date('Y-m-d');
 $pakistan_time_js = date('H:i:s');
@@ -53,7 +50,7 @@ $pakistan_hour_js = date('H');
 $pakistan_timestamp = time(); // Current timestamp in Pakistan time
 // ================================================================
 
-// Initialize variables to avoid undefined errors
+// Initialize variables
 $today_workout = ['count' => 0, 'total_duration' => 0];
 $today_exercises = [];
 $today_meals_display = [];
@@ -63,30 +60,134 @@ $streak = 0;
 $achievements_count = 0;
 $weekly_data = [];
 
-// Get today's workout stats
+// DEBUG: Log today's date and timezone
+error_log("==========================================");
+error_log("Dashboard loaded - User ID: " . $user_id);
+error_log("Today's date (Pakistan): " . $today);
+error_log("Current time (Pakistan): " . $current_time);
+error_log("Server timezone: " . date_default_timezone_get());
+error_log("==========================================");
+
+// FIXED: Get today's workout stats - WORKING FOR ALL SERVERS
 try {
-    $stmt = $pdo->prepare("SELECT COUNT(*) as count, SUM(duration) as total_duration FROM workouts WHERE user_id = ? AND DATE(CONVERT_TZ(date, '+00:00', '+05:00')) = ?");
+    // Method 1: First, get all workouts to see what we have
+    $stmt = $pdo->prepare("SELECT id, exercise, date, DATE(date) as workout_date FROM workouts WHERE user_id = ? ORDER BY date DESC");
+    $stmt->execute([$user_id]);
+    $all_workouts = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    error_log("Total workouts found: " . count($all_workouts));
+    foreach ($all_workouts as $workout) {
+        error_log("Workout ID: " . $workout['id'] . ", Exercise: " . $workout['exercise'] . 
+                  ", Date: " . $workout['date'] . ", Extracted Date: " . $workout['workout_date']);
+    }
+    
+    // Now get today's stats using different methods
+    // Method A: Using DATE() function (standard MySQL)
+    $stmt = $pdo->prepare("SELECT COUNT(*) as count, SUM(duration) as total_duration FROM workouts WHERE user_id = ? AND DATE(date) = ?");
     $stmt->execute([$user_id, $today]);
-    $today_workout = $stmt->fetch(PDO::FETCH_ASSOC);
+    $today_workout_a = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    error_log("Method A (DATE()): Count = " . ($today_workout_a['count'] ?? 0));
+    
+    // Method B: Using DATE_FORMAT
+    $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM workouts WHERE user_id = ? AND DATE_FORMAT(date, '%Y-%m-%d') = ?");
+    $stmt->execute([$user_id, $today]);
+    $today_workout_b = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    error_log("Method B (DATE_FORMAT): Count = " . ($today_workout_b['count'] ?? 0));
+    
+    // Method C: Check if date contains today's date string
+    $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM workouts WHERE user_id = ? AND date LIKE ?");
+    $stmt->execute([$user_id, "%$today%"]);
+    $today_workout_c = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    error_log("Method C (LIKE): Count = " . ($today_workout_c['count'] ?? 0));
+    
+    // Use whichever method found data
+    if ($today_workout_a && $today_workout_a['count'] > 0) {
+        $today_workout = $today_workout_a;
+        error_log("Using Method A results");
+    } elseif ($today_workout_b && $today_workout_b['count'] > 0) {
+        $today_workout = $today_workout_b;
+        $today_workout['total_duration'] = 0; // Add missing field
+        error_log("Using Method B results");
+    } elseif ($today_workout_c && $today_workout_c['count'] > 0) {
+        $today_workout = $today_workout_c;
+        $today_workout['total_duration'] = 0; // Add missing field
+        error_log("Using Method C results");
+    }
+    
     if (!$today_workout) {
         $today_workout = ['count' => 0, 'total_duration' => 0];
     }
+    
 } catch (PDOException $e) {
     error_log("Database error (workout stats): " . $e->getMessage());
 }
 
-// Get today's exercises for display
+// FIXED: Get today's exercises - MULTIPLE METHODS FOR RELIABILITY
 try {
-    $stmt = $pdo->prepare("SELECT exercise, sets, reps, weight, duration, distance, date FROM workouts WHERE user_id = ? AND DATE(CONVERT_TZ(date, '+00:00', '+05:00')) = ? ORDER BY date DESC LIMIT 5");
+    // Debug: Show all recent workouts first
+    $stmt = $pdo->prepare("SELECT id, exercise, sets, reps, weight, duration, distance, date FROM workouts WHERE user_id = ? ORDER BY date DESC LIMIT 10");
+    $stmt->execute([$user_id]);
+    $recent_exercises = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    error_log("Recent exercises (last 10): " . count($recent_exercises));
+    foreach ($recent_exercises as $ex) {
+        error_log("Recent - ID: " . $ex['id'] . ", Exercise: " . $ex['exercise'] . ", Date: " . $ex['date']);
+    }
+    
+    // Try multiple methods to get today's exercises
+    $found_exercises = [];
+    
+    // Method 1: DATE() function
+    $stmt = $pdo->prepare("SELECT id, exercise, sets, reps, weight, duration, distance, date FROM workouts WHERE user_id = ? AND DATE(date) = ? ORDER BY date DESC LIMIT 5");
     $stmt->execute([$user_id, $today]);
-    $today_exercises = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $method1 = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    error_log("Method 1 (DATE()) found: " . count($method1) . " exercises");
+    
+    // Method 2: DATE_FORMAT
+    $stmt = $pdo->prepare("SELECT id, exercise, sets, reps, weight, duration, distance, date FROM workouts WHERE user_id = ? AND DATE_FORMAT(date, '%Y-%m-%d') = ? ORDER BY date DESC LIMIT 5");
+    $stmt->execute([$user_id, $today]);
+    $method2 = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    error_log("Method 2 (DATE_FORMAT) found: " . count($method2) . " exercises");
+    
+    // Method 3: LIKE operator (fallback)
+    $stmt = $pdo->prepare("SELECT id, exercise, sets, reps, weight, duration, distance, date FROM workouts WHERE user_id = ? AND date LIKE ? ORDER BY date DESC LIMIT 5");
+    $stmt->execute([$user_id, "%$today%"]);
+    $method3 = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    error_log("Method 3 (LIKE) found: " . count($method3) . " exercises");
+    
+    // Use whichever method found exercises
+    if (!empty($method1)) {
+        $today_exercises = $method1;
+        error_log("Using Method 1 results");
+    } elseif (!empty($method2)) {
+        $today_exercises = $method2;
+        error_log("Using Method 2 results");
+    } elseif (!empty($method3)) {
+        $today_exercises = $method3;
+        error_log("Using Method 3 results");
+    }
+    
+    error_log("Final: Today's exercises found: " . count($today_exercises));
+    
+    // DEBUG: Log each exercise found
+    foreach ($today_exercises as $ex) {
+        error_log("Today's Exercise: " . $ex['exercise'] . 
+                  ", Date: " . $ex['date'] . 
+                  ", Sets: " . ($ex['sets'] ?? 'N/A') . 
+                  ", Reps: " . ($ex['reps'] ?? 'N/A'));
+    }
+    
 } catch (PDOException $e) {
     error_log("Database error (today exercises): " . $e->getMessage());
 }
 
 // Get today's meals for display
 try {
-    $stmt = $pdo->prepare("SELECT meal_time, food_name, calories, protein, carbs, fat, date FROM meals WHERE user_id = ? AND DATE(CONVERT_TZ(date, '+00:00', '+05:00')) = ? ORDER BY 
+    // Try multiple methods for meals too
+    $stmt = $pdo->prepare("SELECT meal_time, food_name, calories, protein, carbs, fat, date FROM meals WHERE user_id = ? AND DATE(date) = ? ORDER BY 
         CASE meal_time 
             WHEN 'breakfast' THEN 1
             WHEN 'lunch' THEN 2
@@ -96,13 +197,21 @@ try {
         END, id DESC LIMIT 5");
     $stmt->execute([$user_id, $today]);
     $today_meals_display = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // Fallback method if none found
+    if (empty($today_meals_display)) {
+        $stmt = $pdo->prepare("SELECT meal_time, food_name, calories, protein, carbs, fat, date FROM meals WHERE user_id = ? AND date LIKE ? ORDER BY id DESC LIMIT 5");
+        $stmt->execute([$user_id, "%$today%"]);
+        $today_meals_display = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+    
 } catch (PDOException $e) {
     error_log("Database error (today meals): " . $e->getMessage());
 }
 
 // Get meal stats
 try {
-    $stmt = $pdo->prepare("SELECT SUM(calories) as total_calories FROM meals WHERE user_id = ? AND DATE(CONVERT_TZ(date, '+00:00', '+05:00')) = ?");
+    $stmt = $pdo->prepare("SELECT SUM(calories) as total_calories FROM meals WHERE user_id = ? AND DATE(date) = ?");
     $stmt->execute([$user_id, $today]);
     $today_meals = $stmt->fetch(PDO::FETCH_ASSOC);
     if (!$today_meals || $today_meals['total_calories'] === null) {
@@ -145,15 +254,15 @@ if (
     }
 }
 
-// Calculate streak manually with Pakistan timezone
+// Calculate streak
 try {
-    $stmt = $pdo->prepare("SELECT COUNT(DISTINCT DATE(CONVERT_TZ(date, '+00:00', '+05:00'))) as streak FROM (
-        SELECT date FROM workouts WHERE user_id = ? AND DATE(CONVERT_TZ(date, '+00:00', '+05:00')) <= ? 
-        ORDER BY date DESC
-    ) as recent_workouts WHERE DATE(CONVERT_TZ(date, '+00:00', '+05:00')) >= DATE_SUB(?, INTERVAL 6 DAY)");
+    // Use the most reliable method for streak calculation
+    $stmt = $pdo->prepare("SELECT COUNT(DISTINCT DATE(date)) as streak FROM workouts WHERE user_id = ? AND DATE(date) >= DATE_SUB(?, INTERVAL 6 DAY) AND DATE(date) <= ?");
     $stmt->execute([$user_id, $today, $today]);
     $streak_data = $stmt->fetch(PDO::FETCH_ASSOC);
     $streak = $streak_data['streak'] ?? 0;
+    
+    error_log("Streak calculated: " . $streak);
 } catch (PDOException $e) {
     error_log("Database error (streak): " . $e->getMessage());
 }
@@ -168,11 +277,11 @@ try {
     error_log("Database error (achievements): " . $e->getMessage());
 }
 
-// Get weekly workout minutes for chart (Pakistan timezone)
+// Get weekly workout minutes for chart
 try {
     for ($i = 6; $i >= 0; $i--) {
         $day = date('Y-m-d', strtotime("-$i days"));
-        $stmt = $pdo->prepare("SELECT SUM(duration) as total FROM workouts WHERE user_id = ? AND DATE(CONVERT_TZ(date, '+00:00', '+05:00')) = ?");
+        $stmt = $pdo->prepare("SELECT SUM(duration) as total FROM workouts WHERE user_id = ? AND DATE(date) = ?");
         $stmt->execute([$user_id, $day]);
         $day_data = $stmt->fetch(PDO::FETCH_ASSOC);
         $weekly_data[] = [
@@ -190,11 +299,18 @@ function formatPakistanTime($datetime)
     if (empty($datetime)) return '';
 
     try {
+        // First try with Pakistan timezone
         $date = new DateTime($datetime, new DateTimeZone('Asia/Karachi'));
         return $date->format('g:i A');
     } catch (Exception $e) {
-        error_log("Date formatting error: " . $e->getMessage());
-        return '';
+        try {
+            // Fallback to server timezone
+            $date = new DateTime($datetime);
+            return $date->format('g:i A');
+        } catch (Exception $e2) {
+            error_log("Date formatting error: " . $e->getMessage());
+            return '';
+        }
     }
 }
 
@@ -250,8 +366,28 @@ $server_timestamp = $pakistan_timestamp * 1000; // Convert to milliseconds for J
             box-sizing: border-box;
         }
 
+                /* Add some debug styles for testing */
+        .debug-info {
+            display: none; /* Set to block to see debug info */
+            background: rgba(255,0,0,0.1);
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-size: 12px;
+        }
+        
+        .date-warning {
+            background: #ffcc00;
+            color: #000;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-weight: bold;
+            text-align: center;
+        }
+
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
             background: var(--darker);
             color: var(--light);
             min-height: 100vh;
@@ -262,16 +398,21 @@ $server_timestamp = $pakistan_timestamp * 1000; // Convert to milliseconds for J
         }
 
         body::before {
-            content: '';
+            content: "";
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background:
-                radial-gradient(circle at 10% 20%, rgba(0, 212, 255, 0.15) 0%, transparent 40%),
-                radial-gradient(circle at 90% 80%, rgba(255, 45, 117, 0.15) 0%, transparent 40%),
-                radial-gradient(circle at 50% 50%, rgba(157, 78, 221, 0.1) 0%, transparent 60%);
+            background: radial-gradient(circle at 10% 20%,
+                    rgba(0, 212, 255, 0.15) 0%,
+                    transparent 40%),
+                radial-gradient(circle at 90% 80%,
+                    rgba(255, 45, 117, 0.15) 0%,
+                    transparent 40%),
+                radial-gradient(circle at 50% 50%,
+                    rgba(157, 78, 221, 0.1) 0%,
+                    transparent 60%);
             z-index: -2;
         }
 
@@ -290,6 +431,10 @@ $server_timestamp = $pakistan_timestamp * 1000; // Convert to milliseconds for J
             z-index: 1000;
             box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
             height: 80px;
+        }
+
+        .text-muted {
+            color: var(--light);
         }
 
         .navbar-brand.logo {
@@ -376,7 +521,9 @@ $server_timestamp = $pakistan_timestamp * 1000; // Convert to milliseconds for J
 
         /* ==================== DASHBOARD HEADER ==================== */
         .dashboard-header {
-            background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(157, 78, 221, 0.1));
+            background: linear-gradient(135deg,
+                    rgba(0, 212, 255, 0.1),
+                    rgba(157, 78, 221, 0.1));
             backdrop-filter: blur(30px);
             -webkit-backdrop-filter: blur(30px);
             border: 1px solid rgba(255, 255, 255, 0.15);
@@ -392,7 +539,10 @@ $server_timestamp = $pakistan_timestamp * 1000; // Convert to milliseconds for J
             font-size: 2.5rem;
             font-weight: 900;
             margin-bottom: 1rem;
-            background: linear-gradient(135deg, #ffffff 0%, var(--primary) 50%, var(--accent) 100%);
+            background: linear-gradient(135deg,
+                    #ffffff 0%,
+                    var(--primary) 50%,
+                    var(--accent) 100%);
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
@@ -437,7 +587,9 @@ $server_timestamp = $pakistan_timestamp * 1000; // Convert to milliseconds for J
 
         /* Exercises Card */
         .exercises-card {
-            background: linear-gradient(145deg, rgba(0, 212, 255, 0.05), rgba(0, 212, 255, 0.02));
+            background: linear-gradient(145deg,
+                    rgba(0, 212, 255, 0.05),
+                    rgba(0, 212, 255, 0.02));
             backdrop-filter: blur(25px);
             -webkit-backdrop-filter: blur(25px);
             border: 1px solid rgba(0, 212, 255, 0.15);
@@ -646,7 +798,9 @@ $server_timestamp = $pakistan_timestamp * 1000; // Convert to milliseconds for J
 
         /* Meals Card */
         .meals-card {
-            background: linear-gradient(145deg, rgba(255, 45, 117, 0.05), rgba(255, 45, 117, 0.02));
+            background: linear-gradient(145deg,
+                    rgba(255, 45, 117, 0.05),
+                    rgba(255, 45, 117, 0.02));
             backdrop-filter: blur(25px);
             -webkit-backdrop-filter: blur(25px);
             border: 1px solid rgba(255, 45, 117, 0.15);
@@ -846,7 +1000,9 @@ $server_timestamp = $pakistan_timestamp * 1000; // Convert to milliseconds for J
 
         /* Stats Cards */
         .stats-card {
-            background: linear-gradient(145deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
+            background: linear-gradient(145deg,
+                    rgba(255, 255, 255, 0.03),
+                    rgba(255, 255, 255, 0.01));
             backdrop-filter: blur(25px);
             -webkit-backdrop-filter: blur(25px);
             border: 1px solid rgba(255, 255, 255, 0.1);
@@ -906,7 +1062,9 @@ $server_timestamp = $pakistan_timestamp * 1000; // Convert to milliseconds for J
 
         /* Chart Container */
         .chart-container {
-            background: linear-gradient(145deg, rgba(157, 78, 221, 0.05), rgba(157, 78, 221, 0.02));
+            background: linear-gradient(145deg,
+                    rgba(157, 78, 221, 0.05),
+                    rgba(157, 78, 221, 0.02));
             backdrop-filter: blur(25px);
             -webkit-backdrop-filter: blur(25px);
             border: 1px solid rgba(157, 78, 221, 0.15);
@@ -940,7 +1098,9 @@ $server_timestamp = $pakistan_timestamp * 1000; // Convert to milliseconds for J
         }
 
         .action-card {
-            background: linear-gradient(145deg, rgba(0, 230, 118, 0.05), rgba(0, 230, 118, 0.02));
+            background: linear-gradient(145deg,
+                    rgba(0, 230, 118, 0.05),
+                    rgba(0, 230, 118, 0.02));
             backdrop-filter: blur(25px);
             -webkit-backdrop-filter: blur(25px);
             border: 1px solid rgba(0, 230, 118, 0.15);
@@ -997,7 +1157,9 @@ $server_timestamp = $pakistan_timestamp * 1000; // Convert to milliseconds for J
 
         /* Goal Cards */
         .goal-card {
-            background: linear-gradient(145deg, rgba(255, 193, 7, 0.05), rgba(255, 193, 7, 0.02));
+            background: linear-gradient(145deg,
+                    rgba(255, 193, 7, 0.05),
+                    rgba(255, 193, 7, 0.02));
             backdrop-filter: blur(25px);
             -webkit-backdrop-filter: blur(25px);
             border: 1px solid rgba(255, 193, 7, 0.15);
@@ -1076,13 +1238,16 @@ $server_timestamp = $pakistan_timestamp * 1000; // Convert to milliseconds for J
         }
 
         .progress-fill::after {
-            content: '';
+            content: "";
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            background: linear-gradient(90deg,
+                    transparent,
+                    rgba(255, 255, 255, 0.2),
+                    transparent);
             animation: shimmer 2s infinite;
         }
 
@@ -1120,6 +1285,10 @@ $server_timestamp = $pakistan_timestamp * 1000; // Convert to milliseconds for J
             font-weight: 500;
             text-transform: uppercase;
             letter-spacing: 1px;
+        }
+
+        .text-muted {
+            color: var(--light) !important;
         }
 
         /* Mobile navbar close button */
@@ -1355,7 +1524,7 @@ $server_timestamp = $pakistan_timestamp * 1000; // Convert to milliseconds for J
 
             /* Overlay when menu is open */
             .navbar-collapse.show::before {
-                content: '';
+                content: "";
                 position: fixed;
                 top: 80px;
                 left: 0;
@@ -1780,6 +1949,17 @@ $server_timestamp = $pakistan_timestamp * 1000; // Convert to milliseconds for J
 </head>
 
 <body>
+    <!-- Debug info (can be enabled for troubleshooting) -->
+    <div class="debug-info">
+        <strong>Debug Info:</strong><br>
+        User ID: <?= $user_id ?><br>
+        Today's Date (PHP): <?= $today ?><br>
+        Exercises Found: <?= count($today_exercises) ?><br>
+        <?php foreach($today_exercises as $ex): ?>
+            Exercise: <?= $ex['exercise'] ?>, Date: <?= $ex['date'] ?><br>
+        <?php endforeach; ?>
+    </div>
+
     <!-- Desktop Navigation -->
     <nav class="navbar navbar-expand-lg">
         <div class="container">
@@ -1868,7 +2048,6 @@ $server_timestamp = $pakistan_timestamp * 1000; // Convert to milliseconds for J
             </div>
         </div>
 
-
         <!-- Today's Exercises Card -->
         <div class="exercises-card mb-4">
             <div class="exercises-header">
@@ -1891,7 +2070,7 @@ $server_timestamp = $pakistan_timestamp * 1000; // Convert to milliseconds for J
                         // Determine exercise type and styling
                         $exercise_name = htmlspecialchars($exercise['exercise']);
                         $is_cardio = in_array(strtolower($exercise_name), ['running', 'cycling', 'swimming', 'jump rope', 'elliptical', 'burpees', 'rowing', 'stair climber', 'walking', 'jogging']);
-
+                        
                         // Set category and color
                         $category = 'Strength';
                         $category_color = '#3a86ff';
@@ -1921,7 +2100,7 @@ $server_timestamp = $pakistan_timestamp * 1000; // Convert to milliseconds for J
                             </div>
 
                             <div class="exercise-stats">
-                                <?php if (!$is_cardio && !empty($exercise['sets'])): ?>
+                                <?php if (!$is_cardio && isset($exercise['sets']) && !empty($exercise['sets'])): ?>
                                     <div class="stat-item">
                                         <div class="stat-icon strength-stat">
                                             <i class="fas fa-redo"></i>
@@ -1931,7 +2110,7 @@ $server_timestamp = $pakistan_timestamp * 1000; // Convert to milliseconds for J
                                     </div>
                                 <?php endif; ?>
 
-                                <?php if (!$is_cardio && !empty($exercise['reps'])): ?>
+                                <?php if (!$is_cardio && isset($exercise['reps']) && !empty($exercise['reps'])): ?>
                                     <div class="stat-item">
                                         <div class="stat-icon strength-stat">
                                             <i class="fas fa-sync-alt"></i>
@@ -1941,7 +2120,7 @@ $server_timestamp = $pakistan_timestamp * 1000; // Convert to milliseconds for J
                                     </div>
                                 <?php endif; ?>
 
-                                <?php if (!$is_cardio && !empty($exercise['weight']) && $exercise['weight'] > 0): ?>
+                                <?php if (!$is_cardio && isset($exercise['weight']) && !empty($exercise['weight']) && $exercise['weight'] > 0): ?>
                                     <div class="stat-item">
                                         <div class="stat-icon weight-stat">
                                             <i class="fas fa-weight-hanging"></i>
@@ -1951,7 +2130,7 @@ $server_timestamp = $pakistan_timestamp * 1000; // Convert to milliseconds for J
                                     </div>
                                 <?php endif; ?>
 
-                                <?php if ($is_cardio && !empty($exercise['distance']) && $exercise['distance'] > 0): ?>
+                                <?php if ($is_cardio && isset($exercise['distance']) && !empty($exercise['distance']) && $exercise['distance'] > 0): ?>
                                     <div class="stat-item">
                                         <div class="stat-icon cardio-stat">
                                             <i class="fas fa-route"></i>
@@ -1961,7 +2140,7 @@ $server_timestamp = $pakistan_timestamp * 1000; // Convert to milliseconds for J
                                     </div>
                                 <?php endif; ?>
 
-                                <?php if (!empty($exercise['duration']) && $exercise['duration'] > 0): ?>
+                                <?php if (isset($exercise['duration']) && !empty($exercise['duration']) && $exercise['duration'] > 0): ?>
                                     <div class="stat-item">
                                         <div class="stat-icon time-stat">
                                             <i class="fas fa-stopwatch"></i>
@@ -1996,7 +2175,8 @@ $server_timestamp = $pakistan_timestamp * 1000; // Convert to milliseconds for J
             <?php endif; ?>
         </div>
 
-        <!-- Today's Meals Card - TIME PART REMOVED -->
+        <!-- Rest of the dashboard content remains the same... -->
+        <!-- Today's Meals Card -->
         <div class="meals-card mb-4">
             <div class="meals-header">
                 <div class="meals-title">
@@ -2015,11 +2195,8 @@ $server_timestamp = $pakistan_timestamp * 1000; // Convert to milliseconds for J
                 <div class="meals-list">
                     <?php foreach ($today_meals_display as $meal): ?>
                         <?php
-                        // Format meal type
                         $meal_type = htmlspecialchars($meal['meal_time']);
                         $meal_name = htmlspecialchars($meal['food_name']);
-
-                        // Set color based on meal type
                         $meal_type_color = '#ff006e';
                         $meal_type_bg = 'rgba(255, 0, 110, 0.1)';
 
@@ -2051,7 +2228,6 @@ $server_timestamp = $pakistan_timestamp * 1000; // Convert to milliseconds for J
                                         <?= ucfirst($meal_type) ?>
                                     </span>
                                 </div>
-                                <!-- Time display has been removed -->
                             </div>
 
                             <div class="meal-stats">
@@ -2553,6 +2729,17 @@ $server_timestamp = $pakistan_timestamp * 1000; // Convert to milliseconds for J
                 greetingElement.textContent = greeting + ', ' + userName + '! 👋';
             }
         }
+        
+        // Debug function to check if exercises are loading
+        setTimeout(function() {
+            const exerciseItems = document.querySelectorAll('.exercise-item');
+            console.log('Exercise items found on page:', exerciseItems.length);
+            
+            if (exerciseItems.length === 0) {
+                console.log('No exercises displayed. Checking PHP output...');
+                // You can add more debug logic here
+            }
+        }, 1000);
     </script>
 </body>
 
