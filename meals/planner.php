@@ -1773,7 +1773,7 @@ foreach ($existingMeals as $meal) {
             <div class="col-lg-8">
                 <!-- Food Search -->
                 <div class="search-section">
-                    <h5><i class="fas fa-search me-2"></i>Search Pakistani & International Foods</h5>
+                    <h5><i class="fas fa-search me-2"></i>Search Foods</h5>
                     <div class="search-input-group">
                         <i class="fas fa-search search-icon"></i>
                         <input type="text" id="foodSearch" class="search-input" placeholder="Search foods (e.g., biryani, chicken tikka, apple...)">
@@ -2023,6 +2023,87 @@ foreach ($existingMeals as $meal) {
                     }
                 },
                 {
+                    title: "Mutter (Peas) with Rice (1 plate)",
+                    nutrition: {
+                        calories: 350,
+                        protein: 12,
+                        carbs: 65,
+                        fat: 6
+                    }
+                },
+                {
+                    title: "Aloo Chawal (Potato Rice, 1 plate)",
+                    nutrition: {
+                        calories: 420,
+                        protein: 8,
+                        carbs: 80,
+                        fat: 8
+                    }
+                },
+                {
+                    title: "Vegetable Raita (1 bowl)",
+                    nutrition: {
+                        calories: 120,
+                        protein: 6,
+                        carbs: 12,
+                        fat: 6
+                    }
+                },
+                {
+                    title: "Mutter Aloo (Peas & Potatoes, 1 bowl)",
+                    nutrition: {
+                        calories: 280,
+                        protein: 10,
+                        carbs: 45,
+                        fat: 7
+                    }
+                },
+                {
+                    title: "Mix Vegetable Curry (1 bowl)",
+                    nutrition: {
+                        calories: 180,
+                        protein: 8,
+                        carbs: 25,
+                        fat: 6
+                    }
+                },
+                {
+                    title: "Raita (Plain Yogurt, 1 bowl)",
+                    nutrition: {
+                        calories: 90,
+                        protein: 5,
+                        carbs: 8,
+                        fat: 4
+                    }
+                },
+                {
+                    title: "Mutter Aloo Chawal (Peas & Potato Rice, full plate)",
+                    nutrition: {
+                        calories: 520,
+                        protein: 16,
+                        carbs: 90,
+                        fat: 12
+                    }
+                },
+                {
+                    title: "Lobia (Black-eyed peas, 1 bowl)",
+                    nutrition: {
+                        calories: 160,
+                        protein: 8,
+                        carbs: 30,
+                        fat: 2
+                    }
+                },
+                {
+                    title: "Red Lobia (Rajma/Kidney Beans, 1 bowl)",
+                    nutrition: {
+                        calories: 220,
+                        protein: 12,
+                        carbs: 40,
+                        fat: 4
+                    }
+                },
+                {
                     title: "Chana Masala with Puri (2 Puris)",
                     nutrition: {
                         calories: 575,
@@ -2074,6 +2155,195 @@ foreach ($existingMeals as $meal) {
                         protein: 3.5,
                         carbs: 23,
                         fat: 5
+                    }
+                },
+                {
+                    title: "Plain Paratha (1 piece)",
+                    nutrition: {
+                        calories: 260,
+                        protein: 5,
+                        carbs: 35,
+                        fat: 11
+                    }
+                },
+                {
+                    title: "Aloo Paratha (1 piece, stuffed)",
+                    nutrition: {
+                        calories: 320,
+                        protein: 7,
+                        carbs: 45,
+                        fat: 14
+                    }
+                },
+                {
+                    title: "Tandoori Roti (1 piece)",
+                    nutrition: {
+                        calories: 120,
+                        protein: 4,
+                        carbs: 22,
+                        fat: 2
+                    }
+                },
+                {
+                    title: "Chapati (1 piece, no ghee)",
+                    nutrition: {
+                        calories: 90,
+                        protein: 3,
+                        carbs: 18,
+                        fat: 1
+                    }
+                },
+                {
+                    title: "Missi Roti (1 piece)",
+                    nutrition: {
+                        calories: 140,
+                        protein: 6,
+                        carbs: 25,
+                        fat: 3
+                    }
+                },
+                {
+                    title: "Puri (1 piece)",
+                    nutrition: {
+                        calories: 180,
+                        protein: 3,
+                        carbs: 22,
+                        fat: 9
+                    }
+                },
+                {
+                    title: "Butter Naan (1 piece)",
+                    nutrition: {
+                        calories: 350,
+                        protein: 9,
+                        carbs: 50,
+                        fat: 13
+                    }
+                },
+                {
+                    title: "Garlic Naan (1 piece)",
+                    nutrition: {
+                        calories: 380,
+                        protein: 9,
+                        carbs: 52,
+                        fat: 16
+                    }
+                },
+                {
+                    title: "Rumali Roti (1 piece)",
+                    nutrition: {
+                        calories: 80,
+                        protein: 3,
+                        carbs: 16,
+                        fat: 1
+                    }
+                },
+                {
+                    title: "Taftan (1 piece)",
+                    nutrition: {
+                        calories: 280,
+                        protein: 8,
+                        carbs: 48,
+                        fat: 7
+                    }
+                },
+                {
+                    title: "Sheermal (1 piece)",
+                    nutrition: {
+                        calories: 320,
+                        protein: 7,
+                        carbs: 55,
+                        fat: 9
+                    }
+                },
+                {
+                    title: "Kulcha (1 piece)",
+                    nutrition: {
+                        calories: 240,
+                        protein: 6,
+                        carbs: 38,
+                        fat: 8
+                    }
+                },
+                {
+                    title: "Bhatura (1 piece)",
+                    nutrition: {
+                        calories: 280,
+                        protein: 6,
+                        carbs: 42,
+                        fat: 11
+                    }
+                },
+                {
+                    title: "Roghni Naan (1 piece)",
+                    nutrition: {
+                        calories: 400,
+                        protein: 9,
+                        carbs: 52,
+                        fat: 18
+                    }
+                },
+                {
+                    title: "Khameeri Roti (1 piece)",
+                    nutrition: {
+                        calories: 160,
+                        protein: 5,
+                        carbs: 28,
+                        fat: 4
+                    }
+                },
+                {
+                    title: "Tandoori Paratha (1 piece)",
+                    nutrition: {
+                        calories: 300,
+                        protein: 6,
+                        carbs: 40,
+                        fat: 13
+                    }
+                },
+                {
+                    title: "Ghee Roti (1 piece, with ghee)",
+                    nutrition: {
+                        calories: 180,
+                        protein: 4,
+                        carbs: 23,
+                        fat: 8
+                    }
+                },
+                {
+                    title: "Whole Wheat Roti (1 piece)",
+                    nutrition: {
+                        calories: 110,
+                        protein: 4,
+                        carbs: 20,
+                        fat: 2
+                    }
+                },
+                {
+                    title: "Makki di Roti (1 piece)",
+                    nutrition: {
+                        calories: 170,
+                        protein: 4,
+                        carbs: 28,
+                        fat: 5
+                    }
+                },
+                {
+                    title: "Bajre ki Roti (1 piece)",
+                    nutrition: {
+                        calories: 130,
+                        protein: 4,
+                        carbs: 24,
+                        fat: 3
+                    }
+                },
+                {
+                    title: "Plain Flour Roti (1 piece, maida)",
+                    nutrition: {
+                        calories: 130,
+                        protein: 3,
+                        carbs: 24,
+                        fat: 2
                     }
                 },
                 {
@@ -2187,12 +2457,39 @@ foreach ($existingMeals as $meal) {
                     }
                 },
                 {
+                    title: "Chocolate Tea (1 cup)",
+                    nutrition: {
+                        calories: 180,
+                        protein: 5,
+                        carbs: 25,
+                        fat: 7
+                    }
+                },
+                {
                     title: "Kashmiri Chai (1 cup)",
                     nutrition: {
                         calories: 185,
                         protein: 5,
                         carbs: 20,
                         fat: 8
+                    }
+                },
+                {
+                    title: "Green Tea (1 cup, plain)",
+                    nutrition: {
+                        calories: 2,
+                        protein: 0.2,
+                        carbs: 0.5,
+                        fat: 0
+                    }
+                },
+                {
+                    title: "Green Tea with Honey (1 cup)",
+                    nutrition: {
+                        calories: 45,
+                        protein: 0.2,
+                        carbs: 12,
+                        fat: 0
                     }
                 },
                 {
@@ -2403,6 +2700,96 @@ foreach ($existingMeals as $meal) {
                         protein: 6,
                         carbs: 0.6,
                         fat: 5
+                    }
+                },
+                {
+                    title: "Half Fried Egg (1 egg)",
+                    nutrition: {
+                        calories: 110,
+                        protein: 7,
+                        carbs: 1,
+                        fat: 9
+                    }
+                },
+                {
+                    title: "Full Fried Egg (1 egg, sunny side up)",
+                    nutrition: {
+                        calories: 95,
+                        protein: 6,
+                        carbs: 1,
+                        fat: 7
+                    }
+                },
+                {
+                    title: "Anda Bhurji (Scrambled Egg, 1 serving)",
+                    nutrition: {
+                        calories: 180,
+                        protein: 12,
+                        carbs: 3,
+                        fat: 14
+                    }
+                },
+                {
+                    title: "Egg Omelette (2 eggs)",
+                    nutrition: {
+                        calories: 180,
+                        protein: 12,
+                        carbs: 2,
+                        fat: 14
+                    }
+                },
+                {
+                    title: "Masala Omelette (2 eggs with veggies)",
+                    nutrition: {
+                        calories: 210,
+                        protein: 14,
+                        carbs: 5,
+                        fat: 15
+                    }
+                },
+                {
+                    title: "Egg Curry (1 serving with gravy)",
+                    nutrition: {
+                        calories: 220,
+                        protein: 14,
+                        carbs: 8,
+                        fat: 15
+                    }
+                },
+                {
+                    title: "Egg White Only (from 1 egg)",
+                    nutrition: {
+                        calories: 17,
+                        protein: 3.6,
+                        carbs: 0.2,
+                        fat: 0
+                    }
+                },
+                {
+                    title: "Egg Yolk Only (from 1 egg)",
+                    nutrition: {
+                        calories: 55,
+                        protein: 2.7,
+                        carbs: 0.6,
+                        fat: 4.5
+                    }
+                },
+                {
+                    title: "Egg Paratha (1 piece, stuffed)",
+                    nutrition: {
+                        calories: 380,
+                        protein: 15,
+                        carbs: 42,
+                        fat: 18
+                    }
+                },
+                {
+                    title: "Anda Shami (1 piece)",
+                    nutrition: {
+                        calories: 150,
+                        protein: 10,
+                        carbs: 5,
+                        fat: 11
                     }
                 },
                 {
