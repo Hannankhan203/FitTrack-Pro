@@ -1,9 +1,9 @@
-<?php 
+<?php
 // Set timezone to Pakistan/Islamabad
 date_default_timezone_set('Asia/Karachi');
 
 require '../includes/functions.php';
-require_login(); 
+require_login();
 ?>
 <?php
 $user_id = get_user_id();
@@ -11,13 +11,20 @@ $user_id = get_user_id();
 // Handle photo deletion
 if (isset($_GET['delete'])) {
     $filename = basename($_GET['delete']);
-    $filepath = "../uploads/" . $filename;
-    
+    $fileType = $_GET['type'] ?? 'uploads'; // Get storage type from URL
+
+    // Determine which directory to delete from
+    if ($fileType === 'private') {
+        $filepath = "../private_uploads/" . $filename;
+    } else {
+        $filepath = "../uploads/" . $filename;
+    }
+
     // Check if the file exists and belongs to the current user
     if (file_exists($filepath) && strpos($filename, "user_" . get_user_id() . "_") === 0) {
         // Delete the file from server
         unlink($filepath);
-        
+
         // Redirect to refresh the page
         header("Location: photos.php?deleted=1");
         exit();
@@ -28,29 +35,64 @@ if (isset($_GET['delete'])) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['photo'])) {
     $file = $_FILES['photo'];
 
+    // Check for storage type
+    $storageType = $_POST['storage_type'] ?? 'uploads';
+
+    // Validate storage type
+    if (!in_array($storageType, ['uploads', 'private'])) {
+        $storageType = 'uploads'; // Default to uploads if invalid
+    }
+
     // Check for errors
     if ($file['error'] === UPLOAD_ERR_OK) {
         $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
         $name = "user_" . get_user_id() . "_" . time() . "." . $ext;
-        $uploadDir = "../uploads/";
 
-        // Create uploads directory if it doesn't exist
+        // Determine upload directory based on storage type
+        if ($storageType === 'private') {
+            $uploadDir = "../private_uploads/";
+        } else {
+            $uploadDir = "../uploads/";
+        }
+
+        // Create upload directory if it doesn't exist
         if (!is_dir($uploadDir)) {
             mkdir($uploadDir, 0755, true);
         }
 
         // Move uploaded file
-        move_uploaded_file($file['tmp_name'], $uploadDir . $name);
-
-        // Refresh the page to show the new photo
-        echo '<script>window.location.href = "photos.php";</script>';
-        exit();
+        if (move_uploaded_file($file['tmp_name'], $uploadDir . $name)) {
+            // Refresh the page to show the new photo
+            echo '<script>window.location.href = "photos.php";</script>';
+            exit();
+        }
     }
 }
 
-// Get user's photos
-$photos = glob("../uploads/user_" . get_user_id() . "_*");
-rsort($photos);
+// Get user's photos from both directories
+$publicPhotos = glob("../uploads/user_" . get_user_id() . "_*");
+$privatePhotos = glob("../private_uploads/user_" . get_user_id() . "_*");
+
+// Combine all photos with their storage type
+$photos = array();
+foreach ($publicPhotos as $photo) {
+    $photos[] = array(
+        'path' => $photo,
+        'type' => 'uploads'
+    );
+}
+foreach ($privatePhotos as $photo) {
+    $photos[] = array(
+        'path' => $photo,
+        'type' => 'private'
+    );
+}
+
+// Sort by modification time (newest first)
+usort($photos, function ($a, $b) {
+    return filemtime($b['path']) - filemtime($a['path']);
+});
+
 $photoCount = count($photos);
 ?>
 
@@ -282,6 +324,83 @@ $photoCount = count($photos);
             font-size: 2rem;
             color: white;
             margin: 0 auto 1.5rem;
+        }
+
+        /* Storage Type Selection */
+        .storage-selection {
+            margin: 1.5rem 0;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 16px;
+            padding: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .storage-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            justify-content: center;
+        }
+
+        .storage-option {
+            flex: 1;
+            min-width: 200px;
+            max-width: 300px;
+        }
+
+        .storage-option input[type="radio"] {
+            display: none;
+        }
+
+        .storage-option label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            height: 100%;
+        }
+
+        .storage-option input[type="radio"]:checked+label {
+            background: rgba(0, 212, 255, 0.1);
+            border-color: var(--primary);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 212, 255, 0.2);
+        }
+
+        .storage-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            background: var(--gradient-primary);
+            color: white;
+        }
+
+        .storage-option:nth-child(2) .storage-icon {
+            background: var(--gradient-accent);
+        }
+
+        .storage-title {
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+            color: white;
+        }
+
+        .storage-desc {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9rem;
+            text-align: center;
+            line-height: 1.4;
         }
 
         /* Form Elements */
@@ -583,6 +702,24 @@ $photoCount = count($photos);
             background: var(--secondary);
         }
 
+        /* Photo Badge */
+        .photo-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: var(--primary);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            z-index: 2;
+        }
+
+        .photo-badge.private {
+            background: var(--accent);
+        }
+
         /* Comparison Section */
         .comparison-section {
             background: linear-gradient(145deg, rgba(255, 45, 117, 0.05), rgba(255, 45, 117, 0.02));
@@ -700,7 +837,7 @@ $photoCount = count($photos);
             font-size: 1.1rem;
         }
 
-        .text-muted{
+        .text-muted {
             color: var(--light) !important;
         }
 
@@ -1358,6 +1495,37 @@ $photoCount = count($photos);
                     <i class="fas fa-info-circle"></i>
                     <span>No file selected</span>
                 </div>
+                <!-- Storage Type Selection -->
+                <div class="storage-selection">
+                    <h6 class="form-label text-center mb-3">Where would you like to save this photo?</h6>
+                    <div class="storage-options">
+                        <div class="storage-option">
+                            <input type="radio" name="storage_type" id="storage_public" value="uploads" checked>
+                            <label for="storage_public">
+                                <div class="storage-icon">
+                                    <i class="fas fa-globe"></i>
+                                </div>
+                                <div class="storage-title">Public Uploads</div>
+                                <div class="storage-desc">
+                                    Photos saved here can be viewed by others in your community
+                                </div>
+                            </label>
+                        </div>
+
+                        <div class="storage-option">
+                            <input type="radio" name="storage_type" id="storage_private" value="private">
+                            <label for="storage_private">
+                                <div class="storage-icon">
+                                    <i class="fas fa-lock"></i>
+                                </div>
+                                <div class="storage-title">Private Uploads</div>
+                                <div class="storage-desc">
+                                    Photos saved here are only visible to you (more secure)
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
 
                 <div class="upload-progress" id="uploadProgress">
                     <div class="progress-bar">
@@ -1393,14 +1561,26 @@ $photoCount = count($photos);
 
             <?php if ($photoCount > 0): ?>
                 <div class="gallery-grid" id="photoGallery">
-                    <?php foreach (array_slice($photos, 0, 6) as $p):
-                        $fileDate = date('M j, Y', filemtime($p));
-                        $fileTime = date('g:i A', filemtime($p));
-                        $filename = basename($p);
-                        $imagePath = "../uploads/" . $filename;
+                    <?php foreach (array_slice($photos, 0, 6) as $photo):
+                        $photoPath = $photo['path'];
+                        $storageType = $photo['type'];
+                        $fileDate = date('M j, Y', filemtime($photoPath));
+                        $fileTime = date('g:i A', filemtime($photoPath));
+                        $filename = basename($photoPath);
+                        
+                        // Determine the correct image path based on storage type
+                        if ($storageType === 'private') {
+                            $imagePath = "../private_uploads/" . $filename;
+                        } else {
+                            $imagePath = "../uploads/" . $filename;
+                        }
                     ?>
                         <div class="photo-card">
-                            <a href="<?= $imagePath ?>" data-lightbox="progress-gallery" data-title="Progress Photo - <?= $fileDate ?>">
+                            <span class="photo-badge <?= $storageType ?>">
+                                <i class="fas fa-<?= $storageType === 'private' ? 'lock' : 'globe' ?> me-1"></i>
+                                <?= $storageType === 'private' ? 'Private' : 'Public' ?>
+                            </span>
+                            <a href="<?= $imagePath ?>" data-lightbox="progress-gallery" data-title="Progress Photo - <?= $fileDate ?> (<?= $storageType === 'private' ? 'Private' : 'Public' ?>)">
                                 <div class="photo-img-container">
                                     <img src="<?= $imagePath ?>" alt="Progress photo from <?= $fileDate ?>">
                                 </div>
@@ -1411,10 +1591,10 @@ $photoCount = count($photos);
                                     <small class="d-block"><?= $fileTime ?></small>
                                 </div>
                                 <div class="photo-actions">
-                                    <a href="<?= $imagePath ?>" class="photo-btn" data-lightbox="progress-gallery" data-title="Progress Photo - <?= $fileDate ?>">
+                                    <a href="<?= $imagePath ?>" class="photo-btn" data-lightbox="progress-gallery" data-title="Progress Photo - <?= $fileDate ?> (<?= $storageType === 'private' ? 'Private' : 'Public' ?>)">
                                         <i class="fas fa-expand"></i>
                                     </a>
-                                    <button class="photo-btn photo-btn-delete" onclick="deletePhoto('<?= $filename ?>', '<?= $fileDate ?>')">
+                                    <button class="photo-btn photo-btn-delete" onclick="deletePhoto('<?= $filename ?>', '<?= $fileDate ?>', '<?= $storageType ?>')">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </div>
@@ -1464,12 +1644,23 @@ $photoCount = count($photos);
         <?php if ($photoCount >= 2):
             $oldestPhoto = $photos[count($photos) - 1];
             $newestPhoto = $photos[0];
-            $oldestDate = date('M j, Y', filemtime($oldestPhoto));
-            $newestDate = date('M j, Y', filemtime($newestPhoto));
-            $oldestFilename = basename($oldestPhoto);
-            $newestFilename = basename($newestPhoto);
-            $oldestImagePath = "../uploads/" . $oldestFilename;
-            $newestImagePath = "../uploads/" . $newestFilename;
+            $oldestDate = date('M j, Y', filemtime($oldestPhoto['path']));
+            $newestDate = date('M j, Y', filemtime($newestPhoto['path']));
+            $oldestFilename = basename($oldestPhoto['path']);
+            $newestFilename = basename($newestPhoto['path']);
+            
+            // Determine image paths based on storage type
+            if ($oldestPhoto['type'] === 'private') {
+                $oldestImagePath = "../private_uploads/" . $oldestFilename;
+            } else {
+                $oldestImagePath = "../uploads/" . $oldestFilename;
+            }
+            
+            if ($newestPhoto['type'] === 'private') {
+                $newestImagePath = "../private_uploads/" . $newestFilename;
+            } else {
+                $newestImagePath = "../uploads/" . $newestFilename;
+            }
         ?>
             <div class="comparison-section">
                 <div class="comparison-header">
@@ -1598,7 +1789,7 @@ $photoCount = count($photos);
         </a>
     </div>
 
-        <!-- Bootstrap JS Bundle with Popper -->
+    <!-- Bootstrap JS Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Use a simpler lightbox library that's more compatible -->
     <script src="https://cdn.jsdelivr.net/npm/basiclightbox@5.0.4/dist/basicLightbox.min.js"></script>
@@ -1612,14 +1803,14 @@ $photoCount = count($photos);
             // Initialize lightbox functionality
             function initLightbox() {
                 const lightboxLinks = document.querySelectorAll('a[data-lightbox]');
-                
+
                 lightboxLinks.forEach(link => {
                     link.addEventListener('click', function(e) {
                         e.preventDefault();
-                        
+
                         const imgSrc = this.getAttribute('href');
                         const imgTitle = this.getAttribute('data-title') || 'Progress Photo';
-                        
+
                         // Create lightbox instance
                         const instance = basicLightbox.create(`
                             <div class="lightbox-container">
@@ -1635,7 +1826,7 @@ $photoCount = count($photos);
                                 document.body.style.overflow = 'auto';
                             }
                         });
-                        
+
                         instance.show();
                     });
                 });
@@ -1723,9 +1914,13 @@ $photoCount = count($photos);
                     return;
                 }
 
+                // Get selected storage type
+                const storageType = document.querySelector('input[name="storage_type"]:checked').value;
+                const storageLabel = storageType === 'private' ? 'Private Uploads' : 'Public Uploads';
+                
                 // Show selected file name in the progress status
                 const fileName = fileInput.files[0].name;
-                uploadStatus.textContent = `Uploading: ${fileName}`;
+                uploadStatus.textContent = `Uploading to ${storageLabel}: ${fileName}`;
 
                 // Show progress bar
                 uploadBtn.disabled = true;
@@ -1752,7 +1947,7 @@ $photoCount = count($photos);
             function toggleGalleryView() {
                 const gallery = document.getElementById('photoGallery');
                 const toggleBtn = document.getElementById('toggleViewBtn');
-                
+
                 if (gallery.classList.contains('list-view')) {
                     // Switch to grid view
                     gallery.classList.remove('list-view');
@@ -1786,7 +1981,7 @@ $photoCount = count($photos);
             window.loadMorePhotos = loadMorePhotos;
 
             // Delete photo function with confirmation
-            function deletePhoto(filename, date) {
+            function deletePhoto(filename, date, storageType) {
                 Swal.fire({
                     title: 'Delete Photo?',
                     text: `Are you sure you want to delete the photo from ${date}? This action cannot be undone.`,
@@ -1799,8 +1994,8 @@ $photoCount = count($photos);
                     reverseButtons: true
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        // Redirect to delete the photo
-                        window.location.href = `photos.php?delete=${filename}`;
+                        // Redirect to delete the photo with storage type
+                        window.location.href = `photos.php?delete=${filename}&type=${storageType}`;
                     }
                 });
             }
@@ -1916,4 +2111,5 @@ $photoCount = count($photos);
         });
     </script>
 </body>
+
 </html>
