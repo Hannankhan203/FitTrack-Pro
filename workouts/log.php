@@ -340,7 +340,6 @@ $saved_exercises = $stmt->fetchAll();
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            /* border: 10px solid black; */
         }
 
         .type-strength {
@@ -351,6 +350,21 @@ $saved_exercises = $stmt->fetchAll();
         .type-cardio {
             background: rgba(255, 45, 117, 0.1);
             color: var(--secondary);
+        }
+
+        .type-core {
+            background: rgba(157, 78, 221, 0.1);
+            color: var(--accent);
+        }
+
+        .type-fullbody {
+            background: rgba(0, 230, 118, 0.1);
+            color: var(--success);
+        }
+
+        .type-mobility {
+            background: rgba(255, 193, 7, 0.1);
+            color: var(--warning);
         }
 
         .remove-btn {
@@ -829,6 +843,13 @@ $saved_exercises = $stmt->fetchAll();
             background-color: rgba(0, 212, 255, 0.2) !important;
         }
 
+        .select2-results__group {
+            color: var(--primary) !important;
+            font-weight: 700 !important;
+            padding: 8px 16px !important;
+            background: rgba(0, 212, 255, 0.05) !important;
+        }
+
         /* ==================== RESPONSIVE DESIGN ==================== */
         /* Large screens (992px and up) - Desktop navigation visible */
         @media (min-width: 992px) {
@@ -1124,7 +1145,6 @@ $saved_exercises = $stmt->fetchAll();
             .input-field input {
                 padding: 0.875rem;
                 font-size: 0.7rem;
-                /* border: 10px solid black; */
             }
 
             .btn {
@@ -1288,7 +1308,7 @@ $saved_exercises = $stmt->fetchAll();
 
                                 // Determine exercise type based on name
                                 $exercise_type = 'strength'; // Default
-                                $cardio_exercises = ['Running', 'Cycling', 'Swimming', 'Jump Rope', 'Elliptical', 'Burpees', 'Rowing', 'Stair Climber'];
+                                $cardio_exercises = ['Running', 'Cycling', 'Swimming', 'Jump Rope', 'Elliptical', 'Burpees', 'Rowing', 'Stair Climber', 'Sprint Intervals', 'Bike Intervals', 'Rowing Intervals'];
                                 if (in_array($exercise_name, $cardio_exercises)) {
                                     $exercise_type = 'cardio';
                                 }
@@ -1460,33 +1480,329 @@ $saved_exercises = $stmt->fetchAll();
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
     <script>
-        // Initialize exercises array
-        const exercises = <?php
-                            $exercises = [
-                                ['name' => 'Bench Press', 'type' => 'strength', 'icon' => 'fa-weight-hanging'],
-                                ['name' => 'Squats', 'type' => 'strength', 'icon' => 'fa-person'],
-                                ['name' => 'Deadlifts', 'type' => 'strength', 'icon' => 'fa-dumbbell'],
-                                ['name' => 'Pull-ups', 'type' => 'strength', 'icon' => 'fa-arrow-up'],
-                                ['name' => 'Push-ups', 'type' => 'strength', 'icon' => 'fa-person-burst'],
-                                ['name' => 'Running', 'type' => 'cardio', 'icon' => 'fa-person-running'],
-                                ['name' => 'Cycling', 'type' => 'cardio', 'icon' => 'fa-bicycle'],
-                                ['name' => 'Swimming', 'type' => 'cardio', 'icon' => 'fa-person-swimming'],
-                                ['name' => 'Jump Rope', 'type' => 'cardio', 'icon' => 'fa-arrow-rotate-right'],
-                                ['name' => 'Elliptical', 'type' => 'cardio', 'icon' => 'fa-person-walking'],
-                                ['name' => 'Bicep Curls', 'type' => 'strength', 'icon' => 'fa-hand-fist'],
-                                ['name' => 'Tricep Extensions', 'type' => 'strength', 'icon' => 'fa-arrow-up-from-bracket'],
-                                ['name' => 'Shoulder Press', 'type' => 'strength', 'icon' => 'fa-up-long'],
-                                ['name' => 'Lunges', 'type' => 'strength', 'icon' => 'fa-shoe-prints'],
-                                ['name' => 'Plank', 'type' => 'strength', 'icon' => 'fa-ruler-horizontal'],
-                                ['name' => 'Burpees', 'type' => 'cardio', 'icon' => 'fa-fire'],
-                                ['name' => 'Rowing', 'type' => 'cardio', 'icon' => 'fa-water'],
-                                ['name' => 'Stair Climber', 'type' => 'cardio', 'icon' => 'fa-stairs']
-                            ];
-                            echo json_encode($exercises);
-                            ?>;
+        // Comprehensive exercise database with categories
+        const exercises = [
+            // CHEST EXERCISES 💪🏽🏋️‍♂️
+            { group: "Chest 💪🏽🏋️‍♂️", name: "Flat Barbell Bench Press 🏋️‍♂️", type: "strength", icon: "fa-weight-hanging" },
+            { group: "Chest 💪🏽🏋️‍♂️", name: "Incline Barbell Bench Press 🏋️‍♂️", type: "strength", icon: "fa-weight-hanging" },
+            { group: "Chest 💪🏽🏋️‍♂️", name: "Decline Barbell Bench Press 🏋️‍♂️", type: "strength", icon: "fa-weight-hanging" },
+            { group: "Chest 💪🏽🏋️‍♂️", name: "Close-Grip Bench Press 🏋️‍♂️", type: "strength", icon: "fa-hand-fist" },
+            { group: "Chest 💪🏽🏋️‍♂️", name: "Wide-Grip Bench Press 🏋️‍♂️", type: "strength", icon: "fa-weight-hanging" },
+            { group: "Chest 💪🏽🏋️‍♂️", name: "Floor Press 🏋️‍♂️", type: "strength", icon: "fa-weight-hanging" },
+            { group: "Chest 💪🏽🏋️‍♂️", name: "Flat Dumbbell Bench Press 🏋️‍♂️", type: "strength", icon: "fa-dumbbell" },
+            { group: "Chest 💪🏽🏋️‍♂️", name: "Incline Dumbbell Press 🏋️‍♂️", type: "strength", icon: "fa-dumbbell" },
+            { group: "Chest 💪🏽🏋️‍♂️", name: "Decline Dumbbell Press 🏋️‍♂️", type: "strength", icon: "fa-dumbbell" },
+            { group: "Chest 💪🏽🏋️‍♂️", name: "Dumbbell Flyes 🏋️‍♂️", type: "strength", icon: "fa-dumbbell" },
+            { group: "Chest 💪🏽🏋️‍♂️", name: "Incline Dumbbell Flyes 🏋️‍♂️", type: "strength", icon: "fa-dumbbell" },
+            { group: "Chest 💪🏽🏋️‍♂️", name: "Decline Dumbbell Flyes 🏋️‍♂️", type: "strength", icon: "fa-dumbbell" },
+            { group: "Chest 💪🏽🏋️‍♂️", name: "Dumbbell Pullover 🏋️‍♂️", type: "strength", icon: "fa-dumbbell" },
+            { group: "Chest 💪🏽🏋️‍♂️", name: "Machine Chest Press 🖥️", type: "strength", icon: "fa-desktop" },
+            { group: "Chest 💪🏽🏋️‍♂️", name: "Pec Deck Fly Machine 🎛️", type: "strength", icon: "fa-gear" },
+            { group: "Chest 💪🏽🏋️‍♂️", name: "Cable Crossover 💪", type: "strength", icon: "fa-cross" },
+            { group: "Chest 💪🏽🏋️‍♂️", name: "High Cable Crossover 💪", type: "strength", icon: "fa-cross" },
+            { group: "Chest 💪🏽🏋️‍♂️", name: "Low Cable Crossover 💪", type: "strength", icon: "fa-cross" },
+            { group: "Chest 💪🏽🏋️‍♂️", name: "Hammer Strength Chest Press 🖥️", type: "strength", icon: "fa-desktop" },
+            { group: "Chest 💪🏽🏋️‍♂️", name: "Smith Machine Bench Press 🖥️", type: "strength", icon: "fa-desktop" },
+            { group: "Chest 💪🏽🏋️‍♂️", name: "Standard Push-ups 🤸‍♂️", type: "strength", icon: "fa-person-burst" },
+            { group: "Chest 💪🏽🏋️‍♂️", name: "Incline Push-ups 🤸‍♂️", type: "strength", icon: "fa-person-burst" },
+            { group: "Chest 💪🏽🏋️‍♂️", name: "Decline Push-ups 🤸‍♂️", type: "strength", icon: "fa-person-burst" },
+            { group: "Chest 💪🏽🏋️‍♂️", name: "Diamond Push-ups 🤸‍♂️", type: "strength", icon: "fa-gem" },
+            { group: "Chest 💪🏽🏋️‍♂️", name: "Wide Push-ups 🤸‍♂️", type: "strength", icon: "fa-person-burst" },
+            { group: "Chest 💪🏽🏋️‍♂️", name: "Archer Push-ups 🏹", type: "strength", icon: "fa-bow-arrow" },
+            { group: "Chest 💪🏽🏋️‍♂️", name: "Plyometric Push-ups ⚡", type: "strength", icon: "fa-bolt" },
+            { group: "Chest 💪🏽🏋️‍♂️", name: "Chest Dips 🤸‍♂️", type: "strength", icon: "fa-arrow-down-up-across-line" },
+            { group: "Chest 💪🏽🏋️‍♂️", name: "Single-Arm Dumbbell Press 🏋️‍♂️", type: "strength", icon: "fa-dumbbell" },
+            { group: "Chest 💪🏽🏋️‍♂️", name: "Landmine Press 🏋️‍♂️", type: "strength", icon: "fa-flag" },
+            { group: "Chest 💪🏽🏋️‍♂️", name: "Guillotine Press 🗡️", type: "strength", icon: "fa-sword" },
+
+            // BACK EXERCISES 🏋️‍♂️🦾
+            { group: "Back 🏋️‍♂️🦾", name: "Pull-ups ⬆️", type: "strength", icon: "fa-arrow-up" },
+            { group: "Back 🏋️‍♂️🦾", name: "Chin-ups ⬆️", type: "strength", icon: "fa-arrow-up" },
+            { group: "Back 🏋️‍♂️🦾", name: "Neutral-grip Pull-ups ⬆️", type: "strength", icon: "fa-arrow-up" },
+            { group: "Back 🏋️‍♂️🦾", name: "Wide-grip Pull-ups ⬆️", type: "strength", icon: "fa-arrow-up" },
+            { group: "Back 🏋️‍♂️🦾", name: "Commando Pull-ups ⚔️", type: "strength", icon: "fa-user-ninja" },
+            { group: "Back 🏋️‍♂️🦾", name: "Lat Pulldowns ⬇️", type: "strength", icon: "fa-arrow-down" },
+            { group: "Back 🏋️‍♂️🦾", name: "Wide-grip Lat Pulldowns ⬇️", type: "strength", icon: "fa-arrow-down" },
+            { group: "Back 🏋️‍♂️🦾", name: "Close-grip Lat Pulldowns ⬇️", type: "strength", icon: "fa-arrow-down" },
+            { group: "Back 🏋️‍♂️🦾", name: "Reverse-grip Lat Pulldowns ⬇️", type: "strength", icon: "fa-arrow-down" },
+            { group: "Back 🏋️‍♂️🦾", name: "Straight-arm Pulldowns ⬇️", type: "strength", icon: "fa-arrow-down" },
+            { group: "Back 🏋️‍♂️🦾", name: "Assisted Pull-ups 🤝", type: "strength", icon: "fa-hands-helping" },
+            { group: "Back 🏋️‍♂️🦾", name: "Bent-over Barbell Rows ↔️", type: "strength", icon: "fa-weight-hanging" },
+            { group: "Back 🏋️‍♂️🦾", name: "Pendlay Rows ↔️", type: "strength", icon: "fa-weight-hanging" },
+            { group: "Back 🏋️‍♂️🦾", name: "T-bar Rows ↔️", type: "strength", icon: "fa-weight-hanging" },
+            { group: "Back 🏋️‍♂️🦾", name: "Seated Cable Rows ↔️", type: "strength", icon: "fa-chair" },
+            { group: "Back 🏋️‍♂️🦾", name: "Chest-supported Rows ↔️", type: "strength", icon: "fa-bed" },
+            { group: "Back 🏋️‍♂️🦾", name: "Inverted Rows ↔️", type: "strength", icon: "fa-arrows-alt-v" },
+            { group: "Back 🏋️‍♂️🦾", name: "Single-arm Dumbbell Rows ↔️", type: "strength", icon: "fa-dumbbell" },
+            { group: "Back 🏋️‍♂️🦾", name: "Meadows Rows ↔️", type: "strength", icon: "fa-mountain" },
+            { group: "Back 🏋️‍♂️🦾", name: "Kroc Rows ↔️", type: "strength", icon: "fa-fire" },
+            { group: "Back 🏋️‍♂️🦾", name: "Conventional Deadlifts ⬇️⬆️", type: "strength", icon: "fa-dumbbell" },
+            { group: "Back 🏋️‍♂️🦾", name: "Sumo Deadlifts ⬇️⬆️", type: "strength", icon: "fa-dumbbell" },
+            { group: "Back 🏋️‍♂️🦾", name: "Romanian Deadlifts 🦵", type: "strength", icon: "fa-dumbbell" },
+            { group: "Back 🏋️‍♂️🦾", name: "Stiff-legged Deadlifts 🦵", type: "strength", icon: "fa-dumbbell" },
+            { group: "Back 🏋️‍♂️🦾", name: "Trap Bar Deadlifts ⬇️⬆️", type: "strength", icon: "fa-dumbbell" },
+            { group: "Back 🏋️‍♂️🦾", name: "Rack Pulls ⬆️", type: "strength", icon: "fa-dumbbell" },
+            { group: "Back 🏋️‍♂️🦾", name: "Snatch-grip Deadlifts ⬇️⬆️", type: "strength", icon: "fa-dumbbell" },
+            { group: "Back 🏋️‍♂️🦾", name: "Face Pulls 🔄", type: "strength", icon: "fa-arrows-rotate" },
+            { group: "Back 🏋️‍♂️🦾", name: "Rear Delt Flyes 🔙", type: "strength", icon: "fa-dove" },
+            { group: "Back 🏋️‍♂️🦾", name: "Band Pull-aparts 🔄", type: "strength", icon: "fa-band-aid" },
+            { group: "Back 🏋️‍♂️🦾", name: "Reverse Pec Deck 🔄", type: "strength", icon: "fa-rotate-left" },
+            { group: "Back 🏋️‍♂️🦾", name: "High Pulls ⬆️", type: "strength", icon: "fa-arrow-up" },
+            { group: "Back 🏋️‍♂️🦾", name: "Hammer Strength Rows ↔️", type: "strength", icon: "fa-hammer" },
+            { group: "Back 🏋️‍♂️🦾", name: "Machine Pulldowns ⬇️", type: "strength", icon: "fa-desktop" },
+            { group: "Back 🏋️‍♂️🦾", name: "Landmine Rows ↔️", type: "strength", icon: "fa-flag" },
+            { group: "Back 🏋️‍♂️🦾", name: "Rocky Pull-ups ⬆️", type: "strength", icon: "fa-fist-raised" },
+            { group: "Back 🏋️‍♂️🦾", name: "Australian Pull-ups ⬇️", type: "strength", icon: "fa-arrow-down" },
+
+            // SHOULDER EXERCISES 🏋️‍♂️🤸‍♂️
+            { group: "Shoulders 🏋️‍♂️🤸‍♂️", name: "Barbell Overhead Press ⬆️", type: "strength", icon: "fa-weight-hanging" },
+            { group: "Shoulders 🏋️‍♂️🤸‍♂️", name: "Dumbbell Overhead Press ⬆️", type: "strength", icon: "fa-dumbbell" },
+            { group: "Shoulders 🏋️‍♂️🤸‍♂️", name: "Arnold Press 🔄", type: "strength", icon: "fa-arrows-rotate" },
+            { group: "Shoulders 🏋️‍♂️🤸‍♂️", name: "Push Press ⬆️", type: "strength", icon: "fa-arrow-up" },
+            { group: "Shoulders 🏋️‍♂️🤸‍♂️", name: "Seated Dumbbell Press ⬆️", type: "strength", icon: "fa-chair" },
+            { group: "Shoulders 🏋️‍♂️🤸‍♂️", name: "Behind-the-neck Press ⬆️", type: "strength", icon: "fa-head-side" },
+            { group: "Shoulders 🏋️‍♂️🤸‍♂️", name: "Landmine Press ⬆️", type: "strength", icon: "fa-flag" },
+            { group: "Shoulders 🏋️‍♂️🤸‍♂️", name: "Machine Shoulder Press ⬆️", type: "strength", icon: "fa-desktop" },
+            { group: "Shoulders 🏋️‍♂️🤸‍♂️", name: "Kettlebell Press ⬆️", type: "strength", icon: "fa-weight" },
+            { group: "Shoulders 🏋️‍♂️🤸‍♂️", name: "Standing Dumbbell Lateral Raises ➡️", type: "strength", icon: "fa-arrow-right" },
+            { group: "Shoulders 🏋️‍♂️🤸‍♂️", name: "Seated Dumbbell Lateral Raises ➡️", type: "strength", icon: "fa-chair" },
+            { group: "Shoulders 🏋️‍♂️🤸‍♂️", name: "Leaning Lateral Raises ➡️", type: "strength", icon: "fa-arrow-right" },
+            { group: "Shoulders 🏋️‍♂️🤸‍♂️", name: "Cable Lateral Raises ➡️", type: "strength", icon: "fa-cable-car" },
+            { group: "Shoulders 🏋️‍♂️🤸‍♂️", name: "Machine Lateral Raises ➡️", type: "strength", icon: "fa-desktop" },
+            { group: "Shoulders 🏋️‍♂️🤸‍♂️", name: "Bent-over Lateral Raises 🔙", type: "strength", icon: "fa-arrow-down" },
+            { group: "Shoulders 🏋️‍♂️🤸‍♂️", name: "Face Pulls 🔄", type: "strength", icon: "fa-arrows-rotate" },
+            { group: "Shoulders 🏋️‍♂️🤸‍♂️", name: "Reverse Pec Deck 🔄", type: "strength", icon: "fa-rotate-left" },
+            { group: "Shoulders 🏋️‍♂️🤸‍♂️", name: "Dumbbell Front Raises ⬆️", type: "strength", icon: "fa-arrow-up" },
+            { group: "Shoulders 🏋️‍♂️🤸‍♂️", name: "Barbell Front Raises ⬆️", type: "strength", icon: "fa-weight-hanging" },
+            { group: "Shoulders 🏋️‍♂️🤸‍♂️", name: "Cable Front Raises ⬆️", type: "strength", icon: "fa-cable-car" },
+            { group: "Shoulders 🏋️‍♂️🤸‍♂️", name: "Plate Front Raises ⬆️", type: "strength", icon: "fa-weight" },
+            { group: "Shoulders 🏋️‍♂️🤸‍♂️", name: "Upright Rows ⬆️", type: "strength", icon: "fa-arrow-up" },
+            { group: "Shoulders 🏋️‍♂️🤸‍♂️", name: "Shrugs ⬆️", type: "strength", icon: "fa-arrow-up" },
+            { group: "Shoulders 🏋️‍♂️🤸‍♂️", name: "Dumbbell Shrugs ⬆️", type: "strength", icon: "fa-dumbbell" },
+            { group: "Shoulders 🏋️‍♂️🤸‍♂️", name: "Farmer's Walks 🚶‍♂️", type: "strength", icon: "fa-walking" },
+            { group: "Shoulders 🏋️‍♂️🤸‍♂️", name: "Cuban Press 🔄", type: "strength", icon: "fa-arrows-rotate" },
+            { group: "Shoulders 🏋️‍♂️🤸‍♂️", name: "Scaptions ⬆️", type: "strength", icon: "fa-arrow-up" },
+
+            // ARM EXERCISES 💪🖐️
+            { group: "Arms 💪🖐️", name: "Barbell Curls 💪", type: "strength", icon: "fa-weight-hanging" },
+            { group: "Arms 💪🖐️", name: "EZ-bar Curls 💪", type: "strength", icon: "fa-weight-hanging" },
+            { group: "Arms 💪🖐️", name: "Standing Dumbbell Curls 💪", type: "strength", icon: "fa-dumbbell" },
+            { group: "Arms 💪🖐️", name: "Seated Dumbbell Curls 💪", type: "strength", icon: "fa-chair" },
+            { group: "Arms 💪🖐️", name: "Incline Dumbbell Curls 💪", type: "strength", icon: "fa-dumbbell" },
+            { group: "Arms 💪🖐️", name: "Hammer Curls 🔨", type: "strength", icon: "fa-hammer" },
+            { group: "Arms 💪🖐️", name: "Cross-body Hammer Curls 🔨", type: "strength", icon: "fa-hammer" },
+            { group: "Arms 💪🖐️", name: "Preacher Curls (barbell) 📖", type: "strength", icon: "fa-book" },
+            { group: "Arms 💪🖐️", name: "Preacher Curls (dumbbell) 📖", type: "strength", icon: "fa-book" },
+            { group: "Arms 💪🖐️", name: "Spider Curls 🕷️", type: "strength", icon: "fa-spider" },
+            { group: "Arms 💪🖐️", name: "Concentration Curls 🎯", type: "strength", icon: "fa-bullseye" },
+            { group: "Arms 💪🖐️", name: "Zottman Curls 🔄", type: "strength", icon: "fa-arrows-rotate" },
+            { group: "Arms 💪🖐️", name: "Cable Curls 💪", type: "strength", icon: "fa-cable-car" },
+            { group: "Arms 💪🖐️", name: "High Cable Curls 💪", type: "strength", icon: "fa-cable-car" },
+            { group: "Arms 💪🖐️", name: "Low Cable Curls 💪", type: "strength", icon: "fa-cable-car" },
+            { group: "Arms 💪🖐️", name: "Reverse Curls 🔄", type: "strength", icon: "fa-arrows-rotate" },
+            { group: "Arms 💪🖐️", name: "Drag Curls ⬅️", type: "strength", icon: "fa-arrow-left" },
+            { group: "Arms 💪🖐️", name: "21s Curls 2️⃣1️⃣", type: "strength", icon: "fa-hashtag" },
+            { group: "Arms 💪🖐️", name: "Band Curls 💪", type: "strength", icon: "fa-band-aid" },
+            { group: "Arms 💪🖐️", name: "Machine Curls 💪", type: "strength", icon: "fa-desktop" },
+            { group: "Arms 💪🖐️", name: "Close-grip Bench Press ⬇️", type: "strength", icon: "fa-weight-hanging" },
+            { group: "Arms 💪🖐️", name: "Tricep Dips ⬇️", type: "strength", icon: "fa-arrow-down" },
+            { group: "Arms 💪🖐️", name: "Bench Dips ⬇️", type: "strength", icon: "fa-bed" },
+            { group: "Arms 💪🖐️", name: "Skull Crushers 💀", type: "strength", icon: "fa-skull" },
+            { group: "Arms 💪🖐️", name: "Overhead Tricep Extensions ⬆️", type: "strength", icon: "fa-arrow-up" },
+            { group: "Arms 💪🖐️", name: "Overhead Cable Extensions ⬆️", type: "strength", icon: "fa-cable-car" },
+            { group: "Arms 💪🖐️", name: "Tricep Pushdowns (straight bar) ⬇️", type: "strength", icon: "fa-arrow-down" },
+            { group: "Arms 💪🖐️", name: "Tricep Pushdowns (rope) ⬇️", type: "strength", icon: "fa-rope" },
+            { group: "Arms 💪🖐️", name: "Tricep Pushdowns (V-bar) ⬇️", type: "strength", icon: "fa-arrow-down" },
+            { group: "Arms 💪🖐️", name: "Tricep Kickbacks ⬅️", type: "strength", icon: "fa-arrow-left" },
+            { group: "Arms 💪🖐️", name: "JM Press ⬇️", type: "strength", icon: "fa-arrow-down" },
+            { group: "Arms 💪🖐️", name: "Tate Press ⬇️", type: "strength", icon: "fa-arrow-down" },
+            { group: "Arms 💪🖐️", name: "Diamond Push-ups 💎", type: "strength", icon: "fa-gem" },
+            { group: "Arms 💪🖐️", name: "French Press 🇫🇷", type: "strength", icon: "fa-flag" },
+            { group: "Arms 💪🖐️", name: "Single-arm Tricep Extensions ⬆️", type: "strength", icon: "fa-arrow-up" },
+            { group: "Arms 💪🖐️", name: "Cable Kickbacks ⬅️", type: "strength", icon: "fa-cable-car" },
+            { group: "Arms 💪🖐️", name: "Machine Tricep Extensions ⬆️", type: "strength", icon: "fa-desktop" },
+            { group: "Arms 💪🖐️", name: "Band Pushdowns ⬇️", type: "strength", icon: "fa-band-aid" },
+            { group: "Arms 💪🖐️", name: "Floor Press ⬇️", type: "strength", icon: "fa-floor" },
+            { group: "Arms 💪🖐️", name: "Narrow Push-ups ⬇️", type: "strength", icon: "fa-arrows-in" },
+            { group: "Arms 💪🖐️", name: "Wrist Curls ✋", type: "strength", icon: "fa-hand" },
+            { group: "Arms 💪🖐️", name: "Reverse Wrist Curls 🔄", type: "strength", icon: "fa-hand" },
+            { group: "Arms 💪🖐️", name: "Farmer's Walks 🚶‍♂️", type: "strength", icon: "fa-walking" },
+            { group: "Arms 💪🖐️", name: "Plate Pinches 🤏", type: "strength", icon: "fa-weight" },
+            { group: "Arms 💪🖐️", name: "Towel Pull-ups 🧻", type: "strength", icon: "fa-hand-holding" },
+            { group: "Arms 💪🖐️", name: "Dead Hangs ⏱️", type: "strength", icon: "fa-clock" },
+            { group: "Arms 💪🖐️", name: "Wrist Roller ⏱️", type: "strength", icon: "fa-arrows-rotate" },
+            { group: "Arms 💪🖐️", name: "Hammer Levering 🔨", type: "strength", icon: "fa-hammer" },
+
+            // LEG EXERCISES 🦵🏋️‍♂️
+            { group: "Legs 🦵🏋️‍♂️", name: "Barbell Back Squats ⬇️", type: "strength", icon: "fa-weight-hanging" },
+            { group: "Legs 🦵🏋️‍♂️", name: "Front Squats ⬇️", type: "strength", icon: "fa-weight-hanging" },
+            { group: "Legs 🦵🏋️‍♂️", name: "High-bar Squats ⬇️", type: "strength", icon: "fa-weight-hanging" },
+            { group: "Legs 🦵🏋️‍♂️", name: "Low-bar Squats ⬇️", type: "strength", icon: "fa-weight-hanging" },
+            { group: "Legs 🦵🏋️‍♂️", name: "Goblet Squats ⬇️", type: "strength", icon: "fa-weight" },
+            { group: "Legs 🦵🏋️‍♂️", name: "Hack Squats ⬇️", type: "strength", icon: "fa-desktop" },
+            { group: "Legs 🦵🏋️‍♂️", name: "Leg Press ⬇️", type: "strength", icon: "fa-desktop" },
+            { group: "Legs 🦵🏋️‍♂️", name: "Bulgarian Split Squats ⬇️", type: "strength", icon: "fa-person" },
+            { group: "Legs 🦵🏋️‍♂️", name: "Walking Lunges 🚶‍♂️", type: "strength", icon: "fa-walking" },
+            { group: "Legs 🦵🏋️‍♂️", name: "Reverse Lunges ⬅️", type: "strength", icon: "fa-arrow-left" },
+            { group: "Legs 🦵🏋️‍♂️", name: "Stationary Lunges ⬇️", type: "strength", icon: "fa-person" },
+            { group: "Legs 🦵🏋️‍♂️", name: "Step-ups ⬆️", type: "strength", icon: "fa-stairs" },
+            { group: "Legs 🦵🏋️‍♂️", name: "Leg Extensions ⬆️", type: "strength", icon: "fa-arrow-up" },
+            { group: "Legs 🦵🏋️‍♂️", name: "Sissy Squats ⬇️", type: "strength", icon: "fa-person" },
+            { group: "Legs 🦵🏋️‍♂️", name: "Pistol Squats 🔫", type: "strength", icon: "fa-person" },
+            { group: "Legs 🦵🏋️‍♂️", name: "Belt Squats ⬇️", type: "strength", icon: "fa-belt" },
+            { group: "Legs 🦵🏋️‍♂️", name: "Zercher Squats ⬇️", type: "strength", icon: "fa-weight-hanging" },
+            { group: "Legs 🦵🏋️‍♂️", name: "Overhead Squats ⬇️", type: "strength", icon: "fa-weight-hanging" },
+            { group: "Legs 🦵🏋️‍♂️", name: "Box Squats 📦", type: "strength", icon: "fa-box" },
+            { group: "Legs 🦵🏋️‍♂️", name: "Heels-elevated Squats ⬆️", type: "strength", icon: "fa-arrow-up" },
+            { group: "Legs 🦵🏋️‍♂️", name: "Romanian Deadlifts 🦵", type: "strength", icon: "fa-dumbbell" },
+            { group: "Legs 🦵🏋️‍♂️", name: "Stiff-legged Deadlifts 🦵", type: "strength", icon: "fa-dumbbell" },
+            { group: "Legs 🦵🏋️‍♂️", name: "Hamstring Curls (lying) 🦵", type: "strength", icon: "fa-bed" },
+            { group: "Legs 🦵🏋️‍♂️", name: "Hamstring Curls (seated) 🦵", type: "strength", icon: "fa-chair" },
+            { group: "Legs 🦵🏋️‍♂️", name: "Hamstring Curls (standing) 🦵", type: "strength", icon: "fa-person-standing" },
+            { group: "Legs 🦵🏋️‍♂️", name: "Nordic Hamstring Curls 🇳🇴", type: "strength", icon: "fa-person" },
+            { group: "Legs 🦵🏋️‍♂️", name: "Glute-ham Raises 🍑", type: "strength", icon: "fa-arrow-up" },
+            { group: "Legs 🦵🏋️‍♂️", name: "Good Mornings 🌄", type: "strength", icon: "fa-sun" },
+            { group: "Legs 🦵🏋️‍♂️", name: "Single-leg Romanian Deadlifts 🦵", type: "strength", icon: "fa-dumbbell" },
+            { group: "Legs 🦵🏋️‍♂️", name: "Kettlebell Swings ⚖️", type: "strength", icon: "fa-weight" },
+            { group: "Legs 🦵🏋️‍♂️", name: "Reverse Hyperextensions ⬆️", type: "strength", icon: "fa-arrow-up" },
+            { group: "Legs 🦵🏋️‍♂️", name: "Swiss Ball Leg Curls ⚽", type: "strength", icon: "fa-futbol" },
+            { group: "Legs 🦵🏋️‍♂️", name: "Cable Pull-throughs ⬅️", type: "strength", icon: "fa-cable-car" },
+            { group: "Legs 🦵🏋️‍♂️", name: "Band Leg Curls 🦵", type: "strength", icon: "fa-band-aid" },
+            { group: "Legs 🦵🏋️‍♂️", name: "Seated Good Mornings 🌄", type: "strength", icon: "fa-chair" },
+            { group: "Legs 🦵🏋️‍♂️", name: "Hip Thrusts 🍑", type: "strength", icon: "fa-arrow-up" },
+            { group: "Legs 🦵🏋️‍♂️", name: "Glute Bridges 🍑", type: "strength", icon: "fa-bridge" },
+            { group: "Legs 🦵🏋️‍♂️", name: "Single-leg Hip Thrusts 🍑", type: "strength", icon: "fa-arrow-up" },
+            { group: "Legs 🦵🏋️‍♂️", name: "Frog Pumps 🐸", type: "strength", icon: "fa-frog" },
+            { group: "Legs 🦵🏋️‍♂️", name: "Cable Kickbacks ⬅️", type: "strength", icon: "fa-cable-car" },
+            { group: "Legs 🦵🏋️‍♂️", name: "Donkey Kicks 🐴", type: "strength", icon: "fa-horse" },
+            { group: "Legs 🦵🏋️‍♂️", name: "Fire Hydrants 🚒", type: "strength", icon: "fa-fire-hydrant" },
+            { group: "Legs 🦵🏋️‍♂️", name: "Curtsy Lunges 👑", type: "strength", icon: "fa-person" },
+            { group: "Legs 🦵🏋️‍♂️", name: "Sumo Deadlifts 🍑", type: "strength", icon: "fa-dumbbell" },
+            { group: "Legs 🦵🏋️‍♂️", name: "Step-ups (high step) ⬆️", type: "strength", icon: "fa-stairs" },
+            { group: "Legs 🦵🏋️‍♂️", name: "Bulgarian Split Squats 🍑", type: "strength", icon: "fa-person" },
+            { group: "Legs 🦵🏋️‍♂️", name: "Clamshells 🐚", type: "strength", icon: "fa-fish" },
+            { group: "Legs 🦵🏋️‍♂️", name: "Standing Calf Raises 🦶", type: "strength", icon: "fa-arrow-up" },
+            { group: "Legs 🦵🏋️‍♂️", name: "Seated Calf Raises 🦶", type: "strength", icon: "fa-chair" },
+            { group: "Legs 🦵🏋️‍♂️", name: "Donkey Calf Raises 🦶", type: "strength", icon: "fa-horse" },
+            { group: "Legs 🦵🏋️‍♂️", name: "Leg Press Calf Raises 🦶", type: "strength", icon: "fa-desktop" },
+            { group: "Legs 🦵🏋️‍♂️", name: "Single-leg Calf Raises 🦶", type: "strength", icon: "fa-arrow-up" },
+            { group: "Legs 🦵🏋️‍♂️", name: "Farmer's Walk on Toes 🚶‍♂️", type: "strength", icon: "fa-walking" },
+            { group: "Legs 🦵🏋️‍♂️", name: "Jump Rope 🦶", type: "cardio", icon: "fa-rope" },
+            { group: "Legs 🦵🏋️‍♂️", name: "Box Jumps 🦶", type: "strength", icon: "fa-box" },
+
+            // CORE & ABS EXERCISES 🏋️‍♂️🤸‍♂️
+            { group: "Core & Abs 🏋️‍♂️🤸‍♂️", name: "Plank 🧘‍♂️", type: "strength", icon: "fa-ruler-horizontal" },
+            { group: "Core & Abs 🏋️‍♂️🤸‍♂️", name: "Forearm Plank 🧘‍♂️", type: "strength", icon: "fa-ruler-horizontal" },
+            { group: "Core & Abs 🏋️‍♂️🤸‍♂️", name: "Side Plank 🧘‍♂️", type: "strength", icon: "fa-ruler-horizontal" },
+            { group: "Core & Abs 🏋️‍♂️🤸‍♂️", name: "RKC Plank 🧘‍♂️", type: "strength", icon: "fa-ruler-horizontal" },
+            { group: "Core & Abs 🏋️‍♂️🤸‍♂️", name: "Ab Wheel Rollouts 🛞", type: "strength", icon: "fa-circle" },
+            { group: "Core & Abs 🏋️‍♂️🤸‍♂️", name: "Stability Ball Rollouts ⚽", type: "strength", icon: "fa-futbol" },
+            { group: "Core & Abs 🏋️‍♂️🤸‍♂️", name: "Dead Bug 🐛", type: "strength", icon: "fa-bug" },
+            { group: "Core & Abs 🏋️‍♂️🤸‍♂️", name: "Bird-dog 🐦", type: "strength", icon: "fa-dog" },
+            { group: "Core & Abs 🏋️‍♂️🤸‍♂️", name: "Bear Crawls 🐻", type: "strength", icon: "fa-paw" },
+            { group: "Core & Abs 🏋️‍♂️🤸‍♂️", name: "Hollow Body Hold 🫥", type: "strength", icon: "fa-person" },
+            { group: "Core & Abs 🏋️‍♂️🤸‍♂️", name: "L-sit L️⃣", type: "strength", icon: "fa-chair" },
+            { group: "Core & Abs 🏋️‍♂️🤸‍♂️", name: "Side Plank with Rotation 🔄", type: "strength", icon: "fa-ruler-horizontal" },
+            { group: "Core & Abs 🏋️‍♂️🤸‍♂️", name: "Suitcase Carries 🧳", type: "strength", icon: "fa-suitcase" },
+            { group: "Core & Abs 🏋️‍♂️🤸‍♂️", name: "Windshield Wipers 🪟", type: "strength", icon: "fa-wind" },
+            { group: "Core & Abs 🏋️‍♂️🤸‍♂️", name: "Side Bend ⬅️➡️", type: "strength", icon: "fa-arrows-left-right" },
+            { group: "Core & Abs 🏋️‍♂️🤸‍♂️", name: "Pallof Press 🔄", type: "strength", icon: "fa-arrows-rotate" },
+            { group: "Core & Abs 🏋️‍♂️🤸‍♂️", name: "Cable Chop 🔄", type: "strength", icon: "fa-cable-car" },
+            { group: "Core & Abs 🏋️‍♂️🤸‍♂️", name: "Cable Lift 🔄", type: "strength", icon: "fa-cable-car" },
+            { group: "Core & Abs 🏋️‍♂️🤸‍♂️", name: "Renegade Rows 🔄", type: "strength", icon: "fa-arrows-rotate" },
+            { group: "Core & Abs 🏋️‍♂️🤸‍♂️", name: "Crunches 🤸‍♂️", type: "strength", icon: "fa-arrow-up" },
+            { group: "Core & Abs 🏋️‍♂️🤸‍♂️", name: "Reverse Crunches 🔄", type: "strength", icon: "fa-arrows-rotate" },
+            { group: "Core & Abs 🏋️‍♂️🤸‍♂️", name: "Leg Raises ⬆️", type: "strength", icon: "fa-arrow-up" },
+            { group: "Core & Abs 🏋️‍♂️🤸‍♂️", name: "Hanging Leg Raises ⬆️", type: "strength", icon: "fa-arrow-up" },
+            { group: "Core & Abs 🏋️‍♂️🤸‍♂️", name: "Knee Raises ⬆️", type: "strength", icon: "fa-arrow-up" },
+            { group: "Core & Abs 🏋️‍♂️🤸‍♂️", name: "Scissor Kicks ✂️", type: "strength", icon: "fa-scissors" },
+            { group: "Core & Abs 🏋️‍♂️🤸‍♂️", name: "Flutter Kicks 🦶", type: "strength", icon: "fa-feather" },
+            { group: "Core & Abs 🏋️‍♂️🤸‍♂️", name: "Russian Twists 🇷🇺", type: "strength", icon: "fa-arrows-rotate" },
+            { group: "Core & Abs 🏋️‍♂️🤸‍♂️", name: "Bicycle Crunches 🚲", type: "strength", icon: "fa-bicycle" },
+            { group: "Core & Abs 🏋️‍♂️🤸‍♂️", name: "V-ups V️⃣", type: "strength", icon: "fa-arrow-up" },
+            { group: "Core & Abs 🏋️‍♂️🤸‍♂️", name: "Toe Touches 👣", type: "strength", icon: "fa-hand" },
+            { group: "Core & Abs 🏋️‍♂️🤸‍♂️", name: "Captain's Chair Leg Raises ⬆️", type: "strength", icon: "fa-chair" },
+            { group: "Core & Abs 🏋️‍♂️🤸‍♂️", name: "Decline Bench Sit-ups ⬇️", type: "strength", icon: "fa-arrow-down" },
+            { group: "Core & Abs 🏋️‍♂️🤸‍♂️", name: "Medicine Ball Slams ⚽", type: "strength", icon: "fa-futbol" },
+            { group: "Core & Abs 🏋️‍♂️🤸‍♂️", name: "Wood Choppers 🪓", type: "strength", icon: "fa-axe" },
+            { group: "Core & Abs 🏋️‍♂️🤸‍♂️", name: "Standing Cable Rotations 🔄", type: "strength", icon: "fa-cable-car" },
+            { group: "Core & Abs 🏋️‍♂️🤸‍♂️", name: "Medicine Ball Rotational Throws ⚽", type: "strength", icon: "fa-futbol" },
+            { group: "Core & Abs 🏋️‍♂️🤸‍♂️", name: "Turkish Get-ups 🇹🇷", type: "strength", icon: "fa-arrow-up" },
+
+            // CARDIO EXERCISES 🏃‍♂️🚴‍♀️🏊‍♂️
+            { group: "Cardio 🏃‍♂️🚴‍♀️🏊‍♂️", name: "Running/Jogging 🏃‍♂️", type: "cardio", icon: "fa-person-running" },
+            { group: "Cardio 🏃‍♂️🚴‍♀️🏊‍♂️", name: "Cycling (stationary/road) 🚴‍♀️", type: "cardio", icon: "fa-bicycle" },
+            { group: "Cardio 🏃‍♂️🚴‍♀️🏊‍♂️", name: "Swimming 🏊‍♂️", type: "cardio", icon: "fa-person-swimming" },
+            { group: "Cardio 🏃‍♂️🚴‍♀️🏊‍♂️", name: "Rowing 🚣‍♂️", type: "cardio", icon: "fa-water" },
+            { group: "Cardio 🏃‍♂️🚴‍♀️🏊‍♂️", name: "Elliptical Trainer 🏃‍♂️", type: "cardio", icon: "fa-person-walking" },
+            { group: "Cardio 🏃‍♂️🚴‍♀️🏊‍♂️", name: "Stair Climber 🏃‍♂️", type: "cardio", icon: "fa-stairs" },
+            { group: "Cardio 🏃‍♂️🚴‍♀️🏊‍♂️", name: "Cross-country Skiing (machine) ⛷️", type: "cardio", icon: "fa-person-skiing" },
+            { group: "Cardio 🏃‍♂️🚴‍♀️🏊‍♂️", name: "Hiking 🥾", type: "cardio", icon: "fa-mountain" },
+            { group: "Cardio 🏃‍♂️🚴‍♀️🏊‍♂️", name: "Walking (brisk) 🚶‍♂️", type: "cardio", icon: "fa-walking" },
+            { group: "Cardio 🏃‍♂️🚴‍♀️🏊‍♂️", name: "Stair Running 🏃‍♂️", type: "cardio", icon: "fa-stairs" },
+            { group: "Cardio 🏃‍♂️🚴‍♀️🏊‍♂️", name: "Skating/Rollerblading ⛸️", type: "cardio", icon: "fa-person-skating" },
+            { group: "Cardio 🏃‍♂️🚴‍♀️🏊‍♂️", name: "Jump Rope (continuous) 🦶", type: "cardio", icon: "fa-rope" },
+            { group: "Cardio 🏃‍♂️🚴‍♀️🏊‍♂️", name: "Sprint Intervals ⚡", type: "cardio", icon: "fa-bolt" },
+            { group: "Cardio 🏃‍♂️🚴‍♀️🏊‍♂️", name: "Bike Intervals 🚴‍♀️", type: "cardio", icon: "fa-bicycle" },
+            { group: "Cardio 🏃‍♂️🚴‍♀️🏊‍♂️", name: "Rowing Intervals 🚣‍♂️", type: "cardio", icon: "fa-water" },
+            { group: "Cardio 🏃‍♂️🚴‍♀️🏊‍♂️", name: "Battle Ropes 🔥", type: "cardio", icon: "fa-rope" },
+            { group: "Cardio 🏃‍♂️🚴‍♀️🏊‍♂️", name: "Burpee Intervals 🔥", type: "cardio", icon: "fa-fire" },
+            { group: "Cardio 🏃‍♂️🚴‍♀️🏊‍♂️", name: "Mountain Climber Intervals ⛰️", type: "cardio", icon: "fa-mountain" },
+            { group: "Cardio 🏃‍♂️🚴‍♀️🏊‍♂️", name: "Box Jump Intervals 📦", type: "cardio", icon: "fa-box" },
+            { group: "Cardio 🏃‍♂️🚴‍♀️🏊‍♂️", name: "Kettlebell Swing Intervals ⚖️", type: "cardio", icon: "fa-weight" },
+            { group: "Cardio 🏃‍♂️🚴‍♀️🏊‍♂️", name: "Assault Bike Intervals 🚴‍♀️", type: "cardio", icon: "fa-bicycle" },
+            { group: "Cardio 🏃‍♂️🚴‍♀️🏊‍♂️", name: "TABATA Protocol 🔄", type: "cardio", icon: "fa-clock" },
+            { group: "Cardio 🏃‍♂️🚴‍♀️🏊‍♂️", name: "AMRAP 🔄", type: "cardio", icon: "fa-infinity" },
+            { group: "Cardio 🏃‍♂️🚴‍♀️🏊‍♂️", name: "EMOM 🔄", type: "cardio", icon: "fa-clock" },
+            { group: "Cardio 🏃‍♂️🚴‍♀️🏊‍♂️", name: "Chipper Workouts 🔄", type: "cardio", icon: "fa-list-check" },
+
+            // FULL BODY & COMPOUND EXERCISES 🏋️‍♂️🤸‍♂️💥
+            { group: "Full Body 🏋️‍♂️🤸‍♂️💥", name: "Clean and Jerk 💨", type: "strength", icon: "fa-weight-hanging" },
+            { group: "Full Body 🏋️‍♂️🤸‍♂️💥", name: "Snatch 💨", type: "strength", icon: "fa-weight-hanging" },
+            { group: "Full Body 🏋️‍♂️🤸‍♂️💥", name: "Power Clean 💨", type: "strength", icon: "fa-weight-hanging" },
+            { group: "Full Body 🏋️‍♂️🤸‍♂️💥", name: "Power Snatch 💨", type: "strength", icon: "fa-weight-hanging" },
+            { group: "Full Body 🏋️‍♂️🤸‍♂️💥", name: "Hang Clean 💨", type: "strength", icon: "fa-weight-hanging" },
+            { group: "Full Body 🏋️‍♂️🤸‍♂️💥", name: "Clean Pull 💨", type: "strength", icon: "fa-weight-hanging" },
+            { group: "Full Body 🏋️‍♂️🤸‍♂️💥", name: "Farmer's Walks 🏋️‍♂️", type: "strength", icon: "fa-walking" },
+            { group: "Full Body 🏋️‍♂️🤸‍♂️💥", name: "Sandbag Carries 🏋️‍♂️", type: "strength", icon: "fa-bag-shopping" },
+            { group: "Full Body 🏋️‍♂️🤸‍♂️💥", name: "Yoke Walks 🏋️‍♂️", type: "strength", icon: "fa-weight-hanging" },
+            { group: "Full Body 🏋️‍♂️🤸‍♂️💥", name: "Atlas Stone Lifts 🪨", type: "strength", icon: "fa-mountain" },
+            { group: "Full Body 🏋️‍♂️🤸‍♂️💥", name: "Log Press 🪵", type: "strength", icon: "fa-tree" },
+            { group: "Full Body 🏋️‍♂️🤸‍♂️💥", name: "Tire Flips 🛞", type: "strength", icon: "fa-tire" },
+            { group: "Full Body 🏋️‍♂️🤸‍♂️💥", name: "Burpees 💥", type: "strength", icon: "fa-fire" },
+            { group: "Full Body 🏋️‍♂️🤸‍♂️💥", name: "Thrusters (with weight) 💥", type: "strength", icon: "fa-weight-hanging" },
+            { group: "Full Body 🏋️‍♂️🤸‍♂️💥", name: "Kettlebell Swings ⚖️", type: "strength", icon: "fa-weight" },
+            { group: "Full Body 🏋️‍♂️🤸‍♂️💥", name: "Turkish Get-ups 🇹🇷", type: "strength", icon: "fa-arrow-up" },
+            { group: "Full Body 🏋️‍♂️🤸‍♂️💥", name: "Man-makers 👨‍🔧", type: "strength", icon: "fa-person" },
+            { group: "Full Body 🏋️‍♂️🤸‍♂️💥", name: "Squat Thrusts ⬇️", type: "strength", icon: "fa-arrow-down" },
+            { group: "Full Body 🏋️‍♂️🤸‍♂️💥", name: "Bear Complex 🐻", type: "strength", icon: "fa-paw" },
+            { group: "Full Body 🏋️‍♂️🤸‍♂️💥", name: "Grace (clean & jerks) 💎", type: "strength", icon: "fa-weight-hanging" },
+            { group: "Full Body 🏋️‍♂️🤸‍♂️💥", name: "Fran (thrusters + pull-ups) 🇫🇷", type: "strength", icon: "fa-weight-hanging" },
+
+            // MISC & MOBILITY 🧘‍♂️🤲
+            { group: "Mobility 🧘‍♂️🤲", name: "Towel Pull-ups ✋", type: "strength", icon: "fa-hand-holding" },
+            { group: "Mobility 🧘‍♂️🤲", name: "Plate Pinches ✋", type: "strength", icon: "fa-weight" },
+            { group: "Mobility 🧘‍♂️🤲", name: "Fat Gripz Training ✋", type: "strength", icon: "fa-grip" },
+            { group: "Mobility 🧘‍♂️🤲", name: "Wrist Roller ⏱️", type: "strength", icon: "fa-arrows-rotate" },
+            { group: "Mobility 🧘‍♂️🤲", name: "Climbing (rock wall) 🧗", type: "strength", icon: "fa-mountain" },
+            { group: "Mobility 🧘‍♂️🤲", name: "Neck Bridges (caution) 🧠", type: "strength", icon: "fa-brain" },
+            { group: "Mobility 🧘‍♂️🤲", name: "Neck Harness Work 🧠", type: "strength", icon: "fa-brain" },
+            { group: "Mobility 🧘‍♂️🤲", name: "Manual Resistance Neck Training 🧠", type: "strength", icon: "fa-brain" },
+            { group: "Mobility 🧘‍♂️🤲", name: "Foam Rolling 🧘‍♂️", type: "mobility", icon: "fa-roller" },
+            { group: "Mobility 🧘‍♂️🤲", name: "Dynamic Stretching 🧘‍♂️", type: "mobility", icon: "fa-person-walking" },
+            { group: "Mobility 🧘‍♂️🤲", name: "Static Stretching 🧘‍♂️", type: "mobility", icon: "fa-person-standing" },
+            { group: "Mobility 🧘‍♂️🤲", name: "Yoga Poses 🧘‍♂️", type: "mobility", icon: "fa-spa" },
+            { group: "Mobility 🧘‍♂️🤲", name: "Animal Flow 🐾", type: "mobility", icon: "fa-paw" },
+            { group: "Mobility 🧘‍♂️🤲", name: "Pilates 🧘‍♂️", type: "mobility", icon: "fa-person" },
+            { group: "Mobility 🧘‍♂️🤲", name: "Tai Chi 🧘‍♂️", type: "mobility", icon: "fa-yin-yang" }
+        ];
 
         // Exercises that don't require weight input
-        const noWeightExercises = ['Pull-ups', 'Push-ups', 'Lunges', 'Plank'];
+        const noWeightExercises = [
+            'Pull-ups ⬆️', 'Push-ups 🤸‍♂️', 'Lunges 🚶‍♂️', 'Plank 🧘‍♂️', 'Chin-ups ⬆️', 
+            'Dips 🤸‍♂️', 'Bodyweight Squats ⬇️', 'Inverted Rows ↔️', 'Handstand Push-ups 🤸‍♂️',
+            'Muscle-ups ⬆️', 'Australian Pull-ups ⬇️', 'Archer Push-ups 🏹', 'Plyometric Push-ups ⚡'
+        ];
 
         let exerciseCounter = 0;
 
@@ -1494,10 +1810,6 @@ $saved_exercises = $stmt->fetchAll();
         function createExerciseCard() {
             exerciseCounter++;
             const cardId = `exercise-${exerciseCounter}`;
-
-            const options = exercises.map(ex =>
-                `<option value="${ex.name}" data-type="${ex.type}" data-icon="${ex.icon}">${ex.name}</option>`
-            ).join('');
 
             return `
             <div class="exercise-card" id="${cardId}">
@@ -1511,6 +1823,9 @@ $saved_exercises = $stmt->fetchAll();
                         <span class="exercise-type-indicator type-cardio" style="display:none;">
                             <i class="fas fa-running me-1"></i>Cardio
                         </span>
+                        <span class="exercise-type-indicator type-mobility" style="display:none;">
+                            <i class="fas fa-spa me-1"></i>Mobility
+                        </span>
                     </div>
                     <button type="button" class="remove-btn" onclick="removeExercise('${cardId}')">
                         <i class="fas fa-times"></i>
@@ -1521,7 +1836,6 @@ $saved_exercises = $stmt->fetchAll();
                     <label for="exercise-select-${exerciseCounter}" class="form-label">Select Exercise</label>
                     <select class="exercise-select" id="exercise-select-${exerciseCounter}" required>
                         <option value="">Choose an exercise...</option>
-                        ${options}
                     </select>
                 </div>
                 
@@ -1546,12 +1860,12 @@ $saved_exercises = $stmt->fetchAll();
                     </div>
                 </div>
                 
-                <div class="duration-field" style="display:none;">
-                    <label class="form-label">Cardio Duration</label>
+                <div class="cardio-fields" style="display:none;">
+                    <label class="form-label">Cardio Details</label>
                     <div class="input-row">
                         <div class="input-field">
                             <div class="unit-container">
-                                <input type="number" class="duration-input" placeholder="Duration" min="1" required>
+                                <input type="number" class="duration-input" placeholder="Duration" min="1">
                                 <span class="unit-label">min</span>
                             </div>
                             <div class="small text-muted mt-1">Duration in minutes</div>
@@ -1563,14 +1877,59 @@ $saved_exercises = $stmt->fetchAll();
                             </div>
                             <div class="small text-muted mt-1">Distance (optional)</div>
                         </div>
+                        <div class="input-field">
+                            <div class="unit-container">
+                                <input type="number" class="calories-input" placeholder="Calories">
+                                <span class="unit-label">cal</span>
+                            </div>
+                            <div class="small text-muted mt-1">Calories burned (optional)</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mobility-fields" style="display:none;">
+                    <label class="form-label">Mobility Details</label>
+                    <div class="input-row">
+                        <div class="input-field">
+                            <div class="unit-container">
+                                <input type="number" class="time-input" placeholder="Time" min="1" required>
+                                <span class="unit-label">sec</span>
+                            </div>
+                            <div class="small text-muted mt-1">Time in seconds</div>
+                        </div>
+                        <div class="input-field">
+                            <input type="number" class="reps-input-mobility" placeholder="Reps" min="1">
+                            <div class="small text-muted mt-1">Reps (if applicable)</div>
+                        </div>
                     </div>
                 </div>
             </div>
         `;
         }
 
-        // Initialize Select2 on exercise selects
+        // Initialize Select2 with grouped exercises
         function initializeSelect2(selectElement) {
+            // Group exercises by category
+            const groupedExercises = {};
+            exercises.forEach(ex => {
+                if (!groupedExercises[ex.group]) {
+                    groupedExercises[ex.group] = [];
+                }
+                groupedExercises[ex.group].push(ex);
+            });
+
+            // Create HTML options with groups
+            let options = '';
+            Object.keys(groupedExercises).sort().forEach(group => {
+                options += `<optgroup label="${group}">`;
+                groupedExercises[group].forEach(ex => {
+                    options += `<option value="${ex.name}" data-type="${ex.type}" data-icon="${ex.icon}">${ex.name}</option>`;
+                });
+                options += `</optgroup>`;
+            });
+
+            selectElement.innerHTML = `<option value="">Choose an exercise...</option>${options}`;
+
             $(selectElement).select2({
                 placeholder: "Choose an exercise...",
                 allowClear: false,
@@ -1588,45 +1947,69 @@ $saved_exercises = $stmt->fetchAll();
             const ex = exercises.find(e => e.name === exercise.id);
             if (!ex) return exercise.text;
 
+            let typeClass = '';
+            switch(ex.type) {
+                case 'strength': typeClass = 'primary'; break;
+                case 'cardio': typeClass = 'danger'; break;
+                case 'mobility': typeClass = 'warning'; break;
+                default: typeClass = 'primary';
+            }
+
             return $(`
             <div>
-                <i class="fas ${ex.icon} me-2 text-${ex.type === 'strength' ? 'primary' : 'danger'}"></i>
+                <i class="fas ${ex.icon} me-2 text-${typeClass}"></i>
                 ${exercise.text}
-                <span class="badge bg-${ex.type === 'strength' ? 'primary' : 'danger'} float-end">${ex.type}</span>
+                <span class="badge bg-${typeClass} float-end">${ex.type}</span>
             </div>
         `);
         }
 
-        // Toggle fields based on exercise type and hide weight for bodyweight exercises
+        // Toggle fields based on exercise type
         function toggleFields(select) {
             const row = $(select).closest('.exercise-card')[0];
             const selectedOption = $(select).select2('data')[0];
             const exerciseName = selectedOption ? selectedOption.id : '';
-            const type = selectedOption ? selectedOption.element.dataset.type : '';
+            const type = selectedOption ? selectedOption.element.dataset.type : 'strength';
 
             const strengthFields = row.querySelector('.strength-fields');
-            const durationField = row.querySelector('.duration-field');
+            const cardioFields = row.querySelector('.cardio-fields');
+            const mobilityFields = row.querySelector('.mobility-fields');
             const typeStrength = row.querySelector('.type-strength');
             const typeCardio = row.querySelector('.type-cardio');
+            const typeMobility = row.querySelector('.type-mobility');
             const weightField = row.querySelector('.weight-field');
 
-            if (type === 'cardio') {
-                strengthFields.style.display = 'none';
-                durationField.style.display = 'block';
-                typeStrength.style.display = 'none';
-                typeCardio.style.display = 'inline-flex';
-            } else {
-                strengthFields.style.display = 'block';
-                durationField.style.display = 'none';
-                typeStrength.style.display = 'inline-flex';
-                typeCardio.style.display = 'none';
+            // Hide all fields first
+            strengthFields.style.display = 'none';
+            cardioFields.style.display = 'none';
+            mobilityFields.style.display = 'none';
+            typeStrength.style.display = 'none';
+            typeCardio.style.display = 'none';
+            typeMobility.style.display = 'none';
 
-                // Hide weight field for bodyweight exercises
-                if (noWeightExercises.includes(exerciseName)) {
-                    weightField.style.display = 'none';
-                } else {
-                    weightField.style.display = 'block';
-                }
+            // Show appropriate fields based on type
+            switch(type) {
+                case 'strength':
+                    strengthFields.style.display = 'block';
+                    typeStrength.style.display = 'inline-flex';
+                    
+                    // Hide weight field for bodyweight exercises
+                    if (noWeightExercises.includes(exerciseName)) {
+                        weightField.style.display = 'none';
+                    } else {
+                        weightField.style.display = 'block';
+                    }
+                    break;
+                    
+                case 'cardio':
+                    cardioFields.style.display = 'block';
+                    typeCardio.style.display = 'inline-flex';
+                    break;
+                    
+                case 'mobility':
+                    mobilityFields.style.display = 'block';
+                    typeMobility.style.display = 'inline-flex';
+                    break;
             }
         }
 
@@ -1775,53 +2158,75 @@ $saved_exercises = $stmt->fetchAll();
                 }
 
                 const selectedOption = $(select).select2('data')[0];
-                const type = selectedOption ? selectedOption.element.dataset.type : '';
+                const type = selectedOption ? selectedOption.element.dataset.type : 'strength';
                 const data = {
                     exercise: exerciseName
                 };
 
-                if (type === 'cardio') {
-                    const durationInput = row.querySelector('.duration-input');
-                    const duration = durationInput ? durationInput.value : null;
-                    const distanceInput = row.querySelector('.distance-input');
-                    const distance = distanceInput ? distanceInput.value : null;
+                switch(type) {
+                    case 'cardio':
+                        const durationInput = row.querySelector('.duration-input');
+                        const duration = durationInput ? durationInput.value : null;
+                        const distanceInput = row.querySelector('.distance-input');
+                        const distance = distanceInput ? distanceInput.value : null;
+                        const caloriesInput = row.querySelector('.calories-input');
+                        const calories = caloriesInput ? caloriesInput.value : null;
 
-                    if (!duration || duration <= 0) {
-                        hasErrors = true;
-                        if (durationInput) durationInput.classList.add('is-invalid');
-                        return;
-                    }
+                        if (!duration || duration <= 0) {
+                            hasErrors = true;
+                            if (durationInput) durationInput.classList.add('is-invalid');
+                            return;
+                        }
 
-                    data.duration = parseFloat(duration);
-                    if (distance && distance > 0) data.distance = parseFloat(distance);
-                } else {
-                    const setsInput = row.querySelector('.sets-input');
-                    const repsInput = row.querySelector('.reps-input');
-                    const weightInput = row.querySelector('.weight-input');
+                        data.duration = parseFloat(duration);
+                        if (distance && distance > 0) data.distance = parseFloat(distance);
+                        if (calories && calories > 0) data.calories = parseInt(calories);
+                        break;
 
-                    const sets = setsInput ? setsInput.value : null;
-                    const reps = repsInput ? repsInput.value : null;
-                    const weight = weightInput ? weightInput.value : null;
+                    case 'mobility':
+                        const timeInput = row.querySelector('.time-input');
+                        const time = timeInput ? timeInput.value : null;
+                        const repsInputMobility = row.querySelector('.reps-input-mobility');
+                        const repsMobility = repsInputMobility ? repsInputMobility.value : null;
 
-                    if (!sets || sets <= 0) {
-                        hasErrors = true;
-                        if (setsInput) setsInput.classList.add('is-invalid');
-                        return;
-                    }
+                        if (!time || time <= 0) {
+                            hasErrors = true;
+                            if (timeInput) timeInput.classList.add('is-invalid');
+                            return;
+                        }
 
-                    if (!reps || reps <= 0) {
-                        hasErrors = true;
-                        if (repsInput) repsInput.classList.add('is-invalid');
-                        return;
-                    }
+                        data.duration = parseFloat(time);
+                        if (repsMobility && repsMobility > 0) data.reps = parseInt(repsMobility);
+                        break;
 
-                    data.sets = parseInt(sets);
-                    data.reps = parseInt(reps);
+                    default: // strength
+                        const setsInput = row.querySelector('.sets-input');
+                        const repsInput = row.querySelector('.reps-input');
+                        const weightInput = row.querySelector('.weight-input');
 
-                    // Only include weight if it's not a bodyweight exercise
-                    if (!noWeightExercises.includes(exerciseName) && weight && weight > 0) {
-                        data.weight = parseFloat(weight);
-                    }
+                        const sets = setsInput ? setsInput.value : null;
+                        const reps = repsInput ? repsInput.value : null;
+                        const weight = weightInput ? weightInput.value : null;
+
+                        if (!sets || sets <= 0) {
+                            hasErrors = true;
+                            if (setsInput) setsInput.classList.add('is-invalid');
+                            return;
+                        }
+
+                        if (!reps || reps <= 0) {
+                            hasErrors = true;
+                            if (repsInput) repsInput.classList.add('is-invalid');
+                            return;
+                        }
+
+                        data.sets = parseInt(sets);
+                        data.reps = parseInt(reps);
+
+                        // Only include weight if it's not a bodyweight exercise
+                        if (!noWeightExercises.includes(exerciseName) && weight && weight > 0) {
+                            data.weight = parseFloat(weight);
+                        }
                 }
 
                 workouts.push(data);
