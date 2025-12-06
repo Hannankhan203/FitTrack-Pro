@@ -93,7 +93,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_meal'])) {
     }
 }
 
-// Get existing meals for display (only for GET requests) - FIXED: Removed created_at
+// Get existing meals for display (only for GET requests)
 try {
     $stmt = $pdo->prepare("SELECT * FROM meals WHERE user_id = ? AND date = ? ORDER BY 
         CASE meal_time 
@@ -459,8 +459,8 @@ foreach ($existingMeals as $meal) {
 
         .progress-text {
             position: absolute;
-            top: 11%;
-            left: 11%;
+            top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
             display: flex;
@@ -653,9 +653,37 @@ foreach ($existingMeals as $meal) {
             font-size: 1.1rem;
         }
 
+        /* Food Categories */
+        .food-categories {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 1.5rem;
+        }
+
+        .food-category-btn {
+            padding: 0.6rem 1.2rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            color: rgba(255, 255, 255, 0.7);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .food-category-btn:hover,
+        .food-category-btn.active {
+            background: var(--gradient-primary);
+            color: white;
+            border-color: transparent;
+            transform: translateY(-2px);
+        }
+
         /* Search Results */
         .search-results {
-            max-height: 300px;
+            max-height: 400px;
             overflow-y: auto;
             margin-top: 1rem;
             border-radius: 16px;
@@ -1498,6 +1526,19 @@ foreach ($existingMeals as $meal) {
             .d-flex {
                 flex-direction: column !important;
             }
+
+            .progress-text {
+                position: absolute;
+                top: 10%;
+                left: 10%;
+                width: 100%;
+                height: 100%;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                text-align: center;
+            }
         }
     </style>
 </head>
@@ -1606,7 +1647,7 @@ foreach ($existingMeals as $meal) {
                         </div>
                         <div class="stats-value" id="caloriesConsumed"><?php echo $totalCalories; ?></div>
                         <div class="stats-label">Calories Consumed</div>
-                        <div class="stats-goal">Goal: <span id="calorieGoal">2000</span> kcal</div>
+                        <div class="stats-goal">Goal: <span id="calorieGoal">2500</span> kcal</div>
                     </div>
                 </div>
 
@@ -1617,7 +1658,7 @@ foreach ($existingMeals as $meal) {
                         </div>
                         <div class="stats-value" id="proteinAmount"><?php echo $totalProtein; ?>g</div>
                         <div class="stats-label">Protein</div>
-                        <div class="stats-goal">Essential for muscle</div>
+                        <div class="stats-goal">Target: 160g (for muscle)</div>
                     </div>
                 </div>
 
@@ -1657,7 +1698,7 @@ foreach ($existingMeals as $meal) {
                             <circle class="progress-ring-fill" id="calorieProgress" cx="60" cy="60" r="50"></circle>
                         </svg>
                         <div class="progress-text">
-                            <div class="progress-percent" id="caloriePercent"><?php echo round(($totalCalories / 2000) * 100); ?>%</div>
+                            <div class="progress-percent" id="caloriePercent"><?php echo round(($totalCalories / 2500) * 100); ?>%</div>
                             <div class="progress-label">of Goal</div>
                         </div>
                     </div>
@@ -1732,17 +1773,40 @@ foreach ($existingMeals as $meal) {
             <div class="col-lg-8">
                 <!-- Food Search -->
                 <div class="search-section">
-                    <h5><i class="fas fa-search me-2"></i>Search & Add Food</h5>
+                    <h5><i class="fas fa-search me-2"></i>Search Pakistani & International Foods</h5>
                     <div class="search-input-group">
                         <i class="fas fa-search search-icon"></i>
-                        <input type="text" id="foodSearch" class="search-input" placeholder="e.g., chicken breast, apple, rice...">
+                        <input type="text" id="foodSearch" class="search-input" placeholder="Search foods (e.g., biryani, chicken tikka, apple...)">
                     </div>
+
+                    <!-- Food Categories -->
+                    <div class="food-categories mb-3" id="foodCategories">
+                        <button class="food-category-btn active" data-category="all">
+                            All Foods
+                        </button>
+                        <button class="food-category-btn" data-category="pakistani">
+                            <i class="fas fa-flag me-1"></i>Pakistani
+                        </button>
+                        <button class="food-category-btn" data-category="fastfood">
+                            <i class="fas fa-hamburger me-1"></i>Fast Food
+                        </button>
+                        <button class="food-category-btn" data-category="beverages">
+                            <i class="fas fa-glass-whiskey me-1"></i>Beverages
+                        </button>
+                        <button class="food-category-btn" data-category="fruits">
+                            <i class="fas fa-apple-alt me-1"></i>Fruits
+                        </button>
+                        <button class="food-category-btn" data-category="desserts">
+                            <i class="fas fa-ice-cream me-1"></i>Desserts
+                        </button>
+                    </div>
+
                     <div class="d-flex gap-2 mb-3">
                         <button class="btn btn-primary flex-grow-1" id="searchBtn">
                             <i class="fas fa-search me-2"></i>Search Food
                         </button>
                         <button class="barcode-simulator" onclick="simulateBarcodeScan()">
-                            <i class="fas fa-barcode me-2"></i>Barcode Scan
+                            <i class="fas fa-barcode me-2"></i>Quick Add
                         </button>
                     </div>
                     <div class="search-results" id="searchResults" style="display: none;">
@@ -1888,47 +1952,535 @@ foreach ($existingMeals as $meal) {
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
-        // Global variables - INITIALIZE WITH PHP DATA
+        // Global variables
         let totalCalories = <?php echo $totalCalories; ?>;
         let totalProtein = <?php echo $totalProtein; ?>;
         let totalCarbs = <?php echo $totalCarbs; ?>;
         let totalFat = <?php echo $totalFat; ?>;
         let waterGlasses = 0;
         const maxWater = 8;
-        let calorieGoal = 2000;
+        let calorieGoal = 2500;
         let macroChart = null;
         let selectedMealKey = null;
         let currentFoodToAdd = null;
-        let tempFoodItems = []; // Track temporary food items
+        let tempFoodItems = [];
+        let currentCategory = 'all';
 
-        // Store the meals from database in JavaScript
-        const savedMealsFromDB = <?php echo json_encode($existingMeals); ?>;
-
-        // Meal data
-        const mealsData = {
-            'breakfast': {
-                name: 'Breakfast',
-                icon: 'fa-sun',
-                color: 'linear-gradient(135deg, #FF9A9E 0%, #FAD0C4 100%)'
-            },
-            'lunch': {
-                name: 'Lunch',
-                icon: 'fa-utensils',
-                color: 'linear-gradient(135deg, #A1C4FD 0%, #C2E9FB 100%)'
-            },
-            'dinner': {
-                name: 'Dinner',
-                icon: 'fa-moon',
-                color: 'linear-gradient(135deg, #84FAB0 0%, #8FD3F4 100%)'
-            },
-            'snack': {
-                name: 'Snacks',
-                icon: 'fa-apple-alt',
-                color: 'linear-gradient(135deg, #FBC2EB 0%, #A6C1EE 100%)'
-            }
+        // Pakistani Food Database
+        const pakistaniFoodDatabase = {
+            'pakistani': [{
+                    title: "Chicken Biryani (1 Plate = 500g)",
+                    nutrition: {
+                        calories: 800,
+                        protein: 40,
+                        carbs: 105,
+                        fat: 30
+                    }
+                },
+                {
+                    title: "Beef Nihari (with 1 Naan)",
+                    nutrition: {
+                        calories: 700,
+                        protein: 35,
+                        carbs: 60,
+                        fat: 37
+                    }
+                },
+                {
+                    title: "Haleem (1 Bowl = 400g)",
+                    nutrition: {
+                        calories: 525,
+                        protein: 30,
+                        carbs: 70,
+                        fat: 20
+                    }
+                },
+                {
+                    title: "Chicken Karahi (1 Plate)",
+                    nutrition: {
+                        calories: 600,
+                        protein: 45,
+                        carbs: 12,
+                        fat: 42
+                    }
+                },
+                {
+                    title: "Beef Karahi (1 Plate)",
+                    nutrition: {
+                        calories: 650,
+                        protein: 48,
+                        carbs: 12,
+                        fat: 45
+                    }
+                },
+                {
+                    title: "Daal Chawal (1 Plate)",
+                    nutrition: {
+                        calories: 475,
+                        protein: 18,
+                        carbs: 80,
+                        fat: 12
+                    }
+                },
+                {
+                    title: "Chana Masala with Puri (2 Puris)",
+                    nutrition: {
+                        calories: 575,
+                        protein: 18,
+                        carbs: 80,
+                        fat: 25
+                    }
+                },
+                {
+                    title: "Seekh Kebab (2 pieces, 150g)",
+                    nutrition: {
+                        calories: 350,
+                        protein: 28,
+                        carbs: 8,
+                        fat: 25
+                    }
+                },
+                {
+                    title: "Chicken Tikka (4 pieces, 200g)",
+                    nutrition: {
+                        calories: 300,
+                        protein: 40,
+                        carbs: 8,
+                        fat: 15
+                    }
+                },
+                {
+                    title: "Aloo Gosht (1 Bowl)",
+                    nutrition: {
+                        calories: 400,
+                        protein: 28,
+                        carbs: 25,
+                        fat: 25
+                    }
+                },
+                {
+                    title: "Plain Naan (1 Medium)",
+                    nutrition: {
+                        calories: 285,
+                        protein: 9,
+                        carbs: 50,
+                        fat: 7
+                    }
+                },
+                {
+                    title: "Roti/Chapati (1 Medium, with ghee)",
+                    nutrition: {
+                        calories: 150,
+                        protein: 3.5,
+                        carbs: 23,
+                        fat: 5
+                    }
+                },
+                {
+                    title: "Halwa Poori (2 Puris, 1 bowl Halwa)",
+                    nutrition: {
+                        calories: 700,
+                        protein: 10,
+                        carbs: 105,
+                        fat: 32
+                    }
+                }
+            ],
+            'fastfood': [{
+                    title: "Beef/Chandi Burger",
+                    nutrition: {
+                        calories: 525,
+                        protein: 30,
+                        carbs: 42,
+                        fat: 25
+                    }
+                },
+                {
+                    title: "Chicken Roll/Paratha Roll",
+                    nutrition: {
+                        calories: 600,
+                        protein: 28,
+                        carbs: 50,
+                        fat: 32
+                    }
+                },
+                {
+                    title: "Full Grilled Chicken (with skin)",
+                    nutrition: {
+                        calories: 1000,
+                        protein: 90,
+                        carbs: 8,
+                        fat: 65
+                    }
+                },
+                {
+                    title: "Plate of Mixed BBQ (Seekh, Tikka, Malai Boti)",
+                    nutrition: {
+                        calories: 850,
+                        protein: 70,
+                        carbs: 20,
+                        fat: 55
+                    }
+                },
+                {
+                    title: "2 Piece Fried Chicken Meal (with fries & drink)",
+                    nutrition: {
+                        calories: 1100,
+                        protein: 45,
+                        carbs: 90,
+                        fat: 60
+                    }
+                },
+                {
+                    title: "Zinger/Whopper Burger",
+                    nutrition: {
+                        calories: 650,
+                        protein: 28,
+                        carbs: 60,
+                        fat: 38
+                    }
+                },
+                {
+                    title: "Bun Kabab (Double Patty)",
+                    nutrition: {
+                        calories: 425,
+                        protein: 18,
+                        carbs: 35,
+                        fat: 25
+                    }
+                },
+                {
+                    title: "Samosa (2 pieces)",
+                    nutrition: {
+                        calories: 300,
+                        protein: 6.5,
+                        carbs: 35,
+                        fat: 20
+                    }
+                },
+                {
+                    title: "Pakora Platter (Mix, 150g)",
+                    nutrition: {
+                        calories: 475,
+                        protein: 10,
+                        carbs: 60,
+                        fat: 25
+                    }
+                }
+            ],
+            'beverages': [{
+                    title: "Doodh Patti Chai (1 cup)",
+                    nutrition: {
+                        calories: 150,
+                        protein: 6,
+                        carbs: 15,
+                        fat: 7
+                    }
+                },
+                {
+                    title: "Dhoodh Coffee (Instant)",
+                    nutrition: {
+                        calories: 125,
+                        protein: 5,
+                        carbs: 15,
+                        fat: 5
+                    }
+                },
+                {
+                    title: "Kashmiri Chai (1 cup)",
+                    nutrition: {
+                        calories: 185,
+                        protein: 5,
+                        carbs: 20,
+                        fat: 8
+                    }
+                },
+                {
+                    title: "Coca-Cola/Pepsi (330ml)",
+                    nutrition: {
+                        calories: 140,
+                        protein: 0,
+                        carbs: 39,
+                        fat: 0
+                    }
+                },
+                {
+                    title: "Pakola (Ice Cream Soda)",
+                    nutrition: {
+                        calories: 180,
+                        protein: 2,
+                        carbs: 30,
+                        fat: 4
+                    }
+                },
+                {
+                    title: "Fizz Up/Sprite/7Up (330ml)",
+                    nutrition: {
+                        calories: 140,
+                        protein: 0,
+                        carbs: 38,
+                        fat: 0
+                    }
+                },
+                {
+                    title: "Fresh Orange Juice (250ml)",
+                    nutrition: {
+                        calories: 110,
+                        protein: 2,
+                        carbs: 25,
+                        fat: 0.5
+                    }
+                },
+                {
+                    title: "Mango Juice (Sweetened, 250ml)",
+                    nutrition: {
+                        calories: 145,
+                        protein: 1,
+                        carbs: 37,
+                        fat: 0
+                    }
+                },
+                {
+                    title: "Rooh Afza/Sharbat (1 glass)",
+                    nutrition: {
+                        calories: 100,
+                        protein: 0,
+                        carbs: 25,
+                        fat: 0
+                    }
+                },
+                {
+                    title: "Lassi (Sweet, 250ml)",
+                    nutrition: {
+                        calories: 200,
+                        protein: 8,
+                        carbs: 30,
+                        fat: 6
+                    }
+                },
+                {
+                    title: "Lassi (Salted, 250ml)",
+                    nutrition: {
+                        calories: 125,
+                        protein: 8,
+                        carbs: 12,
+                        fat: 5
+                    }
+                }
+            ],
+            'fruits': [{
+                    title: "Mango (100g)",
+                    nutrition: {
+                        calories: 60,
+                        protein: 0.8,
+                        carbs: 15,
+                        fat: 0.4
+                    }
+                },
+                {
+                    title: "Orange (100g)",
+                    nutrition: {
+                        calories: 47,
+                        protein: 0.9,
+                        carbs: 12,
+                        fat: 0.1
+                    }
+                },
+                {
+                    title: "Apple (100g)",
+                    nutrition: {
+                        calories: 52,
+                        protein: 0.3,
+                        carbs: 14,
+                        fat: 0.2
+                    }
+                },
+                {
+                    title: "Banana (100g)",
+                    nutrition: {
+                        calories: 89,
+                        protein: 1.1,
+                        carbs: 23,
+                        fat: 0.3
+                    }
+                },
+                {
+                    title: "Guava (100g)",
+                    nutrition: {
+                        calories: 68,
+                        protein: 2.6,
+                        carbs: 14,
+                        fat: 1
+                    }
+                },
+                {
+                    title: "Dates (2-3 pieces, 20g)",
+                    nutrition: {
+                        calories: 70,
+                        protein: 0.6,
+                        carbs: 18,
+                        fat: 0
+                    }
+                }
+            ],
+            'desserts': [{
+                    title: "Gulab Jamun (2 pieces)",
+                    nutrition: {
+                        calories: 300,
+                        protein: 5,
+                        carbs: 52,
+                        fat: 12
+                    }
+                },
+                {
+                    title: "Gajar ka Halwa (1 small bowl)",
+                    nutrition: {
+                        calories: 375,
+                        protein: 6,
+                        carbs: 50,
+                        fat: 20
+                    }
+                },
+                {
+                    title: "Kheer/Rice Pudding (1 bowl)",
+                    nutrition: {
+                        calories: 300,
+                        protein: 8,
+                        carbs: 45,
+                        fat: 10
+                    }
+                },
+                {
+                    title: "Jalebi (100g)",
+                    nutrition: {
+                        calories: 400,
+                        protein: 3,
+                        carbs: 87,
+                        fat: 8
+                    }
+                },
+                {
+                    title: "Barfi (1 piece)",
+                    nutrition: {
+                        calories: 175,
+                        protein: 4,
+                        carbs: 23,
+                        fat: 9
+                    }
+                }
+            ],
+            'healthy': [{
+                    title: "Grilled Chicken Breast (100g)",
+                    nutrition: {
+                        calories: 165,
+                        protein: 31,
+                        carbs: 0,
+                        fat: 3.6
+                    }
+                },
+                {
+                    title: "Brown Rice (1 cup cooked)",
+                    nutrition: {
+                        calories: 216,
+                        protein: 5,
+                        carbs: 45,
+                        fat: 2
+                    }
+                },
+                {
+                    title: "Broccoli (100g)",
+                    nutrition: {
+                        calories: 34,
+                        protein: 2.8,
+                        carbs: 7,
+                        fat: 0.4
+                    }
+                },
+                {
+                    title: "Boiled Egg (1 large)",
+                    nutrition: {
+                        calories: 78,
+                        protein: 6,
+                        carbs: 0.6,
+                        fat: 5
+                    }
+                },
+                {
+                    title: "Salmon (100g grilled)",
+                    nutrition: {
+                        calories: 208,
+                        protein: 20,
+                        carbs: 0,
+                        fat: 13
+                    }
+                },
+                {
+                    title: "Greek Yogurt (150g)",
+                    nutrition: {
+                        calories: 150,
+                        protein: 15,
+                        carbs: 8,
+                        fat: 4
+                    }
+                },
+                {
+                    title: "Protein Bar",
+                    nutrition: {
+                        calories: 220,
+                        protein: 20,
+                        carbs: 22,
+                        fat: 7
+                    }
+                },
+                {
+                    title: "Avocado (1/2 medium)",
+                    nutrition: {
+                        calories: 120,
+                        protein: 1.5,
+                        carbs: 6.5,
+                        fat: 11
+                    }
+                },
+                {
+                    title: "Almonds (28g)",
+                    nutrition: {
+                        calories: 164,
+                        protein: 6,
+                        carbs: 6,
+                        fat: 14
+                    }
+                },
+                {
+                    title: "Oatmeal (1 cup cooked)",
+                    nutrition: {
+                        calories: 158,
+                        protein: 6,
+                        carbs: 27,
+                        fat: 3
+                    }
+                },
+                {
+                    title: "Sweet Potato (medium baked)",
+                    nutrition: {
+                        calories: 112,
+                        protein: 2,
+                        carbs: 26,
+                        fat: 0
+                    }
+                },
+                {
+                    title: "Tuna (canned in water, 100g)",
+                    nutrition: {
+                        calories: 116,
+                        protein: 26,
+                        carbs: 0,
+                        fat: 0.5
+                    }
+                }
+            ]
         };
 
-        // Initialize page - LOAD SAVED MEALS INTO JAVASCRIPT STATE
+        // Initialize page
         document.addEventListener('DOMContentLoaded', function() {
             loadWaterIntake();
             loadCalorieGoal();
@@ -1937,12 +2489,31 @@ foreach ($existingMeals as $meal) {
             updateMacros();
             initializeMacroChart();
             renderWaterCups();
-
-            // Update progress ring initially
             updateCalorieProgressRing();
 
             // Add event listener for save button
             document.getElementById('saveMealPlanBtn').addEventListener('click', saveMealPlan);
+
+            // Event listeners for search
+            document.getElementById('searchBtn').addEventListener('click', function(e) {
+                e.preventDefault();
+                searchFood();
+            });
+
+            document.getElementById('foodSearch').addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    searchFood();
+                }
+            });
+
+            // Add event listeners for category buttons
+            document.querySelectorAll('.food-category-btn').forEach(button => {
+                button.addEventListener('click', function(e) {
+                    const category = this.getAttribute('data-category');
+                    searchByCategory(category, e);
+                });
+            });
 
             // Mobile navigation handling
             const navbarToggler = document.querySelector('.navbar-toggler');
@@ -1998,160 +2569,117 @@ foreach ($existingMeals as $meal) {
             });
         });
 
-        // Food database
-        const foodDatabase = [{
-                title: "Chicken Breast (100g)",
-                nutrition: {
-                    calories: 165,
-                    protein: 31,
-                    carbs: 0,
-                    fat: 3.6
-                }
-            },
-            {
-                title: "Brown Rice (1 cup)",
-                nutrition: {
-                    calories: 216,
-                    protein: 5,
-                    carbs: 45,
-                    fat: 2
-                }
-            },
-            {
-                title: "Broccoli (100g)",
-                nutrition: {
-                    calories: 34,
-                    protein: 2.8,
-                    carbs: 7,
-                    fat: 0.4
-                }
-            },
-            {
-                title: "Egg (large)",
-                nutrition: {
-                    calories: 78,
-                    protein: 6,
-                    carbs: 0.6,
-                    fat: 5
-                }
-            },
-            {
-                title: "Salmon (100g)",
-                nutrition: {
-                    calories: 208,
-                    protein: 20,
-                    carbs: 0,
-                    fat: 13
-                }
-            },
-            {
-                title: "Apple (medium)",
-                nutrition: {
-                    calories: 95,
-                    protein: 0.5,
-                    carbs: 25,
-                    fat: 0.3
-                }
-            },
-            {
-                title: "Banana (medium)",
-                nutrition: {
-                    calories: 105,
-                    protein: 1,
-                    carbs: 27,
-                    fat: 0
-                }
-            },
-            {
-                title: "Greek Yogurt (150g)",
-                nutrition: {
-                    calories: 150,
-                    protein: 15,
-                    carbs: 8,
-                    fat: 4
-                }
-            },
-            {
-                title: "Protein Bar",
-                nutrition: {
-                    calories: 220,
-                    protein: 20,
-                    carbs: 22,
-                    fat: 7
-                }
-            },
-            {
-                title: "Avocado (medium)",
-                nutrition: {
-                    calories: 240,
-                    protein: 3,
-                    carbs: 13,
-                    fat: 22
-                }
-            },
-            {
-                title: "Almonds (28g)",
-                nutrition: {
-                    calories: 164,
-                    protein: 6,
-                    carbs: 6,
-                    fat: 14
-                }
-            },
-            {
-                title: "Oatmeal (1 cup)",
-                nutrition: {
-                    calories: 158,
-                    protein: 6,
-                    carbs: 27,
-                    fat: 3
-                }
-            },
-            {
-                title: "Sweet Potato (medium)",
-                nutrition: {
-                    calories: 112,
-                    protein: 2,
-                    carbs: 26,
-                    fat: 0
+        // Search by category
+        function searchByCategory(category, event) {
+            currentCategory = category;
+
+            // Update active button
+            document.querySelectorAll('.food-category-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // Find and activate the clicked button
+            if (event) {
+                event.target.classList.add('active');
+            } else {
+                // If called without event (e.g., from code), find button by data-category
+                const button = document.querySelector(`.food-category-btn[data-category="${category}"]`);
+                if (button) {
+                    button.classList.add('active');
                 }
             }
-        ];
 
-        // Search functionality
-        document.getElementById('searchBtn').addEventListener('click', searchFood);
-        document.getElementById('foodSearch').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') searchFood();
-        });
+            // Search with current query
+            const query = document.getElementById('foodSearch').value.trim();
+            if (query) {
+                searchFood();
+            } else {
+                // If no query, show all foods in category
+                displaySearchResults(getFoodsByCategory(category));
+            }
+        }
+
+        // Get foods by category
+        function getFoodsByCategory(category) {
+            if (category === 'all') {
+                return getAllFoods();
+            }
+            return pakistaniFoodDatabase[category] || [];
+        }
+
+        // Get all foods from all categories
+        function getAllFoods() {
+            let allFoods = [];
+            for (const category in pakistaniFoodDatabase) {
+                allFoods = allFoods.concat(pakistaniFoodDatabase[category]);
+            }
+            return allFoods;
+        }
 
         function searchFood() {
             const query = document.getElementById('foodSearch').value.trim();
-            if (query.length < 2) {
-                alert('Please enter at least 2 characters to search');
+
+            if (query.length < 2 && currentCategory === 'all') {
+                showNotification('Please enter at least 2 characters to search', 'warning');
                 return;
             }
 
             const results = document.getElementById('searchResults');
             results.style.display = 'block';
+
+            // Show loading message
             results.innerHTML = '<div class="text-center p-3"><i class="fas fa-spinner fa-spin me-2"></i>Searching...</div>';
 
+            // Use setTimeout to simulate async search (and allow UI to update)
             setTimeout(() => {
-                displaySearchResults(searchFoods(query));
-            }, 500);
+                try {
+                    const foundFoods = searchFoods(query);
+                    displaySearchResults(foundFoods);
+
+                    // If no results and user typed something, show helpful message
+                    if ((!foundFoods || foundFoods.length === 0) && query.length > 0) {
+                        results.innerHTML = `
+                    <div class="text-center p-3">
+                        <div class="mb-2"><i class="fas fa-search fa-lg text-muted"></i></div>
+                        <div class="text-muted">No foods found for "${query}"</div>
+                        <div class="text-muted small mt-1">Try a different search term or change category</div>
+                    </div>
+                `;
+                    }
+                } catch (error) {
+                    console.error('Search error:', error);
+                    results.innerHTML = '<div class="text-center p-3 text-danger">Error searching foods. Please try again.</div>';
+                }
+            }, 100); // Reduced timeout for better responsiveness
         }
 
+        // Search foods based on query and category
         function searchFoods(query) {
-            return foodDatabase.filter(food =>
-                food.title.toLowerCase().includes(query.toLowerCase())
-            );
+            const foods = getFoodsByCategory(currentCategory);
+
+            if (!query || query.trim() === '') {
+                // If no query, show all foods in current category
+                return foods;
+            }
+
+            const searchTerm = query.toLowerCase().trim();
+
+            return foods.filter(food => {
+                // Check if title contains the search term
+                const titleMatch = food.title.toLowerCase().includes(searchTerm);
+
+                // You could also add search by food type/description if available
+                return titleMatch;
+            });
         }
 
+        // Display search results
         function displaySearchResults(foods) {
             const results = document.getElementById('searchResults');
             results.innerHTML = '';
 
             if (!foods || foods.length === 0) {
-                results.innerHTML = '<div class="text-center p-3 text-muted">No foods found. Try a different search.</div>';
+                results.innerHTML = '<div class="text-center p-3 text-muted">No foods found. Try a different search or category.</div>';
                 return;
             }
 
@@ -2191,6 +2719,30 @@ foreach ($existingMeals as $meal) {
             const container = document.getElementById('mealOptionsContainer');
             container.innerHTML = '';
 
+            // Meal data
+            const mealsData = {
+                'breakfast': {
+                    name: 'Breakfast',
+                    icon: 'fa-sun',
+                    color: 'linear-gradient(135deg, #FF9A9E 0%, #FAD0C4 100%)'
+                },
+                'lunch': {
+                    name: 'Lunch',
+                    icon: 'fa-utensils',
+                    color: 'linear-gradient(135deg, #A1C4FD 0%, #C2E9FB 100%)'
+                },
+                'dinner': {
+                    name: 'Dinner',
+                    icon: 'fa-moon',
+                    color: 'linear-gradient(135deg, #84FAB0 0%, #8FD3F4 100%)'
+                },
+                'snack': {
+                    name: 'Snacks',
+                    icon: 'fa-apple-alt',
+                    color: 'linear-gradient(135deg, #FBC2EB 0%, #A6C1EE 100%)'
+                }
+            };
+
             // Create meal options
             for (const [key, meal] of Object.entries(mealsData)) {
                 const mealCalories = getMealCalories(key);
@@ -2209,13 +2761,11 @@ foreach ($existingMeals as $meal) {
                 `;
 
                 option.addEventListener('click', function() {
-                    // Remove selection from all options
                     document.querySelectorAll('.meal-option').forEach(opt => {
                         opt.classList.remove('selected');
                         opt.querySelector('.fa-check').style.opacity = '0';
                     });
 
-                    // Select this option
                     this.classList.add('selected');
                     this.querySelector('.fa-check').style.opacity = '1';
                     selectedMealKey = this.dataset.mealKey;
@@ -2289,24 +2839,22 @@ foreach ($existingMeals as $meal) {
             foodItem.dataset.mealType = mealKey;
 
             foodItem.innerHTML = `
-        <div class="food-info">
-            <div class="food-name">${title}</div>
-            <div class="food-macros">
-                Protein: ${protein}g • Carbs: ${carbs}g • Fat: ${fat}g
-            </div>
-        </div>
-        <div class="food-calories">${calories} kcal</div>
-        <button class="delete-btn" onclick="deleteMealItem('${foodId}', this)">
-            <i class="fas fa-times"></i>
-        </button>
-    `;
+                <div class="food-info">
+                    <div class="food-name">${title}</div>
+                    <div class="food-macros">
+                        Protein: ${protein}g • Carbs: ${carbs}g • Fat: ${fat}g
+                    </div>
+                </div>
+                <div class="food-calories">${calories} kcal</div>
+                <button class="delete-btn" onclick="deleteMealItem('${foodId}', this)">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
 
             container.appendChild(foodItem);
 
             // Add to temporary items array
             tempFoodItems.push(foodId);
-
-            // DO NOT add to "Today's Saved Meals" section - that's only for saved items
 
             // Update totals
             totalCalories += calories;
@@ -2321,14 +2869,14 @@ foreach ($existingMeals as $meal) {
             updateMacroChart();
 
             // Show success notification
-            showNotification(`Added ${title} to ${mealsData[mealKey].name}`, 'success');
+            showNotification(`Added ${title} to meal`, 'success');
 
             // Close search results
             document.getElementById('searchResults').style.display = 'none';
             document.getElementById('foodSearch').value = '';
         }
 
-        // Get current calories for a meal (includes both saved and temporary items)
+        // Get current calories for a meal
         function getMealCalories(mealKey) {
             const container = document.getElementById(`meal-${mealKey}-items`);
             let total = 0;
@@ -2342,7 +2890,7 @@ foreach ($existingMeals as $meal) {
 
         // Delete meal item from database and UI
         function deleteSavedMeal(mealId, btn) {
-            if (!confirm('Are you sure you want to delete this meal from the database?')) return;
+            if (!confirm('Are you sure you want to delete this meal?')) return;
 
             // Show loading
             const originalHTML = btn.innerHTML;
@@ -2386,20 +2934,20 @@ foreach ($existingMeals as $meal) {
                         const allMealsContainer = document.getElementById('all-meals-items');
                         if (allMealsContainer.children.length === 0) {
                             allMealsContainer.innerHTML = `
-                            <div class="empty-state">
-                                <div class="empty-state-icon">
-                                    <i class="fas fa-utensils"></i>
+                                <div class="empty-state">
+                                    <div class="empty-state-icon">
+                                        <i class="fas fa-utensils"></i>
+                                    </div>
+                                    <h4>No meals saved yet</h4>
+                                    <p>Search and add foods above to start tracking your nutrition</p>
                                 </div>
-                                <h4>No meals saved yet</h4>
-                                <p>Search and add foods above to start tracking your nutrition</p>
-                            </div>
-                        `;
+                            `;
                         }
 
                         // Update individual meal sections
                         updateAllMealSections();
 
-                        showNotification('Meal deleted from database!', 'success');
+                        showNotification('Meal deleted successfully!', 'success');
                     } else {
                         showNotification(data.message || 'Error deleting meal', 'error');
                         btn.innerHTML = originalHTML;
@@ -2469,14 +3017,14 @@ foreach ($existingMeals as $meal) {
                     const container = document.getElementById(`meal-${mealKey}-items`);
                     if (container.children.length === 0) {
                         container.innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-state-icon">
-                            <i class="fas fa-plus-circle"></i>
-                        </div>
-                        <h4>No foods added yet</h4>
-                        <p>Search and add foods above to this meal</p>
-                    </div>
-                `;
+                            <div class="empty-state">
+                                <div class="empty-state-icon">
+                                    <i class="fas fa-plus-circle"></i>
+                                </div>
+                                <h4>No foods added yet</h4>
+                                <p>Search and add foods above to this meal</p>
+                            </div>
+                        `;
                     }
                 }
 
@@ -2490,14 +3038,14 @@ foreach ($existingMeals as $meal) {
                 const allMealsContainer = document.getElementById('all-meals-items');
                 if (allMealsContainer.children.length === 0) {
                     allMealsContainer.innerHTML = `
-                <div class="empty-state">
-                    <div class="empty-state-icon">
-                        <i class="fas fa-utensils"></i>
-                    </div>
-                    <h4>No meals saved yet</h4>
-                    <p>Search and add foods above to start tracking your nutrition</p>
-                </div>
-            `;
+                        <div class="empty-state">
+                            <div class="empty-state-icon">
+                                <i class="fas fa-utensils"></i>
+                            </div>
+                            <h4>No meals saved yet</h4>
+                            <p>Search and add foods above to start tracking your nutrition</p>
+                        </div>
+                    `;
                 }
 
                 updateCalorieDisplay();
@@ -2521,7 +3069,7 @@ foreach ($existingMeals as $meal) {
                 mealCalories += parseFloat(food.dataset.calories) || 0;
             });
 
-            document.getElementById(`meal-${mealKey}-calories`).textContent = `${mealCalories} kcal`;
+            document.getElementById(`meal-${mealKey}-calories`).textContent = `${Math.round(mealCalories)} kcal`;
         }
 
         function updateCalorieDisplay() {
@@ -2575,7 +3123,7 @@ foreach ($existingMeals as $meal) {
                         tooltip: {
                             callbacks: {
                                 label: function(context) {
-                                    return `${context.label}: ${context.parsed}g`;
+                                    return `${context.label}: ${context.parsed.toFixed(1)}g`;
                                 }
                             }
                         }
@@ -2592,7 +3140,7 @@ foreach ($existingMeals as $meal) {
             }
         }
 
-        // Save meal plan to database - FIXED: Now only saves temporary items, doesn't duplicate existing ones
+        // Save meal plan to database
         function saveMealPlan() {
             // Collect ONLY temporary food items (new items not yet in database)
             const mealsToSave = [];
@@ -2650,8 +3198,7 @@ foreach ($existingMeals as $meal) {
                     if (data.status === 'success') {
                         showNotification(data.message, 'success');
 
-                        // IMPORTANT: Reload the page to get fresh data from database
-                        // This ensures no duplicates
+                        // Reload the page to get fresh data from database
                         setTimeout(() => {
                             window.location.reload();
                         }, 1000);
@@ -2668,18 +3215,6 @@ foreach ($existingMeals as $meal) {
                     saveBtn.innerHTML = originalText;
                     saveBtn.disabled = false;
                 });
-        }
-
-        // Helper function to update temporary IDs after successful save
-        function updateTempIdsAfterSave(data) {
-            // This would be called if you wanted to update the temporary IDs
-            // to actual database IDs after saving. For now, we'll just reload.
-
-            // For a better UX, you could update the IDs in place, but 
-            // reloading is simpler and ensures consistency
-            setTimeout(() => {
-                window.location.reload();
-            }, 1500);
         }
 
         function clearAllMeals() {
@@ -2798,7 +3333,22 @@ foreach ($existingMeals as $meal) {
         }
 
         function simulateBarcodeScan() {
-            const barcodeFoods = [{
+            // Add some quick healthy options
+            const quickFoods = [{
+                    name: "Protein Shake (1 scoop)",
+                    calories: 120,
+                    protein: 24,
+                    carbs: 3,
+                    fat: 1
+                },
+                {
+                    name: "Boiled Egg (1 large)",
+                    calories: 78,
+                    protein: 6,
+                    carbs: 0.6,
+                    fat: 5
+                },
+                {
                     name: "Greek Yogurt (150g)",
                     calories: 150,
                     protein: 15,
@@ -2806,38 +3356,17 @@ foreach ($existingMeals as $meal) {
                     fat: 4
                 },
                 {
-                    name: "Protein Bar",
-                    calories: 220,
-                    protein: 20,
-                    carbs: 22,
-                    fat: 7
-                },
-                {
-                    name: "Chicken Breast (100g)",
-                    calories: 165,
-                    protein: 31,
-                    carbs: 0,
-                    fat: 3.6
-                },
-                {
-                    name: "Almond Milk (250ml)",
-                    calories: 30,
-                    protein: 1,
-                    carbs: 1,
-                    fat: 2.5
-                },
-                {
-                    name: "Whole Wheat Bread (slice)",
-                    calories: 80,
-                    protein: 3,
-                    carbs: 15,
-                    fat: 1
+                    name: "Apple (medium)",
+                    calories: 95,
+                    protein: 0.5,
+                    carbs: 25,
+                    fat: 0.3
                 }
             ];
 
-            const randomFood = barcodeFoods[Math.floor(Math.random() * barcodeFoods.length)];
+            const randomFood = quickFoods[Math.floor(Math.random() * quickFoods.length)];
 
-            // Directly ask for meal selection after barcode scan
+            // Directly ask for meal selection
             showMealSelection(randomFood.name, randomFood.calories, randomFood.protein, randomFood.carbs, randomFood.fat);
         }
 
