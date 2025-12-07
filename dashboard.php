@@ -108,7 +108,40 @@ try {
 
     foreach ($today_exercises as $workout) {
         if (!empty($workout['duration']) && $workout['duration'] > 0) {
-            $today_total_duration += $workout['duration'];
+            // Check if it's a duration exercise (like plank)
+            $exercise_name = strtolower($workout['exercise'] ?? '');
+            $is_duration_exercise = false;
+            $duration_exercises = [
+                'plank',
+                'forearm plank',
+                'side plank',
+                'hollow body hold',
+                'dead bug',
+                'bird-dog',
+                'bear crawls',
+                'rc plank'
+            ];
+
+            foreach ($duration_exercises as $dur_ex) {
+                if (strpos($exercise_name, $dur_ex) !== false) {
+                    $is_duration_exercise = true;
+                    break;
+                }
+            }
+
+            // Also check if it's stored as duration exercise (sets and reps = 0)
+            $is_stored_as_duration = (isset($workout['sets']) && $workout['sets'] == 0) &&
+                (isset($workout['reps']) && $workout['reps'] == 0);
+
+            $is_duration_exercise = $is_duration_exercise || $is_stored_as_duration;
+
+            if ($is_duration_exercise) {
+                // Convert seconds to minutes for total duration calculation
+                $today_total_duration += ($workout['duration'] / 60);
+            } else {
+                // Regular exercise, duration is already in minutes
+                $today_total_duration += $workout['duration'];
+            }
         } else {
             // Estimate duration
             $today_total_duration += 10; // Default 10 minutes per exercise
@@ -210,12 +243,56 @@ try {
     for ($i = 6; $i >= 0; $i--) {
         $day = date('Y-m-d', strtotime("-$i days"));
 
-        $stmt = $pdo->prepare("SELECT SUM(duration) as total_duration FROM workouts WHERE user_id = ? AND DATE(date) = ?");
+        // Get all workouts for this day to calculate total duration properly
+        $stmt = $pdo->prepare("SELECT * FROM workouts WHERE user_id = ? AND DATE(date) = ?");
         $stmt->execute([$user_id, $day]);
-        $day_data = $stmt->fetch(PDO::FETCH_ASSOC);
+        $day_workouts = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        $total_minutes = $day_data['total_duration'] ?? 0;
-        if ($total_minutes === null) $total_minutes = 0;
+        $total_minutes = 0;
+
+        if (!empty($day_workouts)) {
+            foreach ($day_workouts as $workout) {
+                if (!empty($workout['duration']) && $workout['duration'] > 0) {
+                    // Check if it's a duration exercise
+                    $exercise_name = strtolower($workout['exercise'] ?? '');
+                    $is_duration_exercise = false;
+                    $duration_exercises = [
+                        'plank',
+                        'forearm plank',
+                        'side plank',
+                        'hollow body hold',
+                        'dead bug',
+                        'bird-dog',
+                        'bear crawls',
+                        'rc plank'
+                    ];
+
+                    foreach ($duration_exercises as $dur_ex) {
+                        if (strpos($exercise_name, $dur_ex) !== false) {
+                            $is_duration_exercise = true;
+                            break;
+                        }
+                    }
+
+                    // Also check if it's stored as duration exercise
+                    $is_stored_as_duration = (isset($workout['sets']) && $workout['sets'] == 0) &&
+                        (isset($workout['reps']) && $workout['reps'] == 0);
+
+                    $is_duration_exercise = $is_duration_exercise || $is_stored_as_duration;
+
+                    if ($is_duration_exercise) {
+                        // Convert seconds to minutes
+                        $total_minutes += ($workout['duration'] / 60);
+                    } else {
+                        // Regular exercise, duration is already in minutes
+                        $total_minutes += $workout['duration'];
+                    }
+                } else {
+                    // Estimate duration
+                    $total_minutes += 10; // Default 10 minutes per exercise
+                }
+            }
+        }
 
         $weekly_data[] = [
             'day' => date('D', strtotime($day)),
@@ -1416,6 +1493,16 @@ function formatPakistanTime($datetime)
             .stats-value {
                 font-size: 1.8rem;
             }
+
+            .streak-badge {
+                padding: 0.4rem 1rem;
+                border-radius: 15px;
+                gap: 0px;
+                font-weight: 700;
+                font-size: 0.7rem;
+                box-shadow: 0 5px 20px rgba(255, 45, 117, 0.3);
+                margin-left: 1rem;
+            }
         }
     </style>
 </head>
@@ -1546,6 +1633,31 @@ function formatPakistanTime($datetime)
                         $category_color = $is_cardio ? '#ff006e' : '#3a86ff';
                         $category_bg = $is_cardio ? 'rgba(255, 0, 110, 0.1)' : 'rgba(58, 134, 255, 0.1)';
 
+                        // Check if it's a duration exercise (like plank)
+                        $is_duration_exercise = false;
+                        $duration_exercises = [
+                            'plank',
+                            'forearm plank',
+                            'side plank',
+                            'hollow body hold',
+                            'dead bug',
+                            'bird-dog',
+                            'bear crawls',
+                            'rc plank'
+                        ];
+
+                        foreach ($duration_exercises as $dur_ex) {
+                            if (strpos($exercise_name_lower, $dur_ex) !== false) {
+                                $is_duration_exercise = true;
+                                break;
+                            }
+                        }
+
+                        // Also check if it's stored as duration exercise (sets and reps = 0)
+                        $is_stored_as_duration = (isset($exercise['sets']) && $exercise['sets'] == 0) &&
+                            (isset($exercise['reps']) && $exercise['reps'] == 0);
+
+                        $is_duration_exercise = $is_duration_exercise || $is_stored_as_duration;
                         ?>
 
                         <div class="exercise-item">
@@ -1554,6 +1666,9 @@ function formatPakistanTime($datetime)
                                     <div class="exercise-name"><?= $exercise_name ?></div>
                                     <span class="exercise-category" style="background: <?= $category_bg ?>; color: <?= $category_color ?>;">
                                         <?= $category ?>
+                                        <?php if ($is_duration_exercise): ?>
+                                            <span class="badge bg-warning ms-1">Duration</span>
+                                        <?php endif; ?>
                                     </span>
                                 </div>
                             </div>
@@ -1561,44 +1676,60 @@ function formatPakistanTime($datetime)
                             <div class="exercise-stats">
                                 <?php if (!$is_cardio): ?>
                                     <!-- Strength Stats -->
-                                    <?php if (!empty($exercise['sets'])): ?>
-                                        <div class="stat-item">
-                                            <div class="stat-icon strength-stat">
-                                                <i class="fas fa-redo"></i>
+                                    <?php if ($is_duration_exercise): ?>
+                                        <!-- Duration exercise display (like plank) -->
+                                        <?php if (!empty($exercise['duration']) && $exercise['duration'] > 0): ?>
+                                            <div class="stat-item">
+                                                <div class="stat-icon strength-stat">
+                                                    <i class="fas fa-stopwatch"></i>
+                                                </div>
+                                                <div class="stat-value"><?= htmlspecialchars($exercise['duration']) ?> sec</div>
+                                                <div class="stat-label">Duration</div>
                                             </div>
-                                            <div class="stat-value"><?= htmlspecialchars($exercise['sets']) ?></div>
-                                            <div class="stat-label">Sets</div>
-                                        </div>
-                                    <?php endif; ?>
+                                        <?php endif; ?>
 
-                                    <?php if (!empty($exercise['reps'])): ?>
-                                        <div class="stat-item">
-                                            <div class="stat-icon strength-stat">
-                                                <i class="fas fa-sync-alt"></i>
+                                        <!-- For duration exercises, we don't show sets/reps -->
+                                    <?php else: ?>
+                                        <!-- Regular strength exercise -->
+                                        <?php if (!empty($exercise['sets']) && $exercise['sets'] > 0): ?>
+                                            <div class="stat-item">
+                                                <div class="stat-icon strength-stat">
+                                                    <i class="fas fa-redo"></i>
+                                                </div>
+                                                <div class="stat-value"><?= htmlspecialchars($exercise['sets']) ?></div>
+                                                <div class="stat-label">Sets</div>
                                             </div>
-                                            <div class="stat-value"><?= htmlspecialchars($exercise['reps']) ?></div>
-                                            <div class="stat-label">Reps</div>
-                                        </div>
-                                    <?php endif; ?>
+                                        <?php endif; ?>
 
-                                    <?php if (!empty($exercise['weight']) && $exercise['weight'] > 0): ?>
-                                        <div class="stat-item">
-                                            <div class="stat-icon weight-stat">
-                                                <i class="fas fa-weight-hanging"></i>
+                                        <?php if (!empty($exercise['reps']) && $exercise['reps'] > 0): ?>
+                                            <div class="stat-item">
+                                                <div class="stat-icon strength-stat">
+                                                    <i class="fas fa-sync-alt"></i>
+                                                </div>
+                                                <div class="stat-value"><?= htmlspecialchars($exercise['reps']) ?></div>
+                                                <div class="stat-label">Reps</div>
                                             </div>
-                                            <div class="stat-value"><?= htmlspecialchars($exercise['weight']) ?> kg</div>
-                                            <div class="stat-label">Weight</div>
-                                        </div>
-                                    <?php endif; ?>
+                                        <?php endif; ?>
 
-                                    <?php if (!empty($exercise['duration']) && $exercise['duration'] > 0): ?>
-                                        <div class="stat-item">
-                                            <div class="stat-icon time-stat">
-                                                <i class="fas fa-stopwatch"></i>
+                                        <?php if (!empty($exercise['weight']) && $exercise['weight'] > 0): ?>
+                                            <div class="stat-item">
+                                                <div class="stat-icon weight-stat">
+                                                    <i class="fas fa-weight-hanging"></i>
+                                                </div>
+                                                <div class="stat-value"><?= htmlspecialchars($exercise['weight']) ?> kg</div>
+                                                <div class="stat-label">Weight</div>
                                             </div>
-                                            <div class="stat-value"><?= htmlspecialchars($exercise['duration']) ?> min</div>
-                                            <div class="stat-label">Duration</div>
-                                        </div>
+                                        <?php endif; ?>
+
+                                        <?php if (!empty($exercise['duration']) && $exercise['duration'] > 0 && !$is_duration_exercise): ?>
+                                            <div class="stat-item">
+                                                <div class="stat-icon time-stat">
+                                                    <i class="fas fa-stopwatch"></i>
+                                                </div>
+                                                <div class="stat-value"><?= htmlspecialchars($exercise['duration']) ?> min</div>
+                                                <div class="stat-label">Duration</div>
+                                            </div>
+                                        <?php endif; ?>
                                     <?php endif; ?>
                                 <?php else: ?>
                                     <!-- Cardio Stats -->
@@ -1632,7 +1763,7 @@ function formatPakistanTime($datetime)
                                         </div>
                                     <?php endif; ?>
 
-                                    <?php if (!empty($exercise['sets'])): ?>
+                                    <?php if (!empty($exercise['sets']) && $exercise['sets'] > 0): ?>
                                         <div class="stat-item">
                                             <div class="stat-icon cardio-stat">
                                                 <i class="fas fa-redo"></i>
