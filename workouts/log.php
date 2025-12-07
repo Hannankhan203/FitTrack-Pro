@@ -1419,33 +1419,67 @@ $saved_exercises = $stmt->fetchAll();
                             </div>
                             <div class="saved-exercise-details">
                                 <?php if ($exercise_type === 'strength'): ?>
-                                    <?php if (isset($exercise['sets']) && $exercise['sets']): ?>
-                                        <div class="saved-exercise-detail">
-                                            <i class="fas fa-redo text-primary"></i>
-                                            <span><?= $exercise['sets'] ?></span>
-                                            <div class="detail-label">Sets</div>
-                                        </div>
-                                    <?php endif; ?>
-                                    <?php if (isset($exercise['reps']) && $exercise['reps']): ?>
-                                        <div class="saved-exercise-detail">
-                                            <i class="fas fa-sync-alt text-primary"></i>
-                                            <span><?= $exercise['reps'] ?></span>
-                                            <div class="detail-label">Reps</div>
-                                        </div>
-                                    <?php endif; ?>
-                                    <?php if (isset($exercise['duration']) && $exercise['duration'] > 0): ?>
-                                        <div class="saved-exercise-detail">
-                                            <i class="fas fa-clock text-warning"></i>
-                                            <span><?= $exercise['duration'] ?> min</span>
-                                            <div class="detail-label">Duration</div>
-                                        </div>
-                                    <?php endif; ?>
-                                    <?php if (isset($exercise['weight']) && $exercise['weight'] && !in_array($exercise['exercise'], ['Pull-ups ⬆️', 'Push-ups 🤸‍♂️', 'Lunges 🚶‍♂️', 'Plank 🧘‍♂️'])): ?>
-                                        <div class="saved-exercise-detail">
-                                            <i class="fas fa-weight text-primary"></i>
-                                            <span><?= $exercise['weight'] ?> kg</span>
-                                            <div class="detail-label">Weight</div>
-                                        </div>
+                                    <?php
+                                    // Check if this is a duration exercise (has duration but no sets/reps)
+                                    $isDurationExercise = false;
+                                    $durationExercisesList = [
+                                        'Plank 🧘‍♂️',
+                                        'Forearm Plank 🧘‍♂️',
+                                        'Side Plank 🧘‍♂️',
+                                        'RKC Plank 🧘‍♂️',
+                                        'Hollow Body Hold 🫥',
+                                        'L-sit L️⃣',
+                                        'Dead Bug 🐛',
+                                        'Bird-dog 🐦',
+                                        'Bear Crawls 🐻'
+                                    ];
+
+                                    if (
+                                        in_array($exercise_name, $durationExercisesList) ||
+                                        (isset($exercise['duration']) && $exercise['duration'] > 0 &&
+                                            (!isset($exercise['sets']) || $exercise['sets'] == 0 || !isset($exercise['reps']) || $exercise['reps'] == 0))
+                                    ) {
+                                        $isDurationExercise = true;
+                                    }
+                                    ?>
+
+                                    <?php if ($isDurationExercise): ?>
+                                        <?php if (isset($exercise['duration']) && $exercise['duration'] > 0): ?>
+                                            <div class="saved-exercise-detail">
+                                                <i class="fas fa-clock text-primary"></i>
+                                                <span><?= $exercise['duration'] ?> sec</span>
+                                                <div class="detail-label">Duration</div>
+                                            </div>
+                                        <?php endif; ?>
+                                    <?php else: ?>
+                                        <?php if (isset($exercise['sets']) && $exercise['sets']): ?>
+                                            <div class="saved-exercise-detail">
+                                                <i class="fas fa-redo text-primary"></i>
+                                                <span><?= $exercise['sets'] ?></span>
+                                                <div class="detail-label">Sets</div>
+                                            </div>
+                                        <?php endif; ?>
+                                        <?php if (isset($exercise['reps']) && $exercise['reps']): ?>
+                                            <div class="saved-exercise-detail">
+                                                <i class="fas fa-sync-alt text-primary"></i>
+                                                <span><?= $exercise['reps'] ?></span>
+                                                <div class="detail-label">Reps</div>
+                                            </div>
+                                        <?php endif; ?>
+                                        <?php if (isset($exercise['duration']) && $exercise['duration'] > 0): ?>
+                                            <div class="saved-exercise-detail">
+                                                <i class="fas fa-clock text-warning"></i>
+                                                <span><?= $exercise['duration'] ?> min</span>
+                                                <div class="detail-label">Duration</div>
+                                            </div>
+                                        <?php endif; ?>
+                                        <?php if (isset($exercise['weight']) && $exercise['weight'] && !in_array($exercise['exercise'], ['Pull-ups ⬆️', 'Push-ups 🤸‍♂️', 'Lunges 🚶‍♂️', 'Plank 🧘‍♂️'])): ?>
+                                            <div class="saved-exercise-detail">
+                                                <i class="fas fa-weight text-primary"></i>
+                                                <span><?= $exercise['weight'] ?> kg</span>
+                                                <div class="detail-label">Weight</div>
+                                            </div>
+                                        <?php endif; ?>
                                     <?php endif; ?>
                                 <?php else: // Cardio exercises 
                                 ?>
@@ -1763,6 +1797,12 @@ $saved_exercises = $stmt->fetchAll();
                 name: "Pull-ups ⬆️",
                 type: "strength",
                 icon: "fa-arrow-up"
+            },
+            {
+                group: "Legs 🦵🏋️‍♂️",
+                name: "Squats (Bodyweight) ⬇️",
+                type: "strength",
+                icon: "fa-person"
             },
             {
                 group: "Back 🏋️‍♂️🦾",
@@ -3371,6 +3411,19 @@ $saved_exercises = $stmt->fetchAll();
             'Muscle-ups ⬆️', 'Australian Pull-ups ⬇️', 'Archer Push-ups 🏹', 'Plyometric Push-ups ⚡'
         ];
 
+        // Exercises that require duration instead of sets/reps
+        const durationExercises = [
+            'Plank 🧘‍♂️',
+            'Forearm Plank 🧘‍♂️',
+            'Side Plank 🧘‍♂️',
+            'RKC Plank 🧘‍♂️',
+            'Hollow Body Hold 🫥',
+            'L-sit L️⃣',
+            'Dead Bug 🐛',
+            'Bird-dog 🐦',
+            'Bear Crawls 🐻'
+        ];
+
         // Function to calculate estimated time for strength exercises
         function calculateStrengthDuration(sets, reps, weight) {
             sets = parseInt(sets) || 3;
@@ -3431,107 +3484,120 @@ $saved_exercises = $stmt->fetchAll();
             const cardId = `exercise-${exerciseCounter}`;
 
             return `
-    <div class="exercise-card" id="${cardId}">
-        <div class="exercise-header">
-            <div class="exercise-number">
-                <span class="exercise-badge">${exerciseCounter}</span>
-                <h3 class="exercise-title">Exercise ${exerciseCounter}</h3>
-                <span class="exercise-type-indicator type-strength" style="display:none;">
-                    <i class="fas fa-dumbbell me-1"></i>Strength
-                </span>
-                <span class="exercise-type-indicator type-cardio" style="display:none;">
-                    <i class="fas fa-running me-1"></i>Cardio
-                </span>
-                <span class="exercise-type-indicator type-mobility" style="display:none;">
-                    <i class="fas fa-spa me-1"></i>Mobility
-                </span>
-            </div>
-            <button type="button" class="remove-btn" onclick="removeExercise('${cardId}')">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        
-        <div class="mb-3">
-            <label for="exercise-select-${exerciseCounter}" class="form-label">Select Exercise</label>
-            <select class="exercise-select" id="exercise-select-${exerciseCounter}" required>
-                <option value="">Choose an exercise...</option>
-            </select>
-        </div>
-        
-        <div class="strength-fields">
-            <label class="form-label">Strength Details</label>
-            <div class="input-row">
-                <div class="input-field">
-                    <input type="number" class="sets-input" placeholder="Sets" min="1" required oninput="updateDuration('${cardId}')">
-                    <div class="small text-muted mt-1">Number of sets</div>
-                </div>
-                <div class="input-field">
-                    <input type="number" class="reps-input" placeholder="Reps" min="1" required oninput="updateDuration('${cardId}')">
-                    <div class="small text-muted mt-1">Reps per set</div>
-                </div>
-                <div class="input-field weight-field">
-                    <div class="unit-container">
-                        <input type="number" step="0.5" class="weight-input" placeholder="Weight" oninput="updateDuration('${cardId}')">
-                        <span class="unit-label">kg</span>
+                <div class="exercise-card" id="${cardId}">
+                    <div class="exercise-header">
+                        <div class="exercise-number">
+                            <span class="exercise-badge">${exerciseCounter}</span>
+                            <h3 class="exercise-title">Exercise ${exerciseCounter}</h3>
+                            <span class="exercise-type-indicator type-strength" style="display:none;">
+                                <i class="fas fa-dumbbell me-1"></i>Strength
+                            </span>
+                            <span class="exercise-type-indicator type-cardio" style="display:none;">
+                                <i class="fas fa-running me-1"></i>Cardio
+                            </span>
+                            <span class="exercise-type-indicator type-mobility" style="display:none;">
+                                <i class="fas fa-spa me-1"></i>Mobility
+                            </span>
+                        </div>
+                        <button type="button" class="remove-btn" onclick="removeExercise('${cardId}')">
+                            <i class="fas fa-times"></i>
+                        </button>
                     </div>
-                    <div class="small text-muted mt-1">Weight per rep (optional)</div>
-                </div>
-            </div>
-            <!-- Hidden duration field for strength exercises -->
-            <input type="hidden" class="duration-hidden" value="">
-        </div>
-        
-        <div class="cardio-fields" style="display:none;">
-            <label class="form-label">Cardio Details</label>
-            <div class="input-row">
-                <div class="input-field">
-                    <div class="unit-container">
-                        <input type="number" class="duration-input" placeholder="Duration" min="1" required oninput="updateCardioDuration('${cardId}')">
-                        <span class="unit-label">min</span>
+                    
+                    <div class="mb-3">
+                        <label for="exercise-select-${exerciseCounter}" class="form-label">Select Exercise</label>
+                        <select class="exercise-select" id="exercise-select-${exerciseCounter}" required>
+                            <option value="">Choose an exercise...</option>
+                        </select>
                     </div>
-                    <div class="small text-muted mt-1">Duration in minutes</div>
-                </div>
-                <div class="input-field">
-                    <div class="unit-container">
-                        <input type="number" step="0.1" class="distance-input" placeholder="Distance" oninput="updateCardioDuration('${cardId}')">
-                        <span class="unit-label">km</span>
+                    
+                    <div class="strength-fields">
+                        <label class="form-label">Strength Details</label>
+                        <!-- Duration field for exercises like Plank -->
+                        <div class="duration-strength-container" style="display:none;">
+                            <div class="input-field">
+                                <div class="unit-container">
+                                    <input type="number" class="duration-strength-input" placeholder="Duration" min="1">
+                                    <span class="unit-label">sec</span>
+                                </div>
+                                <div class="small text-muted mt-1">Hold time in seconds</div>
+                            </div>
+                        </div>
+                        <!-- Regular sets/reps fields -->
+                        <div class="sets-reps-container">
+                            <div class="input-row">
+                                <div class="input-field">
+                                    <input type="number" class="sets-input" placeholder="Sets" min="1" required oninput="updateDuration('${cardId}')">
+                                    <div class="small text-muted mt-1">Number of sets</div>
+                                </div>
+                                <div class="input-field">
+                                    <input type="number" class="reps-input" placeholder="Reps" min="1" required oninput="updateDuration('${cardId}')">
+                                    <div class="small text-muted mt-1">Reps per set</div>
+                                </div>
+                                <div class="input-field weight-field">
+                                    <div class="unit-container">
+                                        <input type="number" step="0.5" class="weight-input" placeholder="Weight" oninput="updateDuration('${cardId}')">
+                                        <span class="unit-label">kg</span>
+                                    </div>
+                                    <div class="small text-muted mt-1">Weight per rep (optional)</div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Hidden duration field for strength exercises -->
+                        <input type="hidden" class="duration-hidden" value="">
                     </div>
-                    <div class="small text-muted mt-1">Distance (optional)</div>
-                </div>
-                <div class="input-field">
-                    <div class="unit-container">
-                        <input type="number" class="calories-input" placeholder="Calories">
-                        <span class="unit-label">cal</span>
+                    
+                    <div class="cardio-fields" style="display:none;">
+                        <label class="form-label">Cardio Details</label>
+                        <div class="input-row">
+                            <div class="input-field">
+                                <div class="unit-container">
+                                    <input type="number" class="duration-input" placeholder="Duration" min="1" required oninput="updateCardioDuration('${cardId}')">
+                                    <span class="unit-label">min</span>
+                                </div>
+                                <div class="small text-muted mt-1">Duration in minutes</div>
+                            </div>
+                            <div class="input-field">
+                                <div class="unit-container">
+                                    <input type="number" step="0.1" class="distance-input" placeholder="Distance" oninput="updateCardioDuration('${cardId}')">
+                                    <span class="unit-label">km</span>
+                                </div>
+                                <div class="small text-muted mt-1">Distance (optional)</div>
+                            </div>
+                            <div class="input-field">
+                                <div class="unit-container">
+                                    <input type="number" class="calories-input" placeholder="Calories">
+                                    <span class="unit-label">cal</span>
+                                </div>
+                                <div class="small text-muted mt-1">Calories burned (optional)</div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="small text-muted mt-1">Calories burned (optional)</div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="mobility-fields" style="display:none;">
-            <label class="form-label">Mobility Details</label>
-            <div class="input-row">
-                <div class="input-field">
-                    <div class="unit-container">
-                        <input type="number" class="time-input" placeholder="Time" min="1" required>
-                        <span class="unit-label">sec</span>
+                    
+                    <div class="mobility-fields" style="display:none;">
+                        <label class="form-label">Mobility Details</label>
+                        <div class="input-row">
+                            <div class="input-field">
+                                <div class="unit-container">
+                                    <input type="number" class="time-input" placeholder="Time" min="1" required>
+                                    <span class="unit-label">sec</span>
+                                </div>
+                                <div class="small text-muted mt-1">Time in seconds</div>
+                            </div>
+                            <div class="input-field">
+                                <input type="number" class="reps-input-mobility" placeholder="Reps" min="1">
+                                <div class="small text-muted mt-1">Reps (if applicable)</div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="small text-muted mt-1">Time in seconds</div>
+                    
+                    <!-- Duration display for user feedback -->
+                    <div class="duration-feedback mt-3" style="display:none; padding:10px; background:rgba(0,212,255,0.1); border-radius:8px;">
+                        <i class="fas fa-clock text-primary me-2"></i>
+                        <span class="duration-text">Estimated time: <strong>0</strong> minutes</span>
+                    </div>
                 </div>
-                <div class="input-field">
-                    <input type="number" class="reps-input-mobility" placeholder="Reps" min="1">
-                    <div class="small text-muted mt-1">Reps (if applicable)</div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Duration display for user feedback -->
-        <div class="duration-feedback mt-3" style="display:none; padding:10px; background:rgba(0,212,255,0.1); border-radius:8px;">
-            <i class="fas fa-clock text-primary me-2"></i>
-            <span class="duration-text">Estimated time: <strong>0</strong> minutes</span>
-        </div>
-    </div>
-`;
+            `;
         }
 
         // Update duration for strength exercises in real-time
@@ -3692,6 +3758,8 @@ $saved_exercises = $stmt->fetchAll();
             const typeCardio = row.querySelector('.type-cardio');
             const typeMobility = row.querySelector('.type-mobility');
             const weightField = row.querySelector('.weight-field');
+            const setsRepsContainer = row.querySelector('.sets-reps-container');
+            const durationStrengthContainer = row.querySelector('.duration-strength-container');
             const feedbackDiv = row.querySelector('.duration-feedback');
 
             // Hide all fields first
@@ -3701,6 +3769,9 @@ $saved_exercises = $stmt->fetchAll();
             typeStrength.style.display = 'none';
             typeCardio.style.display = 'none';
             typeMobility.style.display = 'none';
+            if (setsRepsContainer) setsRepsContainer.style.display = 'block';
+            if (durationStrengthContainer) durationStrengthContainer.style.display = 'none';
+            if (weightField) weightField.style.display = 'block';
             if (feedbackDiv) feedbackDiv.style.display = 'none';
 
             // Show appropriate fields based on type
@@ -3709,45 +3780,43 @@ $saved_exercises = $stmt->fetchAll();
                     strengthFields.style.display = 'block';
                     typeStrength.style.display = 'inline-flex';
 
-                    // Hide weight field for bodyweight exercises
-                    if (noWeightExercises.includes(exerciseName)) {
-                        weightField.style.display = 'none';
-                    } else {
-                        weightField.style.display = 'block';
-                    }
+                    // Check if it's a duration exercise
+                    if (durationExercises.includes(exerciseName)) {
+                        // Show duration field, hide sets/reps/weight
+                        if (setsRepsContainer) setsRepsContainer.style.display = 'none';
+                        if (durationStrengthContainer) durationStrengthContainer.style.display = 'block';
+                        if (weightField) weightField.style.display = 'none';
 
-                    // Calculate initial duration if fields have values
-                    setTimeout(() => updateDuration(row.id), 100);
+                        // Show feedback for duration exercises
+                        if (feedbackDiv) {
+                            feedbackDiv.style.display = 'block';
+                            feedbackDiv.querySelector('.duration-text').innerHTML = `Duration: Enter hold time in seconds`;
+                            feedbackDiv.querySelector('.duration-text').style.color = '#00d4ff';
+                        }
+                    }
+                    // Check if it's a bodyweight exercise
+                    else if (noWeightExercises.includes(exerciseName)) {
+                        if (weightField) weightField.style.display = 'none';
+                        if (setsRepsContainer) setsRepsContainer.style.display = 'block';
+                        if (durationStrengthContainer) durationStrengthContainer.style.display = 'none';
+
+                        // Calculate initial duration if fields have values
+                        setTimeout(() => updateDuration(row.id), 100);
+                    }
+                    // Regular strength exercise with weight
+                    else {
+                        if (weightField) weightField.style.display = 'block';
+                        if (setsRepsContainer) setsRepsContainer.style.display = 'block';
+                        if (durationStrengthContainer) durationStrengthContainer.style.display = 'none';
+
+                        // Calculate initial duration if fields have values
+                        setTimeout(() => updateDuration(row.id), 100);
+                    }
                     break;
 
                 case 'cardio':
-                    const durationInput = row.querySelector('.duration-input');
-                    const duration = durationInput ? durationInput.value : null;
-                    const distanceInput = row.querySelector('.distance-input');
-                    const distance = distanceInput ? distanceInput.value : null;
-                    const caloriesInput = row.querySelector('.calories-input');
-                    const calories = caloriesInput ? caloriesInput.value : null;
-
-                    if (!duration || duration <= 0) {
-                        // Check if distance is provided instead
-                        if (!distance || distance <= 0) {
-                            hasErrors = true;
-                            if (durationInput) durationInput.classList.add('is-invalid');
-                            return;
-                        } else {
-                            // Calculate duration from distance
-                            data.duration = calculateCardioDuration(null, distance);
-                            data.distance = parseFloat(distance);
-                        }
-                    } else {
-                        data.duration = parseFloat(duration);
-                        if (distance && distance > 0) data.distance = parseFloat(distance);
-                    }
-
-                    // Add calories if provided
-                    if (calories && calories > 0) {
-                        data.calories = parseInt(calories);
-                    }
+                    cardioFields.style.display = 'block';
+                    typeCardio.style.display = 'inline-flex';
                     break;
 
                 case 'mobility':
@@ -3859,12 +3928,12 @@ $saved_exercises = $stmt->fetchAll();
 
             const icon = type === 'success' ? 'check-circle' : 'exclamation-circle';
             const alertHTML = `
-            <div class="alert alert-${type} alert-dismissible fade show" role="alert">
-                <i class="fas fa-${icon} me-2"></i>
-                ${message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        `;
+                <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                    <i class="fas fa-${icon} me-2"></i>
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            `;
 
             document.body.insertAdjacentHTML('afterbegin', alertHTML);
 
@@ -3907,44 +3976,61 @@ $saved_exercises = $stmt->fetchAll();
                     exercise: exerciseName
                 };
 
-                // Inside the form submission switch statement for strength exercises:
                 switch (type) {
                     case 'strength':
-                        const setsInput = row.querySelector('.sets-input');
-                        const repsInput = row.querySelector('.reps-input');
-                        const weightInput = row.querySelector('.weight-input');
-                        const durationHidden = row.querySelector('.duration-hidden');
+                        // Check if it's a duration exercise
+                        if (durationExercises.includes(exerciseName)) {
+                            const durationInput = row.querySelector('.duration-strength-input');
+                            const duration = durationInput ? durationInput.value : null;
 
-                        const sets = setsInput ? setsInput.value : null;
-                        const reps = repsInput ? repsInput.value : null;
-                        const weight = weightInput ? weightInput.value : null;
+                            if (!duration || duration <= 0) {
+                                hasErrors = true;
+                                if (durationInput) durationInput.classList.add('is-invalid');
+                                return;
+                            }
 
-                        if (!sets || sets <= 0) {
-                            hasErrors = true;
-                            if (setsInput) setsInput.classList.add('is-invalid');
-                            return;
-                        }
-
-                        if (!reps || reps <= 0) {
-                            hasErrors = true;
-                            if (repsInput) repsInput.classList.add('is-invalid');
-                            return;
-                        }
-
-                        data.sets = parseInt(sets);
-                        data.reps = parseInt(reps);
-
-                        // Include calculated duration
-                        if (durationHidden && durationHidden.value) {
-                            data.duration = parseFloat(durationHidden.value);
+                            // For duration exercises, store duration in seconds
+                            // Set sets and reps to 0 to indicate it's a duration exercise
+                            data.duration = parseInt(duration);
+                            data.sets = 0; // 0 indicates duration exercise
+                            data.reps = 0; // 0 indicates duration exercise
                         } else {
-                            // Calculate if not already calculated
-                            data.duration = calculateStrengthDuration(sets, reps, weight);
-                        }
+                            const setsInput = row.querySelector('.sets-input');
+                            const repsInput = row.querySelector('.reps-input');
+                            const weightInput = row.querySelector('.weight-input');
+                            const durationHidden = row.querySelector('.duration-hidden');
 
-                        // Only include weight if it's not a bodyweight exercise
-                        if (!noWeightExercises.includes(exerciseName) && weight && weight > 0) {
-                            data.weight = parseFloat(weight);
+                            const sets = setsInput ? setsInput.value : null;
+                            const reps = repsInput ? repsInput.value : null;
+                            const weight = weightInput ? weightInput.value : null;
+
+                            if (!sets || sets <= 0) {
+                                hasErrors = true;
+                                if (setsInput) setsInput.classList.add('is-invalid');
+                                return;
+                            }
+
+                            if (!reps || reps <= 0) {
+                                hasErrors = true;
+                                if (repsInput) repsInput.classList.add('is-invalid');
+                                return;
+                            }
+
+                            data.sets = parseInt(sets);
+                            data.reps = parseInt(reps);
+
+                            // Include calculated duration
+                            if (durationHidden && durationHidden.value) {
+                                data.duration = parseFloat(durationHidden.value);
+                            } else {
+                                // Calculate if not already calculated
+                                data.duration = calculateStrengthDuration(sets, reps, weight);
+                            }
+
+                            // Only include weight if it's not a bodyweight exercise
+                            if (!noWeightExercises.includes(exerciseName) && weight && weight > 0) {
+                                data.weight = parseFloat(weight);
+                            }
                         }
                         break;
 
@@ -3969,6 +4055,19 @@ $saved_exercises = $stmt->fetchAll();
                             data.duration = parseFloat(duration);
                             if (distance && distance > 0) data.distance = parseFloat(distance);
                         }
+                        break;
+
+                    case 'mobility':
+                        const timeInput = row.querySelector('.time-input');
+                        const time = timeInput ? timeInput.value : null;
+
+                        if (!time || time <= 0) {
+                            hasErrors = true;
+                            if (timeInput) timeInput.classList.add('is-invalid');
+                            return;
+                        }
+
+                        data.duration = parseInt(time); // Store as seconds
                         break;
                 }
 

@@ -2599,6 +2599,114 @@ foreach ($existingMeals as $meal) {
                     }
                 },
                 {
+                    title: "Malai Boti Roll",
+                    nutrition: {
+                        calories: 550,
+                        protein: 25,
+                        carbs: 45,
+                        fat: 30
+                    }
+                },
+                {
+                    title: "French Fries (Medium)",
+                    nutrition: {
+                        calories: 365,
+                        protein: 4,
+                        carbs: 48,
+                        fat: 18
+                    }
+                },
+                {
+                    title: "French Fries (Large)",
+                    nutrition: {
+                        calories: 480,
+                        protein: 5,
+                        carbs: 63,
+                        fat: 23
+                    }
+                },
+                {
+                    title: "French Fries (Small)",
+                    nutrition: {
+                        calories: 230,
+                        protein: 3,
+                        carbs: 30,
+                        fat: 11
+                    }
+                },
+                {
+                    title: "Chicken Burger (Regular)",
+                    nutrition: {
+                        calories: 450,
+                        protein: 25,
+                        carbs: 42,
+                        fat: 22
+                    }
+                },
+                {
+                    title: "Chicken Burger with Cheese",
+                    nutrition: {
+                        calories: 520,
+                        protein: 28,
+                        carbs: 45,
+                        fat: 27
+                    }
+                },
+                {
+                    title: "Grilled Chicken Burger",
+                    nutrition: {
+                        calories: 380,
+                        protein: 30,
+                        carbs: 35,
+                        fat: 15
+                    }
+                },
+                {
+                    title: "Spicy Chicken Burger",
+                    nutrition: {
+                        calories: 480,
+                        protein: 26,
+                        carbs: 44,
+                        fat: 24
+                    }
+                },
+                {
+                    title: "Chicken Burger Meal (with fries & drink)",
+                    nutrition: {
+                        calories: 850,
+                        protein: 32,
+                        carbs: 95,
+                        fat: 38
+                    }
+                },
+                {
+                    title: "Reshmi Kabab Roll",
+                    nutrition: {
+                        calories: 520,
+                        protein: 28,
+                        carbs: 42,
+                        fat: 28
+                    }
+                },
+                {
+                    title: "Chicken Tikka Roll",
+                    nutrition: {
+                        calories: 500,
+                        protein: 26,
+                        carbs: 40,
+                        fat: 26
+                    }
+                },
+                {
+                    title: "Beef Seekh Roll",
+                    nutrition: {
+                        calories: 580,
+                        protein: 32,
+                        carbs: 48,
+                        fat: 32
+                    }
+                },
+                {
                     title: "Zinger/Whopper Burger",
                     nutrition: {
                         calories: 650,
@@ -2870,6 +2978,60 @@ foreach ($existingMeals as $meal) {
                         protein: 31,
                         carbs: 0,
                         fat: 3.6
+                    }
+                },
+                {
+                    title: "Small Cake Slice (Vanilla)",
+                    nutrition: {
+                        calories: 250,
+                        protein: 3,
+                        carbs: 38,
+                        fat: 10
+                    }
+                },
+                {
+                    title: "Chocolate Cake Slice",
+                    nutrition: {
+                        calories: 280,
+                        protein: 4,
+                        carbs: 42,
+                        fat: 12
+                    }
+                },
+                {
+                    title: "Red Velvet Cake Slice",
+                    nutrition: {
+                        calories: 300,
+                        protein: 4,
+                        carbs: 45,
+                        fat: 13
+                    }
+                },
+                {
+                    title: "Cupcake (1 piece)",
+                    nutrition: {
+                        calories: 180,
+                        protein: 2,
+                        carbs: 28,
+                        fat: 7
+                    }
+                },
+                {
+                    title: "Milk Malt Cake (1 piece)",
+                    nutrition: {
+                        calories: 280,
+                        protein: 4,
+                        carbs: 42,
+                        fat: 10
+                    }
+                },
+                {
+                    title: "Milk Malt Cake (1 slice)",
+                    nutrition: {
+                        calories: 320,
+                        protein: 5,
+                        carbs: 48,
+                        fat: 12
                     }
                 },
                 {

@@ -66,7 +66,7 @@ try {
     $stmt = $pdo->prepare("SELECT * FROM workouts WHERE user_id = ? ORDER BY date DESC LIMIT 20");
     $stmt->execute([$user_id]);
     $all_exercises = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
+
     error_log("Total exercises found for user: " . count($all_exercises));
 } catch (PDOException $e) {
     error_log("Debug query error: " . $e->getMessage());
@@ -78,9 +78,9 @@ try {
     $stmt = $pdo->prepare("SELECT * FROM workouts WHERE user_id = ? AND DATE(date) = ? ORDER BY date DESC LIMIT 10");
     $stmt->execute([$user_id, $today]);
     $today_exercises = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
+
     error_log("Method 1 (DATE()) found: " . count($today_exercises) . " exercises");
-    
+
     // If no exercises found, try to see if there are any recent ones
     if (empty($today_exercises)) {
         error_log("No exercises found for today. Checking last 2 days...");
@@ -89,7 +89,7 @@ try {
         $stmt->execute([$user_id, $today, $yesterday]);
         $recent_exercises = $stmt->fetchAll(PDO::FETCH_ASSOC);
         error_log("Recent exercises (today+yesterday): " . count($recent_exercises));
-        
+
         // For debugging, let's use recent exercises if none found for today
         if (count($recent_exercises) > 0 && count($today_exercises) === 0) {
             $today_exercises = $recent_exercises;
@@ -105,7 +105,7 @@ try {
 try {
     $today_workout_count = count($today_exercises);
     $today_total_duration = 0;
-    
+
     foreach ($today_exercises as $workout) {
         if (!empty($workout['duration']) && $workout['duration'] > 0) {
             $today_total_duration += $workout['duration'];
@@ -114,7 +114,7 @@ try {
             $today_total_duration += 10; // Default 10 minutes per exercise
         }
     }
-    
+
     $today_workout = [
         'count' => $today_workout_count,
         'total_duration' => round($today_total_duration, 1)
@@ -156,12 +156,14 @@ try {
     $stmt = $pdo->prepare("SELECT goal_weight, goal_type, weight FROM users WHERE id = ?");
     $stmt->execute([$user_id]);
     $goal_info = $stmt->fetch(PDO::FETCH_ASSOC);
-    
+
     // Calculate goal progress
     $goal_progress = 0;
-    if ($goal_info && isset($goal_info['goal_weight']) && isset($goal_info['weight']) &&
-        $goal_info['goal_weight'] && $goal_info['weight']) {
-        
+    if (
+        $goal_info && isset($goal_info['goal_weight']) && isset($goal_info['weight']) &&
+        $goal_info['goal_weight'] && $goal_info['weight']
+    ) {
+
         if ($goal_info['goal_type'] == 'lose') {
             if ($goal_info['weight'] > $goal_info['goal_weight']) {
                 $total_to_lose = $goal_info['weight'] - $goal_info['goal_weight'];
@@ -207,14 +209,14 @@ try {
 try {
     for ($i = 6; $i >= 0; $i--) {
         $day = date('Y-m-d', strtotime("-$i days"));
-        
+
         $stmt = $pdo->prepare("SELECT SUM(duration) as total_duration FROM workouts WHERE user_id = ? AND DATE(date) = ?");
         $stmt->execute([$user_id, $day]);
         $day_data = $stmt->fetch(PDO::FETCH_ASSOC);
-        
+
         $total_minutes = $day_data['total_duration'] ?? 0;
         if ($total_minutes === null) $total_minutes = 0;
-        
+
         $weekly_data[] = [
             'day' => date('D', strtotime($day)),
             'minutes' => round($total_minutes, 1)
@@ -225,9 +227,10 @@ try {
 }
 
 // Function to format datetime
-function formatPakistanTime($datetime) {
+function formatPakistanTime($datetime)
+{
     if (empty($datetime)) return '';
-    
+
     try {
         $date = new DateTime($datetime);
         return $date->format('g:i A');
@@ -1284,6 +1287,10 @@ function formatPakistanTime($datetime) {
             }
         }
 
+        .small {
+            color: #ffffff !important;
+        }
+
         /* Responsive */
         @media (max-width: 991.98px) {
             .navbar-collapse {
@@ -1523,24 +1530,24 @@ function formatPakistanTime($datetime) {
                         // Get exercise name safely
                         $exercise_name = htmlspecialchars($exercise['exercise'] ?? 'Unnamed Exercise');
                         $exercise_name_lower = strtolower($exercise_name);
-                        
+
                         // Determine if it's cardio or strength
                         $is_cardio = false;
                         $cardio_keywords = ['run', 'jog', 'cycle', 'swim', 'walk', 'row', 'elliptical', 'stair', 'jump', 'burpee', 'sprint', 'bike'];
-                        
+
                         foreach ($cardio_keywords as $keyword) {
                             if (strpos($exercise_name_lower, $keyword) !== false) {
                                 $is_cardio = true;
                                 break;
                             }
                         }
-                        
+
                         $category = $is_cardio ? 'Cardio' : 'Strength';
                         $category_color = $is_cardio ? '#ff006e' : '#3a86ff';
                         $category_bg = $is_cardio ? 'rgba(255, 0, 110, 0.1)' : 'rgba(58, 134, 255, 0.1)';
-                        
+
                         ?>
-                        
+
                         <div class="exercise-item">
                             <div class="exercise-header">
                                 <div>
@@ -1563,7 +1570,7 @@ function formatPakistanTime($datetime) {
                                             <div class="stat-label">Sets</div>
                                         </div>
                                     <?php endif; ?>
-                                    
+
                                     <?php if (!empty($exercise['reps'])): ?>
                                         <div class="stat-item">
                                             <div class="stat-icon strength-stat">
@@ -1573,7 +1580,7 @@ function formatPakistanTime($datetime) {
                                             <div class="stat-label">Reps</div>
                                         </div>
                                     <?php endif; ?>
-                                    
+
                                     <?php if (!empty($exercise['weight']) && $exercise['weight'] > 0): ?>
                                         <div class="stat-item">
                                             <div class="stat-icon weight-stat">
@@ -1583,7 +1590,7 @@ function formatPakistanTime($datetime) {
                                             <div class="stat-label">Weight</div>
                                         </div>
                                     <?php endif; ?>
-                                    
+
                                     <?php if (!empty($exercise['duration']) && $exercise['duration'] > 0): ?>
                                         <div class="stat-item">
                                             <div class="stat-icon time-stat">
@@ -1604,7 +1611,7 @@ function formatPakistanTime($datetime) {
                                             <div class="stat-label">Duration</div>
                                         </div>
                                     <?php endif; ?>
-                                    
+
                                     <?php if (!empty($exercise['distance']) && $exercise['distance'] > 0): ?>
                                         <div class="stat-item">
                                             <div class="stat-icon cardio-stat">
@@ -1614,7 +1621,7 @@ function formatPakistanTime($datetime) {
                                             <div class="stat-label">Distance</div>
                                         </div>
                                     <?php endif; ?>
-                                    
+
                                     <?php if (!empty($exercise['calories']) && $exercise['calories'] > 0): ?>
                                         <div class="stat-item">
                                             <div class="stat-icon cardio-stat">
@@ -1624,7 +1631,7 @@ function formatPakistanTime($datetime) {
                                             <div class="stat-label">Calories</div>
                                         </div>
                                     <?php endif; ?>
-                                    
+
                                     <?php if (!empty($exercise['sets'])): ?>
                                         <div class="stat-item">
                                             <div class="stat-icon cardio-stat">
@@ -1635,9 +1642,9 @@ function formatPakistanTime($datetime) {
                                         </div>
                                     <?php endif; ?>
                                 <?php endif; ?>
-                                
+
                                 <!-- If no stats available, show a message -->
-                                <?php 
+                                <?php
                                 $has_stats = false;
                                 $stat_fields = ['sets', 'reps', 'weight', 'duration', 'distance', 'calories'];
                                 foreach ($stat_fields as $field) {
@@ -1646,7 +1653,7 @@ function formatPakistanTime($datetime) {
                                         break;
                                     }
                                 }
-                                
+
                                 if (!$has_stats): ?>
                                     <div class="stat-item">
                                         <div class="stat-icon info-stat">
@@ -2220,4 +2227,5 @@ function formatPakistanTime($datetime) {
         }
     </script>
 </body>
+
 </html>
