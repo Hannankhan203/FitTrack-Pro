@@ -19,23 +19,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_custom_food'])) 
         $carbs = $_POST['carbs'] ?? 0;
         $fat = $_POST['fat'] ?? 0;
         $category = $_POST['category'] ?? 'custom';
-        
+
         // Check if food already exists for this user
         $checkStmt = $pdo->prepare("SELECT id FROM custom_foods WHERE user_id = ? AND food_name = ?");
         $checkStmt->execute([$user_id, $food_name]);
         $existing = $checkStmt->fetch();
-        
+
         if ($existing) {
             throw new Exception('This food already exists in your personal database');
         }
-        
+
         // Insert into custom_foods table
         $insertStmt = $pdo->prepare("INSERT INTO custom_foods (user_id, food_name, calories, protein, carbs, fat, category, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())");
         $insertStmt->execute([$user_id, $food_name, $calories, $protein, $carbs, $fat, $category]);
-        
+
         // Clear any output
         ob_end_clean();
-        
+
         // Send JSON response
         header('Content-Type: application/json');
         echo json_encode(['status' => 'success', 'message' => 'Custom food saved to your personal database!', 'id' => $pdo->lastInsertId()]);
@@ -52,23 +52,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_custom_food'])) 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_custom_food'])) {
     try {
         $food_id = $_POST['food_id'];
-        
+
         // Verify the food belongs to the current user
         $checkStmt = $pdo->prepare("SELECT id FROM custom_foods WHERE id = ? AND user_id = ?");
         $checkStmt->execute([$food_id, $user_id]);
         $food = $checkStmt->fetch();
-        
+
         if (!$food) {
             throw new Exception('Food not found or access denied');
         }
-        
+
         // Delete the food
         $deleteStmt = $pdo->prepare("DELETE FROM custom_foods WHERE id = ? AND user_id = ?");
         $deleteStmt->execute([$food_id, $user_id]);
-        
+
         // Clear any output
         ob_end_clean();
-        
+
         // Send JSON response
         header('Content-Type: application/json');
         echo json_encode(['status' => 'success', 'message' => 'Custom food deleted successfully!']);
@@ -87,7 +87,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['get_custom_foods'])) {
         $customFoodsStmt = $pdo->prepare("SELECT * FROM custom_foods WHERE user_id = ? ORDER BY food_name");
         $customFoodsStmt->execute([$user_id]);
         $customFoods = $customFoodsStmt->fetchAll(PDO::FETCH_ASSOC);
-        
+
         ob_end_clean();
         header('Content-Type: application/json');
         echo json_encode(['status' => 'success', 'foods' => $customFoods]);
@@ -3100,7 +3100,7 @@ foreach ($existingMeals as $meal) {
                 showNotification('Please enter a food name', 'error');
                 return;
             }
-            
+
             if (!calories || calories <= 0) {
                 showNotification('Please enter valid calories', 'error');
                 return;
@@ -3126,62 +3126,67 @@ foreach ($existingMeals as $meal) {
             formData.append('category', category);
 
             fetch('', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    // Close the modal
-                    const modal = bootstrap.Modal.getInstance(document.getElementById('customFoodModal'));
-                    modal.hide();
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        // Close the modal
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('customFoodModal'));
+                        modal.hide();
 
-                    // Reset form
-                    document.getElementById('customFoodForm').reset();
-                    document.getElementById('customCategory').value = 'custom';
+                        // Reset form
+                        document.getElementById('customFoodForm').reset();
+                        document.getElementById('customCategory').value = 'custom';
 
-                    // Save to localStorage for immediate access
-                    saveCustomFoodToLocalDB({
-                        title: displayName,
-                        nutrition: { calories, protein, carbs, fat },
-                        category: category,
-                        id: data.id // Save the database ID
-                    });
+                        // Save to localStorage for immediate access
+                        saveCustomFoodToLocalDB({
+                            title: displayName,
+                            nutrition: {
+                                calories,
+                                protein,
+                                carbs,
+                                fat
+                            },
+                            category: category,
+                            id: data.id // Save the database ID
+                        });
 
-                    // Show meal selection modal with the custom food
-                    showMealSelection(displayName, calories, protein, carbs, fat);
-                    
-                    showNotification('Custom food saved to your database!', 'success');
-                } else {
-                    showNotification(data.message, 'error');
+                        // Show meal selection modal with the custom food
+                        showMealSelection(displayName, calories, protein, carbs, fat);
+
+                        showNotification('Custom food saved to your database!', 'success');
+                    } else {
+                        showNotification(data.message, 'error');
+                        saveBtn.innerHTML = originalText;
+                        saveBtn.disabled = false;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showNotification('Error saving custom food: ' + error.message, 'error');
                     saveBtn.innerHTML = originalText;
                     saveBtn.disabled = false;
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showNotification('Error saving custom food: ' + error.message, 'error');
-                saveBtn.innerHTML = originalText;
-                saveBtn.disabled = false;
-            });
+                });
         }
 
         function saveCustomFoodToLocalDB(food) {
             // Save custom foods to localStorage for future use
             let customFoods = JSON.parse(localStorage.getItem('customFoods') || '[]');
-            
+
             // Check if food already exists
             const exists = customFoods.some(f => f.title === food.title);
             if (!exists) {
                 customFoods.push(food);
                 localStorage.setItem('customFoods', JSON.stringify(customFoods));
-                
+
                 // Add to in-memory database for current session
                 if (!pakistaniFoodDatabase.custom) {
                     pakistaniFoodDatabase.custom = [];
                 }
                 pakistaniFoodDatabase.custom.push(food);
-                
+
                 // Update category button if needed
                 updateCategoryButtons();
             }
@@ -3191,27 +3196,41 @@ foreach ($existingMeals as $meal) {
         function loadCustomFoods() {
             // First load from localStorage for immediate display
             const localCustomFoods = JSON.parse(localStorage.getItem('customFoods') || '[]');
-            
+
+            // Add localStorage foods to in-memory database
             if (localCustomFoods.length > 0) {
                 if (!pakistaniFoodDatabase.custom) {
                     pakistaniFoodDatabase.custom = [];
                 }
+
+                // Only add foods that don't already exist
                 localCustomFoods.forEach(food => {
-                    const exists = pakistaniFoodDatabase.custom.some(f => f.title === food.title);
+                    const exists = pakistaniFoodDatabase.custom.some(f =>
+                        f.title === food.title &&
+                        f.nutrition.calories === food.nutrition.calories
+                    );
                     if (!exists) {
                         pakistaniFoodDatabase.custom.push(food);
                     }
                 });
+
+                // Update category button
                 updateCategoryButtons();
+
+                // If custom category is active, refresh search results
+                if (currentCategory === 'custom') {
+                    displaySearchResults(pakistaniFoodDatabase.custom);
+                }
             }
-            
-            // Then load from database to sync
+
+            // Then load from database to sync (updates will happen in background)
             fetch('?get_custom_foods=1')
                 .then(response => response.json())
                 .then(data => {
                     if (data.status === 'success' && data.foods && data.foods.length > 0) {
                         let customFoods = JSON.parse(localStorage.getItem('customFoods') || '[]');
-                        
+                        let updated = false;
+
                         data.foods.forEach(food => {
                             const customFood = {
                                 title: food.food_name,
@@ -3224,29 +3243,46 @@ foreach ($existingMeals as $meal) {
                                 category: food.category || 'custom',
                                 id: food.id
                             };
-                            
+
                             // Add to in-memory database if not already there
                             if (!pakistaniFoodDatabase.custom) {
                                 pakistaniFoodDatabase.custom = [];
                             }
-                            
-                            const existsInMemory = pakistaniFoodDatabase.custom.some(f => f.title === customFood.title);
+
+                            const existsInMemory = pakistaniFoodDatabase.custom.some(f =>
+                                f.title === customFood.title &&
+                                f.nutrition.calories === customFood.nutrition.calories
+                            );
+
                             if (!existsInMemory) {
                                 pakistaniFoodDatabase.custom.push(customFood);
+                                updated = true;
                             }
-                            
+
                             // Check if exists in localStorage
-                            const existsInLocal = customFoods.some(f => f.title === customFood.title);
+                            const existsInLocal = customFoods.some(f =>
+                                f.title === customFood.title &&
+                                f.nutrition.calories === customFood.nutrition.calories
+                            );
+
                             if (!existsInLocal) {
                                 customFoods.push(customFood);
+                                updated = true;
                             }
                         });
-                        
-                        // Save updated list to localStorage
-                        localStorage.setItem('customFoods', JSON.stringify(customFoods));
-                        
-                        // Update category button
+
+                        // Save updated list to localStorage if changed
+                        if (updated) {
+                            localStorage.setItem('customFoods', JSON.stringify(customFoods));
+                        }
+
+                        // Update category button if needed
                         updateCategoryButtons();
+
+                        // Refresh search results if custom category is selected
+                        if (currentCategory === 'custom') {
+                            displaySearchResults(pakistaniFoodDatabase.custom);
+                        }
                     }
                 })
                 .catch(error => {
@@ -3256,22 +3292,29 @@ foreach ($existingMeals as $meal) {
         }
 
         function updateCategoryButtons() {
-            // Check if custom category button exists, if not add it
             const categoriesContainer = document.getElementById('foodCategories');
-            const customBtnExists = categoriesContainer.querySelector('[data-category="custom"]');
-            
-            if (!customBtnExists && pakistaniFoodDatabase.custom && pakistaniFoodDatabase.custom.length > 0) {
-                const customBtn = document.createElement('button');
+            let customBtn = categoriesContainer.querySelector('[data-category="custom"]');
+
+            // Check if we have custom foods
+            const hasCustomFoods = (pakistaniFoodDatabase.custom && pakistaniFoodDatabase.custom.length > 0) ||
+                (localStorage.getItem('customFoods') && JSON.parse(localStorage.getItem('customFoods')).length > 0);
+
+            if (!customBtn && hasCustomFoods) {
+                // Create custom category button
+                customBtn = document.createElement('button');
                 customBtn.className = 'food-category-btn';
                 customBtn.setAttribute('data-category', 'custom');
                 customBtn.innerHTML = '<i class="fas fa-user-edit me-1"></i>My Foods';
-                
+
                 customBtn.addEventListener('click', function(e) {
                     const category = this.getAttribute('data-category');
                     searchByCategory(category, e);
                 });
-                
+
                 categoriesContainer.appendChild(customBtn);
+            } else if (customBtn && !hasCustomFoods) {
+                // Remove custom category button if no custom foods
+                customBtn.remove();
             }
         }
 
@@ -3280,6 +3323,27 @@ foreach ($existingMeals as $meal) {
             if (category === 'all') {
                 return getAllFoods();
             }
+
+            // For custom category, make sure it exists
+            if (category === 'custom') {
+                if (!pakistaniFoodDatabase.custom) {
+                    pakistaniFoodDatabase.custom = [];
+                }
+                // Also check localStorage for any custom foods
+                const localCustomFoods = JSON.parse(localStorage.getItem('customFoods') || '[]');
+                if (localCustomFoods.length > 0 && pakistaniFoodDatabase.custom.length === 0) {
+                    localCustomFoods.forEach(food => {
+                        const exists = pakistaniFoodDatabase.custom.some(f =>
+                            f.title === food.title &&
+                            f.nutrition.calories === food.nutrition.calories
+                        );
+                        if (!exists) {
+                            pakistaniFoodDatabase.custom.push(food);
+                        }
+                    });
+                }
+            }
+
             return pakistaniFoodDatabase[category] || [];
         }
 
@@ -3389,29 +3453,57 @@ foreach ($existingMeals as $meal) {
         function searchByCategory(category, event) {
             currentCategory = category;
 
-            // Update active button
+            // Update the category button activation
             document.querySelectorAll('.food-category-btn').forEach(btn => {
                 btn.classList.remove('active');
             });
 
-            // Find and activate the clicked button
             if (event) {
                 event.target.classList.add('active');
             } else {
-                // If called without event (e.g., from code), find button by data-category
                 const button = document.querySelector(`.food-category-btn[data-category="${category}"]`);
                 if (button) {
                     button.classList.add('active');
                 }
             }
 
-            // Search with current query
+            // If custom category doesn't exist in database yet, create it
+            if (category === 'custom' && !pakistaniFoodDatabase.custom) {
+                pakistaniFoodDatabase.custom = [];
+            }
+
+            // Load custom foods if selecting custom category
+            if (category === 'custom') {
+                // Ensure custom foods are loaded
+                if (!pakistaniFoodDatabase.custom || pakistaniFoodDatabase.custom.length === 0) {
+                    loadCustomFoods();
+                }
+            }
+
+            // Search with current query or show all foods in category
             const query = document.getElementById('foodSearch').value.trim();
             if (query) {
                 searchFood();
             } else {
                 // If no query, show all foods in category
-                displaySearchResults(getFoodsByCategory(category));
+                const foods = getFoodsByCategory(category);
+                if (foods && foods.length > 0) {
+                    displaySearchResults(foods);
+                } else if (category === 'custom') {
+                    // Show empty state for custom foods
+                    const results = document.getElementById('searchResults');
+                    results.style.display = 'block';
+                    results.innerHTML = `
+            <div class="text-center p-3">
+                <div class="mb-2"><i class="fas fa-user-edit fa-lg text-muted"></i></div>
+                <div class="text-muted">No custom foods yet</div>
+                <div class="text-muted small mt-1">Click "Add Custom" to create your first food</div>
+                <button class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#customFoodModal">
+                    <i class="fas fa-plus-circle me-2"></i>Add Custom Food
+                </button>
+            </div>
+        `;
+                }
             }
         }
 
@@ -4193,4 +4285,5 @@ foreach ($existingMeals as $meal) {
         }
     </script>
 </body>
+
 </html>
