@@ -2780,6 +2780,51 @@ foreach ($existingMeals as $meal) {
                     }
                 },
                 {
+                    title: "Tea with Gur (Jaggery, 1 cup)",
+                    nutrition: {
+                        calories: 80,
+                        protein: 2,
+                        carbs: 18,
+                        fat: 1
+                    }
+                },
+                {
+                    title: "Tea with Sugar (1 cup)",
+                    nutrition: {
+                        calories: 70,
+                        protein: 2,
+                        carbs: 16,
+                        fat: 1
+                    }
+                },
+                {
+                    title: "Tea with Powdered Milk (1 cup)",
+                    nutrition: {
+                        calories: 90,
+                        protein: 3,
+                        carbs: 12,
+                        fat: 3
+                    }
+                },
+                {
+                    title: "Tea with Gur & Powdered Milk (1 cup)",
+                    nutrition: {
+                        calories: 110,
+                        protein: 4,
+                        carbs: 20,
+                        fat: 3
+                    }
+                },
+                {
+                    title: "Tea with Sugar & Powdered Milk (1 cup)",
+                    nutrition: {
+                        calories: 100,
+                        protein: 4,
+                        carbs: 18,
+                        fat: 3
+                    }
+                },
+                {
                     title: "Chocolate Tea (1 cup)",
                     nutrition: {
                         calories: 180,
