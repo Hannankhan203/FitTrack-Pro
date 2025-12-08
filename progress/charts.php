@@ -126,7 +126,7 @@ try {
     $weeklyWorkouts = ['count' => 0];
 }
 
-// Goal progress
+// Goal progress - COMPLETELY FIXED VERSION
 try {
     $stmt = $pdo->prepare("SELECT goal_weight, goal_type, weight FROM users WHERE id = ?");
     $stmt->execute([$user_id]);
@@ -137,24 +137,59 @@ try {
 }
 
 $goal_progress = 0;
-if ($goal_info && $goal_info['goal_weight'] && $goal_info['weight']) {
+
+// First, check if user has a goal weight set
+if ($goal_info && $goal_info['goal_weight'] > 0) {
+    // Get starting weight: use the first entry from progress table if available
+    $starting_weight = $goal_info['weight']; // Default to weight in users table
+    
+    // Try to get the first weight entry from progress table
+    try {
+        $stmt = $pdo->prepare("SELECT weight FROM progress WHERE user_id = ? ORDER BY created_at ASC, date ASC LIMIT 1");
+        $stmt->execute([$user_id]);
+        $firstWeight = $stmt->fetch();
+        if ($firstWeight && $firstWeight['weight'] > 0) {
+            $starting_weight = $firstWeight['weight'];
+        }
+    } catch (PDOException $e) {
+        // If no progress entries or error, use weight from users table
+        error_log("Error fetching first weight: " . $e->getMessage());
+    }
+    
+    // Get current weight - prefer from progress table (most recent), fallback to users table weight
+    $currentWeight = $current_weight ?: $goal_info['weight'];
+    
     if ($goal_info['goal_type'] == 'lose') {
-        if ($goal_info['weight'] > $goal_info['goal_weight']) {
-            $total_to_lose = $goal_info['weight'] - $goal_info['goal_weight'];
-            $currentWeight = $current_weight ?: $goal_info['weight'];
-            $current_lost = $goal_info['weight'] - $currentWeight;
-            $goal_progress = min(100, max(0, ($current_lost / $total_to_lose) * 100));
+        // For weight loss: starting weight should be higher than goal weight
+        if ($starting_weight > $goal_info['goal_weight']) {
+            $total_to_lose = $starting_weight - $goal_info['goal_weight'];
+            $current_lost = $starting_weight - $currentWeight;
+            
+            // Calculate progress, ensure it's between 0-100%
+            if ($total_to_lose > 0) {
+                $goal_progress = ($current_lost / $total_to_lose) * 100;
+                $goal_progress = min(100, max(0, $goal_progress));
+            }
         }
     } elseif ($goal_info['goal_type'] == 'gain') {
-        if ($goal_info['weight'] < $goal_info['goal_weight']) {
-            $total_to_gain = $goal_info['goal_weight'] - $goal_info['weight'];
-            $currentWeight = $current_weight ?: $goal_info['weight'];
-            $current_gain = $currentWeight - $goal_info['weight'];
-            $goal_progress = min(100, max(0, ($current_gain / $total_to_gain) * 100));
+        // For weight gain: starting weight should be lower than goal weight
+        if ($starting_weight < $goal_info['goal_weight']) {
+            $total_to_gain = $goal_info['goal_weight'] - $starting_weight;
+            $current_gain = $currentWeight - $starting_weight;
+            
+            // Calculate progress, ensure it's between 0-100%
+            if ($total_to_gain > 0) {
+                $goal_progress = ($current_gain / $total_to_gain) * 100;
+                $goal_progress = min(100, max(0, $goal_progress));
+            }
         }
     } else {
+        // Maintenance goal - always 100%
         $goal_progress = 100;
     }
+    
+    // Round for display
+    $goal_progress = round($goal_progress);
 }
 ?>
 
@@ -1404,15 +1439,36 @@ if ($goal_info && $goal_info['goal_weight'] && $goal_info['weight']) {
                 </div>
 
                 <div class="col-md-3 col-sm-6 mb-4">
-                    <div class="stats-card">
-                        <div class="stats-icon">
-                            <i class="fas fa-bullseye"></i>
-                        </div>
-                        <div class="stats-value"><?= round($goal_progress) ?>%</div>
-                        <div class="stats-label">Goal Progress</div>
-                        <div class="stats-subtitle"><?= isset($goal_info['goal_type']) ? ucfirst($goal_info['goal_type']) . ' weight' : 'No goal set' ?></div>
-                    </div>
-                </div>
+    <div class="stats-card">
+        <div class="stats-icon">
+            <i class="fas fa-bullseye"></i>
+        </div>
+        <div class="stats-value"><?= $goal_progress ?>%</div>
+        <div class="stats-label">Goal Progress</div>
+        <div class="stats-subtitle">
+            <?php
+            if ($goal_info && $goal_info['goal_weight'] > 0) {
+                echo ucfirst($goal_info['goal_type']) . ' to ' . $goal_info['goal_weight'] . 'kg';
+            } else {
+                echo 'No goal set';
+            }
+            ?>
+        </div>
+        <?php if ($goal_info && $goal_info['goal_weight'] > 0): ?>
+            <div class="small text-muted mt-2">
+                <?php
+                if ($goal_info['goal_type'] == 'lose') {
+                    $remaining = max(0, ($current_weight ?: $goal_info['weight']) - $goal_info['goal_weight']);
+                    echo number_format($remaining, 1) . "kg to go";
+                } elseif ($goal_info['goal_type'] == 'gain') {
+                    $remaining = max(0, $goal_info['goal_weight'] - ($current_weight ?: $goal_info['weight']));
+                    echo number_format($remaining, 1) . "kg to go";
+                }
+                ?>
+            </div>
+        <?php endif; ?>
+    </div>
+</div>
             </div>
         </div>
 

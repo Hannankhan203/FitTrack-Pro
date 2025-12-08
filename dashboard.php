@@ -184,37 +184,109 @@ try {
     error_log("Database error (meal stats): " . $e->getMessage());
 }
 
-// ==================== GOAL INFO ====================
+// ==================== GOAL INFO - COMPLETELY FIXED ====================
 try {
+    // Get user's goal info
     $stmt = $pdo->prepare("SELECT goal_weight, goal_type, weight FROM users WHERE id = ?");
     $stmt->execute([$user_id]);
     $goal_info = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    // Calculate goal progress
+    // Initialize variables
     $goal_progress = 0;
-    if (
-        $goal_info && isset($goal_info['goal_weight']) && isset($goal_info['weight']) &&
-        $goal_info['goal_weight'] && $goal_info['weight']
-    ) {
+    $starting_weight = 0;
+    $current_weight = 0;
 
-        if ($goal_info['goal_type'] == 'lose') {
-            if ($goal_info['weight'] > $goal_info['goal_weight']) {
-                $total_to_lose = $goal_info['weight'] - $goal_info['goal_weight'];
-                $current_lost = isset($goal_info['current_lost']) ? $goal_info['current_lost'] : 0;
-                $goal_progress = min(100, ($current_lost / $total_to_lose) * 100);
+    if ($goal_info && isset($goal_info['goal_weight']) && $goal_info['goal_weight'] > 0) {
+
+        // 1. Get STARTING weight: Try to get FIRST weight from progress table
+        try {
+            $stmt = $pdo->prepare("SELECT weight FROM progress WHERE user_id = ? ORDER BY created_at ASC, date ASC LIMIT 1");
+            $stmt->execute([$user_id]);
+            $firstWeight = $stmt->fetch();
+            if ($firstWeight && $firstWeight['weight'] > 0) {
+                $starting_weight = $firstWeight['weight'];
+            } else {
+                // If no progress entries, use weight from users table as starting weight
+                $starting_weight = $goal_info['weight'] ?? 0;
             }
-        } elseif ($goal_info['goal_type'] == 'gain') {
-            if ($goal_info['weight'] < $goal_info['goal_weight']) {
-                $total_to_gain = $goal_info['goal_weight'] - $goal_info['weight'];
-                $current_gain = isset($goal_info['current_gain']) ? $goal_info['current_gain'] : 0;
-                $goal_progress = min(100, ($current_gain / $total_to_gain) * 100);
+        } catch (PDOException $e) {
+            error_log("Error fetching first weight: " . $e->getMessage());
+            $starting_weight = $goal_info['weight'] ?? 0;
+        }
+
+        // 2. Get CURRENT weight: Try to get LATEST weight from progress table
+        try {
+            $stmt = $pdo->prepare("SELECT weight FROM progress WHERE user_id = ? ORDER BY created_at DESC, date DESC LIMIT 1");
+            $stmt->execute([$user_id]);
+            $latestWeight = $stmt->fetch();
+            if ($latestWeight && $latestWeight['weight'] > 0) {
+                $current_weight = $latestWeight['weight'];
+            } else {
+                // If no progress entries, use starting weight as current weight
+                $current_weight = $starting_weight;
+            }
+        } catch (PDOException $e) {
+            error_log("Error fetching latest weight: " . $e->getMessage());
+            $current_weight = $starting_weight;
+        }
+
+        // 3. Calculate progress
+        $goal_weight = $goal_info['goal_weight'];
+        $goal_type = $goal_info['goal_type'] ?? 'maintain';
+
+        // Debug output - uncomment to see what's happening
+        /*
+        echo "<div style='background:#222;color:white;padding:10px;margin:10px;border:2px solid red;'>";
+        echo "DEBUG - Goal Progress Calculation:<br>";
+        echo "Starting Weight: " . $starting_weight . " kg<br>";
+        echo "Current Weight: " . $current_weight . " kg<br>";
+        echo "Goal Weight: " . $goal_weight . " kg<br>";
+        echo "Goal Type: " . $goal_type . "<br>";
+        */
+
+        if ($goal_type == 'lose') {
+            if ($starting_weight > $goal_weight && $starting_weight > 0) {
+                $total_to_lose = $starting_weight - $goal_weight;
+                $current_lost = $starting_weight - $current_weight;
+
+                // Debug
+                // echo "Total to lose: " . $total_to_lose . " kg<br>";
+                // echo "Current lost: " . $current_lost . " kg<br>";
+
+                if ($total_to_lose > 0) {
+                    $goal_progress = ($current_lost / $total_to_lose) * 100;
+                    $goal_progress = min(100, max(0, $goal_progress));
+                }
+            }
+        } elseif ($goal_type == 'gain') {
+            if ($starting_weight < $goal_weight && $starting_weight > 0) {
+                $total_to_gain = $goal_weight - $starting_weight;
+                $current_gain = $current_weight - $starting_weight;
+
+                if ($total_to_gain > 0) {
+                    $goal_progress = ($current_gain / $total_to_gain) * 100;
+                    $goal_progress = min(100, max(0, $goal_progress));
+                }
             }
         } else {
+            // Maintenance goal
             $goal_progress = 100;
         }
+
+        // Debug
+        // echo "Progress: " . round($goal_progress) . "%<br>";
+        // echo "</div>";
+
+        // Round for display
+        $goal_progress = round($goal_progress);
+
+        // Add weights to goal_info for display
+        $goal_info['starting_weight'] = $starting_weight;
+        $goal_info['current_weight'] = $current_weight;
     }
 } catch (PDOException $e) {
     error_log("Database error (goal info): " . $e->getMessage());
+    $goal_info = false;
 }
 
 // ==================== STREAK CALCULATION ====================
@@ -2076,7 +2148,7 @@ function formatPakistanTime($datetime)
 
                         <div class="progress-title">
                             <span>Progress</span>
-                            <span class="fw-bold text-success"><?= round($goal_progress) ?>%</span>
+                            <span class="fw-bold text-success"><?= $goal_progress ?>%</span>
                         </div>
 
                         <div class="progress-bar-custom">
@@ -2085,15 +2157,27 @@ function formatPakistanTime($datetime)
 
                         <div class="goal-stats">
                             <div class="goal-stat">
-                                <div class="goal-value"><?= htmlspecialchars($goal_info['weight']) ?> kg</div>
+                                <div class="goal-value"><?= htmlspecialchars($goal_info['current_weight'] ?? $goal_info['weight'] ?? 0) ?> kg</div>
                                 <div class="goal-label">Current</div>
                             </div>
                             <div class="goal-stat">
-                                <div class="goal-value"><?= htmlspecialchars($goal_info['goal_weight']) ?> kg</div>
+                                <div class="goal-value"><?= htmlspecialchars($goal_info['goal_weight'] ?? 0) ?> kg</div>
                                 <div class="goal-label">Target</div>
                             </div>
                             <div class="goal-stat">
-                                <div class="goal-value"><?= abs($goal_info['weight'] - $goal_info['goal_weight']) ?> kg</div>
+                                <div class="goal-value">
+                                    <?php
+                                    $remaining = 0;
+                                    if (isset($goal_info['goal_type'])) {
+                                        if ($goal_info['goal_type'] == 'lose') {
+                                            $remaining = max(0, ($goal_info['current_weight'] ?? $goal_info['weight'] ?? 0) - $goal_info['goal_weight']);
+                                        } elseif ($goal_info['goal_type'] == 'gain') {
+                                            $remaining = max(0, $goal_info['goal_weight'] - ($goal_info['current_weight'] ?? $goal_info['weight'] ?? 0));
+                                        }
+                                    }
+                                    echo htmlspecialchars($remaining);
+                                    ?> kg
+                                </div>
                                 <div class="goal-label">Remaining</div>
                             </div>
                         </div>

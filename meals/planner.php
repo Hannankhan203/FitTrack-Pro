@@ -2526,6 +2526,51 @@ foreach ($existingMeals as $meal) {
                     }
                 },
                 {
+                    title: "Shami Kabab Cutlet (1 piece)",
+                    nutrition: {
+                        calories: 120,
+                        protein: 8,
+                        carbs: 6,
+                        fat: 7
+                    }
+                },
+                {
+                    title: "Aloo (Potato) Cutlet (1 piece)",
+                    nutrition: {
+                        calories: 100,
+                        protein: 2,
+                        carbs: 15,
+                        fat: 4
+                    }
+                },
+                {
+                    title: "Chicken Cutlet (1 piece)",
+                    nutrition: {
+                        calories: 150,
+                        protein: 12,
+                        carbs: 8,
+                        fat: 8
+                    }
+                },
+                {
+                    title: "Beef Cutlet (1 piece)",
+                    nutrition: {
+                        calories: 160,
+                        protein: 10,
+                        carbs: 8,
+                        fat: 10
+                    }
+                },
+                {
+                    title: "Chicken Aloo Cutlet (1 piece)",
+                    nutrition: {
+                        calories: 130,
+                        protein: 10,
+                        carbs: 12,
+                        fat: 6
+                    }
+                },
+                {
                     title: "Whole Wheat Roti (1 piece)",
                     nutrition: {
                         calories: 110,
@@ -2653,6 +2698,33 @@ foreach ($existingMeals as $meal) {
                     }
                 },
                 {
+                    title: "Homemade Chicken Burger (1 burger)",
+                    nutrition: {
+                        calories: 320,
+                        protein: 28,
+                        carbs: 30,
+                        fat: 12
+                    }
+                },
+                {
+                    title: "Homemade Chicken Burger with Whole Wheat Bun",
+                    nutrition: {
+                        calories: 350,
+                        protein: 30,
+                        carbs: 35,
+                        fat: 12
+                    }
+                },
+                {
+                    title: "Homemade Chicken Patty Only (grilled)",
+                    nutrition: {
+                        calories: 180,
+                        protein: 25,
+                        carbs: 5,
+                        fat: 7
+                    }
+                },
+                {
                     title: "Chicken Burger (Regular)",
                     nutrition: {
                         calories: 450,
@@ -2749,6 +2821,24 @@ foreach ($existingMeals as $meal) {
                         protein: 6.5,
                         carbs: 35,
                         fat: 20
+                    }
+                },
+                {
+                    title: "Homemade Fries (Pan Fried, 1 serving)",
+                    nutrition: {
+                        calories: 220,
+                        protein: 3,
+                        carbs: 30,
+                        fat: 10
+                    }
+                },
+                {
+                    title: "Homemade Fries (Air Fried, 1 serving)",
+                    nutrition: {
+                        calories: 150,
+                        protein: 3,
+                        carbs: 30,
+                        fat: 3
                     }
                 },
                 {
@@ -3068,6 +3158,33 @@ foreach ($existingMeals as $meal) {
                         protein: 4,
                         carbs: 45,
                         fat: 13
+                    }
+                },
+                {
+                    title: "Toasted White Bread (1 slice)",
+                    nutrition: {
+                        calories: 85,
+                        protein: 3,
+                        carbs: 16,
+                        fat: 1
+                    }
+                },
+                {
+                    title: "Toasted White Bread (2 slices)",
+                    nutrition: {
+                        calories: 170,
+                        protein: 6,
+                        carbs: 32,
+                        fat: 2
+                    }
+                },
+                {
+                    title: "Toasted White Bread with Butter (1 slice)",
+                    nutrition: {
+                        calories: 120,
+                        protein: 3,
+                        carbs: 16,
+                        fat: 5
                     }
                 },
                 {
