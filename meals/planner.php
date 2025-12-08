@@ -2562,6 +2562,24 @@ foreach ($existingMeals as $meal) {
                     }
                 },
                 {
+                    title: "Lacha Murgh (Spicy Shredded Chicken, 1 plate)",
+                    nutrition: {
+                        calories: 320,
+                        protein: 38,
+                        carbs: 10,
+                        fat: 15
+                    }
+                },
+                {
+                    title: "Lacha Chicken (Shredded Chicken, 1 serving)",
+                    nutrition: {
+                        calories: 280,
+                        protein: 35,
+                        carbs: 8,
+                        fat: 12
+                    }
+                },
+                {
                     title: "Chicken Aloo Cutlet (1 piece)",
                     nutrition: {
                         calories: 130,
@@ -3011,6 +3029,24 @@ foreach ($existingMeals as $meal) {
                         protein: 8,
                         carbs: 30,
                         fat: 6
+                    }
+                },
+                {
+                    title: "Mirinda (330ml can)",
+                    nutrition: {
+                        calories: 140,
+                        protein: 0,
+                        carbs: 36,
+                        fat: 0
+                    }
+                },
+                {
+                    title: "Mirinda (250ml bottle)",
+                    nutrition: {
+                        calories: 105,
+                        protein: 0,
+                        carbs: 27,
+                        fat: 0
                     }
                 },
                 {

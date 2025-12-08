@@ -1690,17 +1690,84 @@ function formatPakistanTime($datetime)
                         $exercise_name = htmlspecialchars($exercise['exercise'] ?? 'Unnamed Exercise');
                         $exercise_name_lower = strtolower($exercise_name);
 
-                        // Determine if it's cardio or strength
-                        $is_cardio = false;
-                        $cardio_keywords = ['run', 'jog', 'cycle', 'swim', 'walk', 'row', 'elliptical', 'stair', 'jump', 'burpee', 'sprint', 'bike'];
+// Determine if it's cardio or strength
+$is_cardio = false;
+$cardio_keywords = ['run', 'jog', 'cycle', 'swim', 'walk', 'elliptical', 'stair', 'jump', 'burpee', 'sprint', 'bike'];
 
-                        foreach ($cardio_keywords as $keyword) {
-                            if (strpos($exercise_name_lower, $keyword) !== false) {
-                                $is_cardio = true;
-                                break;
-                            }
-                        }
+// Strength exercise patterns that contain "row" but are NOT cardio
+$strength_exercises_with_row = [
+    'bent over row',
+    'seated row',
+    'cable row',
+    't-bar row',
+    'inverted row',
+    'single-arm row',
+    'dumbbell row',
+    'barbell row',
+    'pendlay row',
+    'meadows row',
+    'yates row'
+];
 
+// Check if it's a strength exercise with "row" in the name
+$is_strength_row = false;
+foreach ($strength_exercises_with_row as $strength_row) {
+    if (strpos($exercise_name_lower, $strength_row) !== false) {
+        $is_strength_row = true;
+        break;
+    }
+}
+
+// Only classify as cardio if it contains cardio keywords AND is not a strength row exercise
+if (!$is_strength_row) {
+    foreach ($cardio_keywords as $keyword) {
+        // Special case: "row" should only be cardio if it's specifically about rowing machines
+        // or appears at the end of words like "rowing"
+        if ($keyword === 'row') {
+            // Check if it's specifically about rowing (cardio machine)
+            if (strpos($exercise_name_lower, 'rowing') !== false || 
+                strpos($exercise_name_lower, 'rower') !== false ||
+                strpos($exercise_name_lower, 'row machine') !== false) {
+                $is_cardio = true;
+                break;
+            }
+            // For standalone "row", be more specific
+            if (preg_match('/\brow\b/', $exercise_name_lower) && 
+                !strpos($exercise_name_lower, 'dumbbell') &&
+                !strpos($exercise_name_lower, 'barbell') &&
+                !strpos($exercise_name_lower, 'cable') &&
+                !strpos($exercise_name_lower, 't-bar')) {
+                $is_cardio = true;
+                break;
+            }
+        } else {
+            // For other cardio keywords
+            if (strpos($exercise_name_lower, $keyword) !== false) {
+                $is_cardio = true;
+                break;
+            }
+        }
+    }
+}
+
+// Additional check: if it contains weight-related terms, it's likely strength
+$weight_keywords = ['dumbbell', 'barbell', 'kettlebell', 'weight', 'press', 'curl', 'extension', 'raise', 'fly', 'pull', 'push', 'squat', 'deadlift', 'lunge', 'pull-up', 'chin-up', 'dip', 'crunch'];
+$has_weight_term = false;
+foreach ($weight_keywords as $keyword) {
+    if (strpos($exercise_name_lower, $keyword) !== false) {
+        $has_weight_term = true;
+        break;
+    }
+}
+
+// If it has weight terms and doesn't specifically contain cardio machine names, it's strength
+if ($has_weight_term && !$is_cardio) {
+    $is_cardio = false;
+}
+
+$category = $is_cardio ? 'Cardio' : 'Strength';
+$category_color = $is_cardio ? '#ff006e' : '#3a86ff';
+$category_bg = $is_cardio ? 'rgba(255, 0, 110, 0.1)' : 'rgba(58, 134, 255, 0.1)';
                         $category = $is_cardio ? 'Cardio' : 'Strength';
                         $category_color = $is_cardio ? '#ff006e' : '#3a86ff';
                         $category_bg = $is_cardio ? 'rgba(255, 0, 110, 0.1)' : 'rgba(58, 134, 255, 0.1)';
