@@ -2,10 +2,16 @@
 // Start output buffering to catch any stray output
 ob_start();
 
+// ==================== PAKISTAN ISLAMABAD TIMEZONE ====================
+// Set timezone to Pakistan (Islamabad) - UTC+5
+date_default_timezone_set('Asia/Karachi');
+
 require '../includes/functions.php';
 require_login();
 
 $today = date('Y-m-d');
+$display_date = date('l, F j, Y');  // Format: Monday, January 15, 2024
+$display_time = date('g:i A');      // Format: 2:30 PM
 
 require '../includes/db.php';
 $user_id = get_user_id();
@@ -425,19 +431,28 @@ foreach ($existingMeals as $meal) {
         }
 
         .date-display {
-            display: inline-flex;
+            display: flex;
             align-items: center;
             gap: 1rem;
             color: rgba(255, 255, 255, 0.9);
             font-size: 1.1rem;
-            background: rgba(255, 255, 255, 0.1);
-            padding: 0.8rem 1.8rem;
-            border-radius: 25px;
-            font-weight: 600;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
         }
 
         .date-display i {
             color: var(--accent);
+        }
+
+        .date-time-badge {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0.8rem 1.8rem;
+            border-radius: 25px;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+            margin-top: 1rem;
         }
 
         /* Stats Cards */
@@ -1826,7 +1841,10 @@ foreach ($existingMeals as $meal) {
             <p>Track your nutrition and calories for optimal fitness results</p>
             <div class="date-display">
                 <i class="fas fa-calendar-alt"></i>
-                <span><?php echo date('F j, Y'); ?></span>
+                <span id="current-date"><?= htmlspecialchars($display_date) ?></span>
+                <i class="fas fa-clock ms-3"></i>
+                <span id="current-time"><?= htmlspecialchars($display_time) ?></span>
+                <span class="ms-2 small">PKT (Islamabad)</span>
             </div>
         </div>
 
@@ -3609,7 +3627,44 @@ foreach ($existingMeals as $meal) {
                     }
                 }
             });
+
+            // Initialize Pakistan time display
+            updatePakistanTime();
+            setInterval(updatePakistanTime, 60000); // Update every minute
         });
+
+        // Function to update Pakistan time display
+        function updatePakistanTime() {
+            const now = new Date();
+
+            // Get current time in UTC
+            const utcTime = now.getTime() + (now.getTimezoneOffset() * 60000);
+
+            // Pakistan is UTC+5
+            const pakistanOffset = 5 * 60; // 5 hours in minutes
+            const pakistanTime = new Date(utcTime + (pakistanOffset * 60000));
+
+            // Format date
+            const optionsDate = {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            };
+            const dateStr = pakistanTime.toLocaleDateString('en-US', optionsDate);
+
+            // Format time
+            let hours = pakistanTime.getHours();
+            const minutes = pakistanTime.getMinutes().toString().padStart(2, '0');
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12;
+            hours = hours ? hours : 12; // the hour '0' should be '12'
+            const timeStr = hours + ':' + minutes + ' ' + ampm;
+
+            // Update display
+            document.getElementById('current-date').textContent = dateStr;
+            document.getElementById('current-time').textContent = timeStr;
+        }
 
         // Search by category
         function searchByCategory(category, event) {

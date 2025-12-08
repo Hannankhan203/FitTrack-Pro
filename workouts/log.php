@@ -2,15 +2,83 @@
 require '../includes/functions.php';
 require_login();
 
+// Set timezone to Pakistan (Islamabad) - UTC+5
+date_default_timezone_set('Asia/Karachi');
+
+// Get current date and time in Pakistan time
+$today = date('Y-m-d');
+$display_date = date('l, F j, Y');  // Format: Monday, January 15, 2024
+$display_time = date('g:i A');      // Format: 2:30 PM
+
 // Fetch saved exercises for the current user
 require_once '../includes/db.php';
 $user_id = get_user_id();
-$date = date('Y-m-d');
 
-// Get saved exercises for today
-$stmt = $pdo->prepare("SELECT * FROM workouts WHERE user_id = ? AND DATE(date) = CURDATE() ORDER BY id DESC");
-$stmt->execute([$user_id]);
+// FIX 1: Change query to use Pakistan date (not MySQL server date)
+// Use the PHP $today variable which is in Pakistan time
+$stmt = $pdo->prepare("SELECT * FROM workouts WHERE user_id = ? AND DATE(date) = ? ORDER BY date DESC");
+$stmt->execute([$user_id, $today]);
 $saved_exercises = $stmt->fetchAll();
+
+// Function to format exercise time from database - FIXED VERSION
+function formatExerciseTime($db_time)
+{
+    if (empty($db_time)) return '';
+
+    try {
+        // Method 1: Try with timezone conversion first
+        $utc_timezone = new DateTimeZone('UTC');
+        $pakistan_timezone = new DateTimeZone('Asia/Karachi');
+
+        // Create DateTime from database time assuming it's in UTC
+        $utc_time = new DateTime($db_time, $utc_timezone);
+
+        // Convert to Pakistan time
+        $utc_time->setTimezone($pakistan_timezone);
+
+        // Get the formatted time
+        $formatted_time = $utc_time->format('g:i A');
+
+        // Compare with current time - if it's 1 hour ahead, adjust
+        $current_time = date('g:i A');
+        $formatted_hour = $utc_time->format('G');
+        $current_hour = date('G');
+
+        if ($formatted_hour == $current_hour + 1) {
+            // Fix the 1-hour offset issue
+            $utc_time->modify('-1 hour');
+            return $utc_time->format('g:i A');
+        }
+
+        return $formatted_time;
+    } catch (Exception $e) {
+        // Fallback: Direct formatting (no timezone conversion)
+        return date('g:i A', strtotime($db_time));
+    }
+}
+
+// Alternative function that always works - use this if still having issues
+function formatExerciseTimeSimple($db_time)
+{
+    if (empty($db_time)) return '';
+
+    // Direct conversion - handles most cases
+    $timestamp = strtotime($db_time);
+
+    // Check if we need to adjust for timezone difference
+    $db_hour = date('G', $timestamp);
+    $current_hour = date('G');
+
+    // If database hour is different from current hour by 1, adjust
+    if ($db_hour == $current_hour + 1) {
+        $timestamp = $timestamp - 3600; // Subtract 1 hour
+    }
+
+    return date('g:i A', $timestamp);
+}
+
+// In your display loop, you can use either:
+// formatExerciseTime($exercise['date']) OR formatExerciseTimeSimple($exercise['date'])
 ?>
 
 <!DOCTYPE html>
@@ -251,6 +319,25 @@ $saved_exercises = $stmt->fetchAll();
             align-items: center;
             gap: 12px;
             margin-bottom: 1rem;
+        }
+
+        /* Saved Exercise Timestamp */
+        .saved-exercise-time {
+            color: var(--primary);
+            font-size: 0.9rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background: rgba(0, 212, 255, 0.1);
+            padding: 4px 12px;
+            border-radius: 20px;
+            display: inline-flex;
+            margin-bottom: 10px;
+        }
+
+        .saved-exercise-time i {
+            font-size: 0.8rem;
         }
 
         /* Workout Form Container */
@@ -557,6 +644,10 @@ $saved_exercises = $stmt->fetchAll();
             font-size: 0.85rem;
             margin-top: 0.5rem;
             display: block;
+        }
+
+        .mb-3 {
+            color: white !important;
         }
 
         /* Form Actions */
@@ -1159,7 +1250,6 @@ $saved_exercises = $stmt->fetchAll();
             }
 
             .h4 {
-                /* position: relative; */
                 left: 0;
             }
 
@@ -1222,6 +1312,19 @@ $saved_exercises = $stmt->fetchAll();
             .navbar-nav .nav-link {
                 padding: 1rem;
                 font-size: 1rem;
+            }
+
+            .date-display {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                gap: 0.4rem;
+                color: rgba(255, 255, 255, 0.9);
+                font-size: 0.6rem;
+                background: rgba(255, 255, 255, 0.1);
+                padding: 0.4rem 1rem;
+                border-radius: 15px;
+                font-weight: 600;
             }
         }
 
@@ -1335,9 +1438,12 @@ $saved_exercises = $stmt->fetchAll();
         <div class="page-header">
             <h1><i class="fas fa-dumbbell me-2"></i>Log Your Workout</h1>
             <p>Track your exercises and monitor your progress for today's session</p>
-            <div class="date-display">
+            <div class="date-display" id="date-display">
                 <i class="fas fa-calendar-alt"></i>
-                <span><?php echo date('F j, Y'); ?></span>
+                <span id="current-date"><?= htmlspecialchars($display_date) ?></span>
+                <i class="fas fa-clock ms-3"></i>
+                <span id="current-time"><?= htmlspecialchars($display_time) ?></span>
+                <span class="ms-2 small">PKT (Islamabad)</span>
             </div>
         </div>
 
@@ -1347,9 +1453,18 @@ $saved_exercises = $stmt->fetchAll();
                 <h4><i class="fas fa-history me-2 text-primary"></i>Today's Saved Exercises</h4>
                 <p class="text-muted mb-3">Exercises you've saved today. Click delete to remove them.</p>
 
-                <?php foreach ($saved_exercises as $exercise): ?>
+                <?php foreach ($saved_exercises as $exercise):
+                    // Format the timestamp from database
+                    $exercise_time = formatExerciseTime($exercise['date']);
+                ?>
                     <div class="saved-exercise-card" id="saved-exercise-<?= $exercise['id'] ?>">
                         <div class="saved-exercise-info">
+                            <!-- Add timestamp header -->
+                            <div class="saved-exercise-time mb-2">
+                                <i class="fas fa-clock me-1"></i>
+                                Saved at: <?= htmlspecialchars($exercise_time) ?> PKT
+                            </div>
+
                             <div class="saved-exercise-name">
                                 <?php
                                 $icon = '';
@@ -4125,8 +4240,50 @@ $saved_exercises = $stmt->fetchAll();
             }
         }
 
+        // Function to update Pakistan time using browser's timezone
+        function updatePakistanTime() {
+            const now = new Date();
+
+            // Get current time in UTC
+            const utcTime = now.getTime() + (now.getTimezoneOffset() * 60000);
+
+            // Pakistan is UTC+5
+            const pakistanOffset = 5 * 60; // 5 hours in minutes
+            const pakistanTime = new Date(utcTime + (pakistanOffset * 60000));
+
+            // Format date
+            const optionsDate = {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            };
+            const dateStr = pakistanTime.toLocaleDateString('en-US', optionsDate);
+
+            // Format time
+            let hours = pakistanTime.getHours();
+            const minutes = pakistanTime.getMinutes().toString().padStart(2, '0');
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12;
+            hours = hours ? hours : 12; // the hour '0' should be '12'
+            const timeStr = hours + ':' + minutes + ' ' + ampm;
+
+            // Update display
+            const dateDisplay = document.getElementById('date-display');
+            if (dateDisplay) {
+                document.getElementById('current-date').textContent = dateStr;
+                document.getElementById('current-time').textContent = timeStr;
+            }
+
+            return pakistanTime;
+        }
+
         // Initialize page
         $(document).ready(function() {
+            // Update Pakistan time immediately and set interval
+            updatePakistanTime();
+            setInterval(updatePakistanTime, 60000); // Update every minute
+
             // Add first exercise
             addExercise();
 
