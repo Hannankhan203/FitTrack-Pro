@@ -2327,6 +2327,12 @@ function formatExerciseTimeSimple($db_time)
             },
             {
                 group: "Arms 💪🖐️",
+                name: "Adjustable Hand Gripper 🤏💪",
+                type: "strength",
+                icon: "fa-hand-fist"
+            },
+            {
+                group: "Arms 💪🖐️",
                 name: "Incline Dumbbell Curls 💪",
                 type: "strength",
                 icon: "fa-dumbbell"
@@ -3459,6 +3465,13 @@ function formatExerciseTimeSimple($db_time)
             },
             {
                 group: "Mobility 🧘‍♂️🤲",
+                name: "Adjustable Hand Gripper 🤏💪",
+                type: "strength",
+                icon: "fa-hand-fist"
+            },
+
+            {
+                group: "Mobility 🧘‍♂️🤲",
                 name: "Neck Bridges (caution) 🧠",
                 type: "strength",
                 icon: "fa-brain"
@@ -3523,7 +3536,7 @@ function formatExerciseTimeSimple($db_time)
         const noWeightExercises = [
             'Pull-ups ⬆️', 'Push-ups 🤸‍♂️', 'Lunges 🚶‍♂️', 'Plank 🧘‍♂️', 'Chin-ups ⬆️',
             'Dips 🤸‍♂️', 'Bodyweight Squats ⬇️', 'Inverted Rows ↔️', 'Handstand Push-ups 🤸‍♂️',
-            'Muscle-ups ⬆️', 'Australian Pull-ups ⬇️', 'Archer Push-ups 🏹', 'Plyometric Push-ups ⚡'
+            'Muscle-ups ⬆️', 'Australian Pull-ups ⬇️', 'Archer Push-ups 🏹', 'Plyometric Push-ups ⚡', 'Adjustable Hand Gripper 🤏💪'
         ];
 
         // Exercises that require duration instead of sets/reps

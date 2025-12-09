@@ -2589,6 +2589,15 @@ foreach ($existingMeals as $meal) {
                     }
                 },
                 {
+                    title: "Tandoor ki Tali Hui Roti (Griddle fried roti, 1 piece)",
+                    nutrition: {
+                        calories: 200,
+                        protein: 4,
+                        carbs: 28,
+                        fat: 8
+                    }
+                },
+                {
                     title: "Whole Wheat Roti (1 piece)",
                     nutrition: {
                         calories: 110,
@@ -2633,6 +2642,52 @@ foreach ($existingMeals as $meal) {
                         fat: 32
                     }
                 }
+            ],
+            'mediterranean': [{
+                    title: "Falafel (Tamiya, 1 piece)",
+                    nutrition: {
+                        calories: 65,
+                        protein: 2.5,
+                        carbs: 5,
+                        fat: 3.5
+                    }
+                },
+                {
+                    title: "Mini Falafel (20g ball)",
+                    nutrition: {
+                        calories: 50,
+                        protein: 1.8,
+                        carbs: 4.2,
+                        fat: 2.8
+                    }
+                },
+                {
+                    title: "Hummus (2 tbsp / 30g)",
+                    nutrition: {
+                        calories: 75,
+                        protein: 2,
+                        carbs: 5,
+                        fat: 5.5
+                    }
+                },
+                {
+                    title: "Tahini Sauce (2 tbsp / 30g)",
+                    nutrition: {
+                        calories: 180,
+                        protein: 5,
+                        carbs: 3.5,
+                        fat: 17
+                    }
+                },
+                {
+                    title: "Fried Eggplant (1 slice)",
+                    nutrition: {
+                        calories: 30,
+                        protein: 0.3,
+                        carbs: 3.5,
+                        fat: 2
+                    }
+                },
             ],
             'fastfood': [{
                     title: "Beef/Chandi Burger",
@@ -3041,6 +3096,24 @@ foreach ($existingMeals as $meal) {
                     }
                 },
                 {
+                    title: "Powdered Milk Drink (no sugar, 1 glass)",
+                    nutrition: {
+                        calories: 120,
+                        protein: 8,
+                        carbs: 12,
+                        fat: 4
+                    }
+                },
+                {
+                    title: "Powdered Milk Drink with Sugar (1 glass)",
+                    nutrition: {
+                        calories: 180,
+                        protein: 8,
+                        carbs: 28,
+                        fat: 4
+                    }
+                },
+                {
                     title: "Mirinda (250ml bottle)",
                     nutrition: {
                         calories: 105,
@@ -3202,6 +3275,60 @@ foreach ($existingMeals as $meal) {
                         calories: 85,
                         protein: 3,
                         carbs: 16,
+                        fat: 1
+                    }
+                },
+                {
+                    title: "Egg White Only (from 1 large egg)",
+                    nutrition: {
+                        calories: 17,
+                        protein: 3.6,
+                        carbs: 0.2,
+                        fat: 0
+                    }
+                },
+                {
+                    title: "Egg Whites (100g)",
+                    nutrition: {
+                        calories: 52,
+                        protein: 11,
+                        carbs: 0.7,
+                        fat: 0.2
+                    }
+                },
+                {
+                    title: "Egg White Omelette (from 2 eggs)",
+                    nutrition: {
+                        calories: 34,
+                        protein: 7,
+                        carbs: 0.4,
+                        fat: 0
+                    }
+                },
+                {
+                    title: "Talbina (Barley Porridge, 1 bowl)",
+                    nutrition: {
+                        calories: 180,
+                        protein: 6,
+                        carbs: 35,
+                        fat: 2
+                    }
+                },
+                {
+                    title: "Talbina with Honey (1 bowl)",
+                    nutrition: {
+                        calories: 220,
+                        protein: 6,
+                        carbs: 45,
+                        fat: 2
+                    }
+                },
+                {
+                    title: "Talbina (Barley flour porridge, 1 serving)",
+                    nutrition: {
+                        calories: 150,
+                        protein: 5,
+                        carbs: 30,
                         fat: 1
                     }
                 },
