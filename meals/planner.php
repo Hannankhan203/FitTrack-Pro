@@ -990,25 +990,6 @@ foreach ($existingMeals as $meal) {
             box-shadow: 0 5px 15px rgba(0, 230, 118, 0.3);
         }
 
-        .barcode-simulator {
-            background: var(--gradient-accent);
-            color: white;
-            border: none;
-            padding: 0.75rem 1.5rem;
-            border-radius: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .barcode-simulator:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(157, 78, 221, 0.3);
-        }
-
         /* Delete Buttons */
         .delete-btn {
             background: var(--gradient-secondary);
@@ -1859,7 +1840,7 @@ foreach ($existingMeals as $meal) {
                         </div>
                         <div class="stats-value" id="caloriesConsumed"><?php echo $totalCalories; ?></div>
                         <div class="stats-label">Calories Consumed</div>
-                        <div class="stats-goal">Goal: <span id="calorieGoal">2500</span> kcal</div>
+                        <div class="stats-goal">Goal: <span id="calorieGoal">3000</span> kcal</div>
                     </div>
                 </div>
 
@@ -1870,7 +1851,7 @@ foreach ($existingMeals as $meal) {
                         </div>
                         <div class="stats-value" id="proteinAmount"><?php echo $totalProtein; ?>g</div>
                         <div class="stats-label">Protein</div>
-                        <div class="stats-goal">Target: 160g (for muscle)</div>
+                        <div class="stats-goal">Target: 200g (for muscle)</div>
                     </div>
                 </div>
 
@@ -1881,7 +1862,7 @@ foreach ($existingMeals as $meal) {
                         </div>
                         <div class="stats-value" id="carbsAmount"><?php echo $totalCarbs; ?>g</div>
                         <div class="stats-label">Carbohydrates</div>
-                        <div class="stats-goal">Energy source</div>
+                        <div class="stats-goal">Target: 360g (Energy source)</div>
                     </div>
                 </div>
 
@@ -1892,7 +1873,7 @@ foreach ($existingMeals as $meal) {
                         </div>
                         <div class="stats-value" id="fatAmount"><?php echo $totalFat; ?>g</div>
                         <div class="stats-label">Fats</div>
-                        <div class="stats-goal">Healthy fats</div>
+                        <div class="stats-goal">Target: 83g (Healthy fats)</div>
                     </div>
                 </div>
             </div>
@@ -1988,7 +1969,7 @@ foreach ($existingMeals as $meal) {
                     <h5><i class="fas fa-search me-2"></i>Search Foods</h5>
                     <div class="search-input-group">
                         <i class="fas fa-search search-icon"></i>
-                        <input type="text" id="foodSearch" class="search-input" placeholder="Search foods (e.g., biryani, chicken tikka, apple...)">
+                        <input type="text" id="foodSearch" class="search-input" placeholder="Search foods (e.g. Chicken, Whey, Egg Whites ...)">
                     </div>
 
                     <!-- Food Categories -->
@@ -2016,9 +1997,6 @@ foreach ($existingMeals as $meal) {
                     <div class="d-flex gap-2 mb-3">
                         <button class="btn btn-primary flex-grow-1" id="searchBtn">
                             <i class="fas fa-search me-2"></i>Search Food
-                        </button>
-                        <button class="barcode-simulator" onclick="simulateBarcodeScan()">
-                            <i class="fas fa-barcode me-2"></i>Quick Add
                         </button>
                         <button class="btn btn-secondary" id="addCustomFoodBtn" data-bs-toggle="modal" data-bs-target="#customFoodModal">
                             <i class="fas fa-plus-circle me-2"></i>Add Custom
@@ -2181,1174 +2159,254 @@ foreach ($existingMeals as $meal) {
         let tempFoodItems = [];
         let currentCategory = 'all';
 
-        // Pakistani Food Database
+        // Food Database
         const pakistaniFoodDatabase = {
             'pakistani': [{
-                    title: "Chicken Biryani (1 Plate = 500g)",
-                    nutrition: {
-                        calories: 800,
-                        protein: 40,
-                        carbs: 105,
-                        fat: 30
-                    }
-                },
-                {
-                    title: "Beef Nihari (with 1 Naan)",
-                    nutrition: {
-                        calories: 700,
-                        protein: 35,
-                        carbs: 60,
-                        fat: 37
-                    }
-                },
-                {
-                    title: "Haleem (1 Bowl = 400g)",
-                    nutrition: {
-                        calories: 525,
-                        protein: 30,
-                        carbs: 70,
-                        fat: 20
-                    }
-                },
-                {
-                    title: "Chicken Karahi (1 Plate)",
-                    nutrition: {
-                        calories: 600,
-                        protein: 45,
-                        carbs: 12,
-                        fat: 42
-                    }
-                },
-                {
-                    title: "Beef Karahi (1 Plate)",
-                    nutrition: {
-                        calories: 650,
-                        protein: 48,
-                        carbs: 12,
-                        fat: 45
-                    }
-                },
-                {
-                    title: "Daal Chawal (1 Plate)",
-                    nutrition: {
-                        calories: 475,
-                        protein: 18,
-                        carbs: 80,
-                        fat: 12
-                    }
-                },
-                {
-                    title: "Vegetable Roll (1 piece)",
-                    nutrition: {
-                        calories: 260,
-                        protein: 5,
-                        carbs: 32,
-                        fat: 13
-                    }
-                },
-                {
-                    title: "Aloo Samosa (1 piece)",
-                    nutrition: {
-                        calories: 220,
-                        protein: 3,
-                        carbs: 28,
-                        fat: 11
-                    }
-                },
-                {
-                    title: "Gosht Ki Boti (1 piece, cooked)",
-                    nutrition: {
-                        calories: 55,
-                        protein: 7,
-                        carbs: 0,
-                        fat: 3
-                    }
-                },
-                {
-                    title: "Chicken Box Patty (1 piece)",
-                    nutrition: {
-                        calories: 380,
-                        protein: 12,
-                        carbs: 32,
-                        fat: 22
-                    }
-                },
-
-                {
-                    title: "Mutter (Peas) with Rice (1 plate)",
-                    nutrition: {
-                        calories: 350,
-                        protein: 12,
-                        carbs: 65,
-                        fat: 6
-                    }
-                },
-                {
-                    title: "Aloo Chawal (Potato Rice, 1 plate)",
-                    nutrition: {
-                        calories: 420,
-                        protein: 8,
-                        carbs: 80,
-                        fat: 8
-                    }
-                },
-                {
-                    title: "Vegetable Raita (1 bowl)",
-                    nutrition: {
-                        calories: 120,
-                        protein: 6,
-                        carbs: 12,
-                        fat: 6
-                    }
-                },
-                {
-                    title: "Mutter Aloo (Peas & Potatoes, 1 bowl)",
-                    nutrition: {
-                        calories: 280,
-                        protein: 10,
-                        carbs: 45,
-                        fat: 7
-                    }
-                },
-                {
-                    title: "Mix Vegetable Curry (1 bowl)",
-                    nutrition: {
-                        calories: 180,
-                        protein: 8,
-                        carbs: 25,
-                        fat: 6
-                    }
-                },
-                {
-                    title: "Raita (Plain Yogurt, 1 bowl)",
-                    nutrition: {
-                        calories: 90,
-                        protein: 5,
-                        carbs: 8,
-                        fat: 4
-                    }
-                },
-                {
-                    title: "Mutter Aloo Chawal (Peas & Potato Rice, full plate)",
-                    nutrition: {
-                        calories: 520,
-                        protein: 16,
-                        carbs: 90,
-                        fat: 12
-                    }
-                },
-                {
-                    title: "Lobia (Black-eyed peas, 1 bowl)",
-                    nutrition: {
-                        calories: 160,
-                        protein: 8,
-                        carbs: 30,
-                        fat: 2
-                    }
-                },
-                {
-                    title: "Red Lobia (Rajma/Kidney Beans, 1 bowl)",
-                    nutrition: {
-                        calories: 220,
-                        protein: 15,
-                        carbs: 40,
-                        fat: 1
-                    }
-                },
-                {
-                    title: "Black Chole (1 bowl)",
-                    nutrition: {
-                        calories: 270,
-                        protein: 15,
-                        carbs: 45,
-                        fat: 4
-                    }
-                },
-
-                {
-                    title: "Chana Masala with Puri (2 Puris)",
-                    nutrition: {
-                        calories: 575,
-                        protein: 18,
-                        carbs: 80,
-                        fat: 25
-                    }
-                },
-                {
-                    title: "Seekh Kebab (2 pieces, 150g)",
-                    nutrition: {
-                        calories: 350,
-                        protein: 28,
-                        carbs: 8,
-                        fat: 25
-                    }
-                },
-                {
-                    title: "Chicken Tikka (4 pieces, 200g)",
-                    nutrition: {
-                        calories: 300,
-                        protein: 40,
-                        carbs: 8,
-                        fat: 15
-                    }
-                },
-                {
-                    title: "Aloo Gosht (1 Bowl)",
-                    nutrition: {
-                        calories: 400,
-                        protein: 28,
-                        carbs: 25,
-                        fat: 25
-                    }
-                },
-                {
-                    title: "Plain Naan (1 Medium)",
-                    nutrition: {
-                        calories: 285,
-                        protein: 9,
-                        carbs: 50,
-                        fat: 7
-                    }
-                },
-                {
-                    title: "Roti/Chapati (1 Medium, with ghee)",
-                    nutrition: {
-                        calories: 150,
-                        protein: 3.5,
-                        carbs: 23,
-                        fat: 5
-                    }
-                },
-                {
-                    title: "Plain Paratha (1 piece)",
-                    nutrition: {
-                        calories: 260,
-                        protein: 5,
-                        carbs: 35,
-                        fat: 11
-                    }
-                },
-                {
-                    title: "Aloo Paratha (1 piece, stuffed)",
-                    nutrition: {
-                        calories: 320,
-                        protein: 7,
-                        carbs: 45,
-                        fat: 14
-                    }
-                },
-                {
-                    title: "Tandoori Roti (1 piece)",
-                    nutrition: {
-                        calories: 120,
-                        protein: 4,
-                        carbs: 22,
-                        fat: 2
-                    }
-                },
-                {
-                    title: "Chapati (1 piece, no ghee)",
-                    nutrition: {
-                        calories: 90,
-                        protein: 3,
-                        carbs: 18,
-                        fat: 1
-                    }
-                },
-                {
-                    title: "Missi Roti (1 piece)",
-                    nutrition: {
-                        calories: 140,
-                        protein: 6,
-                        carbs: 25,
-                        fat: 3
-                    }
-                },
-                {
-                    title: "Puri (1 piece)",
-                    nutrition: {
-                        calories: 180,
-                        protein: 3,
-                        carbs: 22,
-                        fat: 9
-                    }
-                },
-                {
-                    title: "Butter Naan (1 piece)",
-                    nutrition: {
-                        calories: 350,
-                        protein: 9,
-                        carbs: 50,
-                        fat: 13
-                    }
-                },
-                {
-                    title: "Garlic Naan (1 piece)",
-                    nutrition: {
-                        calories: 380,
-                        protein: 9,
-                        carbs: 52,
-                        fat: 16
-                    }
-                },
-                {
-                    title: "Rumali Roti (1 piece)",
-                    nutrition: {
-                        calories: 80,
-                        protein: 3,
-                        carbs: 16,
-                        fat: 1
-                    }
-                },
-                {
-                    title: "Taftan (1 piece)",
-                    nutrition: {
-                        calories: 280,
-                        protein: 8,
-                        carbs: 48,
-                        fat: 7
-                    }
-                },
-                {
-                    title: "Sheermal (1 piece)",
-                    nutrition: {
-                        calories: 320,
-                        protein: 7,
-                        carbs: 55,
-                        fat: 9
-                    }
-                },
-                {
-                    title: "Kulcha (1 piece)",
-                    nutrition: {
-                        calories: 240,
-                        protein: 6,
-                        carbs: 38,
-                        fat: 8
-                    }
-                },
-                {
-                    title: "Bhatura (1 piece)",
-                    nutrition: {
-                        calories: 280,
-                        protein: 6,
-                        carbs: 42,
-                        fat: 11
-                    }
-                },
-                {
-                    title: "Roghni Naan (1 piece)",
-                    nutrition: {
-                        calories: 400,
-                        protein: 9,
-                        carbs: 52,
-                        fat: 18
-                    }
-                },
-                {
-                    title: "Khameeri Roti (1 piece)",
-                    nutrition: {
-                        calories: 160,
-                        protein: 5,
-                        carbs: 28,
-                        fat: 4
-                    }
-                },
-                {
-                    title: "Tandoori Paratha (1 piece)",
-                    nutrition: {
-                        calories: 300,
-                        protein: 6,
-                        carbs: 40,
-                        fat: 13
-                    }
-                },
-                {
-                    title: "Ghee Roti (1 piece, with ghee)",
-                    nutrition: {
-                        calories: 180,
-                        protein: 4,
-                        carbs: 23,
-                        fat: 8
-                    }
-                },
-                {
-                    title: "Shami Kabab Cutlet (1 piece)",
-                    nutrition: {
-                        calories: 120,
-                        protein: 8,
-                        carbs: 6,
-                        fat: 7
-                    }
-                },
-                {
-                    title: "Aloo (Potato) Cutlet (1 piece)",
+                    title: "Half-Fried Egg (1 egg)",
                     nutrition: {
                         calories: 100,
-                        protein: 2,
-                        carbs: 15,
-                        fat: 4
-                    }
-                },
-                {
-                    title: "Chicken Cutlet (1 piece)",
-                    nutrition: {
-                        calories: 150,
-                        protein: 12,
-                        carbs: 8,
-                        fat: 8
-                    }
-                },
-                {
-                    title: "Beef Cutlet (1 piece)",
-                    nutrition: {
-                        calories: 160,
-                        protein: 10,
-                        carbs: 8,
-                        fat: 10
-                    }
-                },
-                {
-                    title: "Lacha Murgh (Spicy Shredded Chicken, 1 plate)",
-                    nutrition: {
-                        calories: 320,
-                        protein: 38,
-                        carbs: 10,
-                        fat: 15
-                    }
-                },
-                {
-                    title: "Lacha Chicken (Shredded Chicken, 1 serving)",
-                    nutrition: {
-                        calories: 280,
-                        protein: 35,
-                        carbs: 8,
-                        fat: 12
-                    }
-                },
-                {
-                    title: "Chicken Aloo Cutlet (1 piece)",
-                    nutrition: {
-                        calories: 130,
-                        protein: 10,
-                        carbs: 12,
-                        fat: 6
-                    }
-                },
-                {
-                    title: "Tandoor ki Tali Hui Roti (Griddle fried roti, 1 piece)",
-                    nutrition: {
-                        calories: 200,
-                        protein: 4,
-                        carbs: 28,
-                        fat: 8
-                    }
-                },
-                {
-                    title: "Whole Wheat Roti (1 piece)",
-                    nutrition: {
-                        calories: 110,
-                        protein: 4,
-                        carbs: 20,
-                        fat: 2
-                    }
-                },
-                {
-                    title: "Makki di Roti (1 piece)",
-                    nutrition: {
-                        calories: 170,
-                        protein: 4,
-                        carbs: 28,
-                        fat: 5
-                    }
-                },
-                {
-                    title: "Bajre ki Roti (1 piece)",
-                    nutrition: {
-                        calories: 130,
-                        protein: 4,
-                        carbs: 24,
-                        fat: 3
-                    }
-                },
-                {
-                    title: "Plain Flour Roti (1 piece, maida)",
-                    nutrition: {
-                        calories: 130,
-                        protein: 3,
-                        carbs: 24,
-                        fat: 2
-                    }
-                },
-                {
-                    title: "Halwa Poori (2 Puris, 1 bowl Halwa)",
-                    nutrition: {
-                        calories: 700,
-                        protein: 10,
-                        carbs: 105,
-                        fat: 32
-                    }
-                }
-            ],
-            'mediterranean': [{
-                    title: "Falafel (Tamiya, 1 piece)",
-                    nutrition: {
-                        calories: 65,
-                        protein: 2.5,
-                        carbs: 5,
-                        fat: 3.5
-                    }
-                },
-                {
-                    title: "Mini Falafel (20g ball)",
-                    nutrition: {
-                        calories: 50,
-                        protein: 1.8,
-                        carbs: 4.2,
-                        fat: 2.8
-                    }
-                },
-                {
-                    title: "Hummus (2 tbsp / 30g)",
-                    nutrition: {
-                        calories: 75,
-                        protein: 2,
-                        carbs: 5,
-                        fat: 5.5
-                    }
-                },
-                {
-                    title: "Tahini Sauce (2 tbsp / 30g)",
-                    nutrition: {
-                        calories: 180,
-                        protein: 5,
-                        carbs: 3.5,
-                        fat: 17
-                    }
-                },
-                {
-                    title: "Fried Eggplant (1 slice)",
-                    nutrition: {
-                        calories: 30,
-                        protein: 0.3,
-                        carbs: 3.5,
-                        fat: 2
-                    }
-                },
-            ],
-            'fastfood': [{
-                    title: "Beef/Chandi Burger",
-                    nutrition: {
-                        calories: 525,
-                        protein: 30,
-                        carbs: 42,
-                        fat: 25
-                    }
-                },
-                {
-                    title: "Chicken Roll/Paratha Roll",
-                    nutrition: {
-                        calories: 600,
-                        protein: 28,
-                        carbs: 50,
-                        fat: 32
-                    }
-                },
-                {
-                    title: "Full Grilled Chicken (with skin)",
-                    nutrition: {
-                        calories: 1000,
-                        protein: 90,
-                        carbs: 8,
-                        fat: 65
-                    }
-                },
-                {
-                    title: "Plate of Mixed BBQ (Seekh, Tikka, Malai Boti)",
-                    nutrition: {
-                        calories: 850,
-                        protein: 70,
-                        carbs: 20,
-                        fat: 55
-                    }
-                },
-                {
-                    title: "2 Piece Fried Chicken Meal (with fries & drink)",
-                    nutrition: {
-                        calories: 1100,
-                        protein: 45,
-                        carbs: 90,
-                        fat: 60
-                    }
-                },
-                {
-                    title: "Malai Boti Roll",
-                    nutrition: {
-                        calories: 550,
-                        protein: 25,
-                        carbs: 45,
-                        fat: 30
-                    }
-                },
-                {
-                    title: "French Fries (Medium)",
-                    nutrition: {
-                        calories: 365,
-                        protein: 4,
-                        carbs: 48,
-                        fat: 18
-                    }
-                },
-                {
-                    title: "French Fries (Large)",
-                    nutrition: {
-                        calories: 480,
-                        protein: 5,
-                        carbs: 63,
-                        fat: 23
-                    }
-                },
-                {
-                    title: "French Fries (Small)",
-                    nutrition: {
-                        calories: 230,
-                        protein: 3,
-                        carbs: 30,
-                        fat: 11
-                    }
-                },
-                {
-                    title: "Homemade Chicken Burger (1 burger)",
-                    nutrition: {
-                        calories: 320,
-                        protein: 28,
-                        carbs: 30,
-                        fat: 12
-                    }
-                },
-                {
-                    title: "Homemade Chicken Burger with Whole Wheat Bun",
-                    nutrition: {
-                        calories: 350,
-                        protein: 30,
-                        carbs: 35,
-                        fat: 12
-                    }
-                },
-                {
-                    title: "Homemade Chicken Patty Only (grilled)",
-                    nutrition: {
-                        calories: 180,
-                        protein: 25,
-                        carbs: 5,
-                        fat: 7
-                    }
-                },
-                {
-                    title: "Chicken Burger (Regular)",
-                    nutrition: {
-                        calories: 450,
-                        protein: 25,
-                        carbs: 42,
-                        fat: 22
-                    }
-                },
-                {
-                    title: "Chicken Burger with Cheese",
-                    nutrition: {
-                        calories: 520,
-                        protein: 28,
-                        carbs: 45,
-                        fat: 27
-                    }
-                },
-                {
-                    title: "Grilled Chicken Burger",
-                    nutrition: {
-                        calories: 380,
-                        protein: 30,
-                        carbs: 35,
-                        fat: 15
-                    }
-                },
-                {
-                    title: "Spicy Chicken Burger",
-                    nutrition: {
-                        calories: 480,
-                        protein: 26,
-                        carbs: 44,
-                        fat: 24
-                    }
-                },
-                {
-                    title: "Chicken Burger Meal (with fries & drink)",
-                    nutrition: {
-                        calories: 850,
-                        protein: 32,
-                        carbs: 95,
-                        fat: 38
-                    }
-                },
-                {
-                    title: "Reshmi Kabab Roll",
-                    nutrition: {
-                        calories: 520,
-                        protein: 28,
-                        carbs: 42,
-                        fat: 28
-                    }
-                },
-                {
-                    title: "Chicken Tikka Roll",
-                    nutrition: {
-                        calories: 500,
-                        protein: 26,
-                        carbs: 40,
-                        fat: 26
-                    }
-                },
-                {
-                    title: "Beef Seekh Roll",
-                    nutrition: {
-                        calories: 580,
-                        protein: 32,
-                        carbs: 48,
-                        fat: 32
-                    }
-                },
-                {
-                    title: "Zinger/Whopper Burger",
-                    nutrition: {
-                        calories: 650,
-                        protein: 28,
-                        carbs: 60,
-                        fat: 38
-                    }
-                },
-                {
-                    title: "Bun Kabab (Double Patty)",
-                    nutrition: {
-                        calories: 425,
-                        protein: 18,
-                        carbs: 35,
-                        fat: 25
-                    }
-                },
-                {
-                    title: "Samosa (2 pieces)",
-                    nutrition: {
-                        calories: 300,
-                        protein: 6.5,
-                        carbs: 35,
-                        fat: 20
-                    }
-                },
-                {
-                    title: "Homemade Fries (Pan Fried, 1 serving)",
-                    nutrition: {
-                        calories: 220,
-                        protein: 3,
-                        carbs: 30,
-                        fat: 10
-                    }
-                },
-                {
-                    title: "Homemade Fries (Air Fried, 1 serving)",
-                    nutrition: {
-                        calories: 150,
-                        protein: 3,
-                        carbs: 30,
-                        fat: 3
-                    }
-                },
-                {
-                    title: "Pakora Platter (Mix, 150g)",
-                    nutrition: {
-                        calories: 475,
-                        protein: 10,
-                        carbs: 60,
-                        fat: 25
-                    }
-                }
-            ],
-            'beverages': [{
-                    title: "Doodh Patti Chai (1 cup)",
-                    nutrition: {
-                        calories: 150,
                         protein: 6,
-                        carbs: 15,
-                        fat: 7
-                    }
-                },
-                {
-                    title: "Dhoodh Coffee (Instant)",
-                    nutrition: {
-                        calories: 125,
-                        protein: 5,
-                        carbs: 15,
-                        fat: 5
-                    }
-                },
-                {
-                    title: "Tea with Gur (Jaggery, 1 cup)",
-                    nutrition: {
-                        calories: 80,
-                        protein: 2,
-                        carbs: 18,
-                        fat: 1
-                    }
-                },
-                {
-                    title: "Tea with Sugar (1 cup)",
-                    nutrition: {
-                        calories: 70,
-                        protein: 2,
-                        carbs: 16,
-                        fat: 1
-                    }
-                },
-                {
-                    title: "Tea with Powdered Milk (1 cup)",
-                    nutrition: {
-                        calories: 90,
-                        protein: 3,
-                        carbs: 12,
-                        fat: 3
-                    }
-                },
-                {
-                    title: "Tea with Gur & Powdered Milk (1 cup)",
-                    nutrition: {
-                        calories: 110,
-                        protein: 4,
-                        carbs: 20,
-                        fat: 3
-                    }
-                },
-                {
-                    title: "Tea with Sugar & Powdered Milk (1 cup)",
-                    nutrition: {
-                        calories: 100,
-                        protein: 4,
-                        carbs: 18,
-                        fat: 3
-                    }
-                },
-                {
-                    title: "Chocolate Tea (1 cup)",
-                    nutrition: {
-                        calories: 180,
-                        protein: 5,
-                        carbs: 25,
-                        fat: 7
-                    }
-                },
-                {
-                    title: "Kashmiri Chai (1 cup)",
-                    nutrition: {
-                        calories: 185,
-                        protein: 5,
-                        carbs: 20,
-                        fat: 8
-                    }
-                },
-                {
-                    title: "Green Tea (1 cup, plain)",
-                    nutrition: {
-                        calories: 2,
-                        protein: 0.2,
                         carbs: 0.5,
-                        fat: 0
+                        fat: 7
                     }
                 },
                 {
-                    title: "Green Tea with Honey (1 cup)",
-                    nutrition: {
-                        calories: 45,
-                        protein: 0.2,
-                        carbs: 12,
-                        fat: 0
-                    }
-                },
-                {
-                    title: "Coca-Cola/Pepsi (330ml)",
-                    nutrition: {
-                        calories: 140,
-                        protein: 0,
-                        carbs: 39,
-                        fat: 0
-                    }
-                },
-                {
-                    title: "Pakola (Ice Cream Soda)",
-                    nutrition: {
-                        calories: 180,
-                        protein: 2,
-                        carbs: 30,
-                        fat: 4
-                    }
-                },
-                {
-                    title: "Fizz Up/Sprite/7Up (330ml)",
-                    nutrition: {
-                        calories: 140,
-                        protein: 0,
-                        carbs: 38,
-                        fat: 0
-                    }
-                },
-                {
-                    title: "Fresh Orange Juice (250ml)",
-                    nutrition: {
-                        calories: 110,
-                        protein: 2,
-                        carbs: 25,
-                        fat: 0.5
-                    }
-                },
-                {
-                    title: "Mango Juice (Sweetened, 250ml)",
-                    nutrition: {
-                        calories: 145,
-                        protein: 1,
-                        carbs: 37,
-                        fat: 0
-                    }
-                },
-                {
-                    title: "Rooh Afza/Sharbat (1 glass)",
-                    nutrition: {
-                        calories: 100,
-                        protein: 0,
-                        carbs: 25,
-                        fat: 0
-                    }
-                },
-                {
-                    title: "Lassi (Sweet, 250ml)",
+                    title: "Half-Fried Eggs (2 eggs)",
                     nutrition: {
                         calories: 200,
-                        protein: 8,
-                        carbs: 30,
-                        fat: 6
+                        protein: 12,
+                        carbs: 1,
+                        fat: 15
                     }
                 },
                 {
-                    title: "Mirinda (330ml can)",
-                    nutrition: {
-                        calories: 140,
-                        protein: 0,
-                        carbs: 36,
-                        fat: 0
-                    }
-                },
-                {
-                    title: "Powdered Milk Drink (no sugar, 1 glass)",
-                    nutrition: {
-                        calories: 120,
-                        protein: 8,
-                        carbs: 12,
-                        fat: 4
-                    }
-                },
-                {
-                    title: "Powdered Milk Drink with Sugar (1 glass)",
-                    nutrition: {
-                        calories: 180,
-                        protein: 8,
-                        carbs: 28,
-                        fat: 4
-                    }
-                },
-                {
-                    title: "Mirinda (250ml bottle)",
-                    nutrition: {
-                        calories: 105,
-                        protein: 0,
-                        carbs: 27,
-                        fat: 0
-                    }
-                },
-                {
-                    title: "Lassi (Salted, 250ml)",
-                    nutrition: {
-                        calories: 125,
-                        protein: 8,
-                        carbs: 12,
-                        fat: 5
-                    }
-                }
-            ],
-            'fruits': [{
-                    title: "Mango (100g)",
-                    nutrition: {
-                        calories: 60,
-                        protein: 0.8,
-                        carbs: 15,
-                        fat: 0.4
-                    }
-                },
-                {
-                    title: "Orange (100g)",
-                    nutrition: {
-                        calories: 47,
-                        protein: 0.9,
-                        carbs: 12,
-                        fat: 0.1
-                    }
-                },
-                {
-                    title: "Apple (100g)",
-                    nutrition: {
-                        calories: 52,
-                        protein: 0.3,
-                        carbs: 14,
-                        fat: 0.2
-                    }
-                },
-                {
-                    title: "Banana (100g)",
-                    nutrition: {
-                        calories: 89,
-                        protein: 1.1,
-                        carbs: 23,
-                        fat: 0.3
-                    }
-                },
-                {
-                    title: "Guava (100g)",
-                    nutrition: {
-                        calories: 68,
-                        protein: 2.6,
-                        carbs: 14,
-                        fat: 1
-                    }
-                },
-                {
-                    title: "Dates (2-3 pieces, 20g)",
-                    nutrition: {
-                        calories: 70,
-                        protein: 0.6,
-                        carbs: 18,
-                        fat: 0
-                    }
-                }
-            ],
-            'desserts': [{
-                    title: "Gulab Jamun (2 pieces)",
-                    nutrition: {
-                        calories: 300,
-                        protein: 5,
-                        carbs: 52,
-                        fat: 12
-                    }
-                },
-                {
-                    title: "Gajar ka Halwa (1 small bowl)",
-                    nutrition: {
-                        calories: 375,
-                        protein: 6,
-                        carbs: 50,
-                        fat: 20
-                    }
-                },
-                {
-                    title: "Kheer/Rice Pudding (1 bowl)",
-                    nutrition: {
-                        calories: 300,
-                        protein: 8,
-                        carbs: 45,
-                        fat: 10
-                    }
-                },
-                {
-                    title: "Jalebi (100g)",
-                    nutrition: {
-                        calories: 400,
-                        protein: 3,
-                        carbs: 87,
-                        fat: 8
-                    }
-                },
-                {
-                    title: "Barfi (1 piece)",
-                    nutrition: {
-                        calories: 175,
-                        protein: 4,
-                        carbs: 23,
-                        fat: 9
-                    }
-                }
-            ],
-            'healthy': [{
-                    title: "Grilled Chicken Breast (100g)",
-                    nutrition: {
-                        calories: 165,
-                        protein: 31,
-                        carbs: 0,
-                        fat: 3.6
-                    }
-                },
-                {
-                    title: "Small Cake Slice (Vanilla)",
-                    nutrition: {
-                        calories: 250,
-                        protein: 3,
-                        carbs: 38,
-                        fat: 10
-                    }
-                },
-                {
-                    title: "Normal White Bread (1 slice)",
+                    title: "White Bread (1 slice)",
                     nutrition: {
                         calories: 75,
                         protein: 2.5,
-                        carbs: 14,
+                        carbs: 13.5,
                         fat: 1
                     }
                 },
                 {
-                    title: "Normal White Bread (2 slices)",
+                    title: "White Bread (2 slices)",
                     nutrition: {
                         calories: 150,
                         protein: 5,
-                        carbs: 28,
+                        carbs: 27,
                         fat: 2
-                    }
-                },
-                {
-                    title: "Standard White Bread Slice",
-                    nutrition: {
-                        calories: 80,
-                        protein: 3,
-                        carbs: 15,
-                        fat: 1
-                    }
-                },
-                {
-                    title: "Chocolate Cake Slice",
-                    nutrition: {
-                        calories: 280,
-                        protein: 4,
-                        carbs: 42,
-                        fat: 12
-                    }
-                },
-                {
-                    title: "Red Velvet Cake Slice",
-                    nutrition: {
-                        calories: 300,
-                        protein: 4,
-                        carbs: 45,
-                        fat: 13
                     }
                 },
                 {
                     title: "Toasted White Bread (1 slice)",
                     nutrition: {
-                        calories: 85,
+                        calories: 76,
+                        protein: 2.5,
+                        carbs: 13.5,
+                        fat: 1
+                    }
+                },
+                {
+                    title: "Toasted White Bread (2 slices)",
+                    nutrition: {
+                        calories: 152,
+                        protein: 5,
+                        carbs: 27,
+                        fat: 2
+                    }
+                },
+            ],
+            'fastfood': [],
+            'beverages': [{
+                    title: "Tea with Gur + Powdered Milk (1 cup)",
+                    nutrition: {
+                        calories: 110,
+                        protein: 4,
+                        carbs: 20,
+                        fat: 3
+                    }
+                },
+                {
+                    title: "Green Tea (1 cup)",
+                    nutrition: {
+                        calories: 2,
+                        protein: 0,
+                        carbs: 0,
+                        fat: 0
+                    }
+                },
+                {
+                    title: "Tea with Sugar & Powdered Milk (1 cup)",
+                    nutrition: {
+                        calories: 130,
+                        protein: 2,
+                        carbs: 18,
+                        fat: 5
+                    }
+                },
+                {
+                    title: "Tea with Powdered Milk (no sugar, 1 cup)",
+                    nutrition: {
+                        calories: 65,
+                        protein: 2,
+                        carbs: 7,
+                        fat: 3.5
+                    }
+                },
+                {
+                    title: "Black Coffee (1 cup)",
+                    nutrition: {
+                        calories: 5,
+                        protein: 0,
+                        carbs: 0,
+                        fat: 0
+                    }
+                },
+                {
+                    title: "Coffee with Sugar (1 tsp, no milk)",
+                    nutrition: {
+                        calories: 16,
+                        protein: 0,
+                        carbs: 4,
+                        fat: 0
+                    }
+                },
+                {
+                    title: "Coffee with Milk (2 tbsp powdered milk, no sugar)",
+                    nutrition: {
+                        calories: 25,
+                        protein: 1,
+                        carbs: 4,
+                        fat: 1.5
+                    }
+                },
+                {
+                    title: "Coffee with Milk & Sugar (2 tbsp powdered milk + 1 tsp sugar)",
+                    nutrition: {
+                        calories: 40,
+                        protein: 1,
+                        carbs: 8,
+                        fat: 1.5
+                    }
+                },
+                {
+                    title: "Whole Milk (1 cup)",
+                    nutrition: {
+                        calories: 150,
+                        protein: 8,
+                        carbs: 12,
+                        fat: 8
+                    }
+                },
+
+            ],
+            'fruits': [{
+                    title: "Apple (medium)",
+                    nutrition: {
+                        calories: 80,
+                        protein: 0.4,
+                        carbs: 21,
+                        fat: 0.3
+                    }
+                },
+                {
+                    title: "Orange (medium)",
+                    nutrition: {
+                        calories: 60,
+                        protein: 1,
+                        carbs: 15,
+                        fat: 0.2
+                    }
+                },
+                {
+                    title: "Pomegranate (1 medium)",
+                    nutrition: {
+                        calories: 140,
                         protein: 3,
-                        carbs: 16,
+                        carbs: 32,
+                        fat: 1.2
+                    }
+                },
+                {
+                    title: "Grapes (5 grapes)",
+                    nutrition: {
+                        calories: 10,
+                        protein: 0.1,
+                        carbs: 2.6,
+                        fat: 0
+                    }
+                },
+                {
+                    title: "Mango (medium)",
+                    nutrition: {
+                        calories: 135,
+                        protein: 1,
+                        carbs: 35,
+                        fat: 0.6
+                    }
+                },
+                {
+                    title: "Almonds (10 pieces)",
+                    nutrition: {
+                        calories: 70,
+                        protein: 2.5,
+                        carbs: 2,
+                        fat: 6
+                    }
+                },
+                {
+                    title: "Cashews (10 pieces)",
+                    nutrition: {
+                        calories: 65,
+                        protein: 2,
+                        carbs: 4,
+                        fat: 5
+                    }
+                },
+                {
+                    title: "Walnuts (10 halves)",
+                    nutrition: {
+                        calories: 100,
+                        protein: 2.5,
+                        carbs: 1.5,
+                        fat: 9
+                    }
+                },
+                {
+                    title: "Raisins (10 pieces)",
+                    nutrition: {
+                        calories: 15,
+                        protein: 0.2,
+                        carbs: 4,
+                        fat: 0
+                    }
+                },
+                {
+                    title: "Pistachios (10 pieces)",
+                    nutrition: {
+                        calories: 65,
+                        protein: 2.5,
+                        carbs: 3,
+                        fat: 5
+                    }
+                },
+                {
+                    title: "Mixed Nuts & Raisins (10 almonds + 10 cashews + 10 walnuts + 10 raisins + 10 pistachios)",
+                    nutrition: {
+                        calories: 315,
+                        protein: 9.7,
+                        carbs: 14.5,
+                        fat: 25
+                    }
+                },
+            ],
+            'desserts': [],
+            'healthy': [{
+                    title: "Homemade Whey (1 cup)",
+                    nutrition: {
+                        calories: 60,
+                        protein: 8,
+                        carbs: 8,
                         fat: 1
                     }
                 },
@@ -3362,21 +2420,30 @@ foreach ($existingMeals as $meal) {
                     }
                 },
                 {
-                    title: "Egg Whites (100g)",
+                    title: "Egg Whites (2 boiled)",
                     nutrition: {
-                        calories: 52,
-                        protein: 11,
-                        carbs: 0.7,
-                        fat: 0.2
+                        calories: 34,
+                        protein: 8,
+                        carbs: 0.6,
+                        fat: 0
                     }
                 },
                 {
-                    title: "Egg White Omelette (from 2 eggs)",
+                    title: "1 Boiled Egg (large)",
                     nutrition: {
-                        calories: 34,
-                        protein: 7,
-                        carbs: 0.4,
-                        fat: 0
+                        calories: 70,
+                        protein: 6,
+                        carbs: 0.5,
+                        fat: 5
+                    }
+                },
+                {
+                    title: "2 Boiled Egg",
+                    nutrition: {
+                        calories: 140,
+                        protein: 12,
+                        carbs: 1,
+                        fat: 10
                     }
                 },
                 {
@@ -3389,275 +2456,33 @@ foreach ($existingMeals as $meal) {
                     }
                 },
                 {
-                    title: "Talbina with Honey (1 bowl)",
+                    title: "Red Lobia (Rajma/Kidney Beans, 1 bowl)",
                     nutrition: {
                         calories: 220,
-                        protein: 6,
-                        carbs: 45,
-                        fat: 2
-                    }
-                },
-                {
-                    title: "Talbina (Barley flour porridge, 1 serving)",
-                    nutrition: {
-                        calories: 150,
-                        protein: 5,
-                        carbs: 30,
+                        protein: 15,
+                        carbs: 40,
                         fat: 1
                     }
                 },
                 {
-                    title: "Toasted White Bread (2 slices)",
+                    title: "Boiled Chicken (1 piece / ~25 g)",
                     nutrition: {
-                        calories: 170,
-                        protein: 6,
-                        carbs: 32,
-                        fat: 2
-                    }
-                },
-                {
-                    title: "Toasted White Bread with Butter (1 slice)",
-                    nutrition: {
-                        calories: 120,
-                        protein: 3,
-                        carbs: 16,
-                        fat: 5
-                    }
-                },
-                {
-                    title: "Cupcake (1 piece)",
-                    nutrition: {
-                        calories: 180,
-                        protein: 2,
-                        carbs: 28,
-                        fat: 7
-                    }
-                },
-                {
-                    title: "Milk Malt Cake (1 piece)",
-                    nutrition: {
-                        calories: 280,
-                        protein: 4,
-                        carbs: 42,
-                        fat: 10
-                    }
-                },
-                {
-                    title: "Milk Malt Cake (1 slice)",
-                    nutrition: {
-                        calories: 320,
-                        protein: 5,
-                        carbs: 48,
-                        fat: 12
-                    }
-                },
-                {
-                    title: "Brown Rice (1 cup cooked)",
-                    nutrition: {
-                        calories: 216,
-                        protein: 5,
-                        carbs: 45,
-                        fat: 2
-                    }
-                },
-                {
-                    title: "Broccoli (100g)",
-                    nutrition: {
-                        calories: 34,
-                        protein: 2.8,
-                        carbs: 7,
-                        fat: 0.4
-                    }
-                },
-                {
-                    title: "Boiled Egg (1 large)",
-                    nutrition: {
-                        calories: 78,
-                        protein: 6,
-                        carbs: 0.6,
-                        fat: 5
-                    }
-                },
-                {
-                    title: "Half Fried Egg (1 egg)",
-                    nutrition: {
-                        calories: 110,
-                        protein: 7,
-                        carbs: 1,
-                        fat: 9
-                    }
-                },
-                {
-                    title: "Full Fried Egg (1 egg, sunny side up)",
-                    nutrition: {
-                        calories: 95,
-                        protein: 6,
-                        carbs: 1,
-                        fat: 7
-                    }
-                },
-                {
-                    title: "Anda Bhurji (Scrambled Egg, 1 serving)",
-                    nutrition: {
-                        calories: 180,
-                        protein: 12,
-                        carbs: 3,
-                        fat: 14
-                    }
-                },
-                {
-                    title: "Egg Omelette (2 eggs)",
-                    nutrition: {
-                        calories: 180,
-                        protein: 12,
-                        carbs: 2,
-                        fat: 14
-                    }
-                },
-                {
-                    title: "Masala Omelette (2 eggs with veggies)",
-                    nutrition: {
-                        calories: 210,
-                        protein: 14,
-                        carbs: 5,
-                        fat: 15
-                    }
-                },
-                {
-                    title: "Egg Curry (1 serving with gravy)",
-                    nutrition: {
-                        calories: 220,
-                        protein: 14,
-                        carbs: 8,
-                        fat: 15
-                    }
-                },
-                {
-                    title: "Egg White Only (from 1 egg)",
-                    nutrition: {
-                        calories: 17,
-                        protein: 3.6,
-                        carbs: 0.2,
-                        fat: 0
-                    }
-                },
-                {
-                    title: "Egg Yolk Only (from 1 egg)",
-                    nutrition: {
-                        calories: 55,
-                        protein: 2.7,
-                        carbs: 0.6,
-                        fat: 4.5
-                    }
-                },
-                {
-                    title: "Egg Paratha (1 piece, stuffed)",
-                    nutrition: {
-                        calories: 380,
-                        protein: 15,
-                        carbs: 42,
-                        fat: 18
-                    }
-                },
-                {
-                    title: "Anda Shami (1 piece)",
-                    nutrition: {
-                        calories: 150,
-                        protein: 10,
-                        carbs: 5,
-                        fat: 11
-                    }
-                },
-                {
-                    title: "Salmon (100g grilled)",
-                    nutrition: {
-                        calories: 208,
-                        protein: 20,
+                        calories: 50,
+                        protein: 9,
                         carbs: 0,
-                        fat: 13
+                        fat: 1.5
                     }
                 },
                 {
-                    title: "White Bread (2 slices)",
+                    title: "Boiled Chicken (2 pieces / ~50 g)",
                     nutrition: {
-                        calories: 160,
-                        protein: 6,
-                        carbs: 30,
-                        fat: 2
-                    }
-                },
-                {
-                    title: "White Bread (1 slice)",
-                    nutrition: {
-                        calories: 80,
-                        protein: 3,
-                        carbs: 15,
-                        fat: 1
-                    }
-                },
-                {
-                    title: "Greek Yogurt (150g)",
-                    nutrition: {
-                        calories: 150,
-                        protein: 15,
-                        carbs: 8,
-                        fat: 4
-                    }
-                },
-                {
-                    title: "Protein Bar",
-                    nutrition: {
-                        calories: 220,
-                        protein: 20,
-                        carbs: 22,
-                        fat: 7
-                    }
-                },
-                {
-                    title: "Avocado (1/2 medium)",
-                    nutrition: {
-                        calories: 120,
-                        protein: 1.5,
-                        carbs: 6.5,
-                        fat: 11
-                    }
-                },
-                {
-                    title: "Almonds (28g)",
-                    nutrition: {
-                        calories: 164,
-                        protein: 6,
-                        carbs: 6,
-                        fat: 14
-                    }
-                },
-                {
-                    title: "Oatmeal (1 cup cooked)",
-                    nutrition: {
-                        calories: 158,
-                        protein: 6,
-                        carbs: 27,
+                        calories: 100,
+                        protein: 18,
+                        carbs: 0,
                         fat: 3
                     }
                 },
-                {
-                    title: "Sweet Potato (medium baked)",
-                    nutrition: {
-                        calories: 112,
-                        protein: 2,
-                        carbs: 26,
-                        fat: 0
-                    }
-                },
-                {
-                    title: "Tuna (canned in water, 100g)",
-                    nutrition: {
-                        calories: 116,
-                        protein: 26,
-                        carbs: 0,
-                        fat: 0.5
-                    }
-                }
+
             ],
             'custom': []
         };
@@ -4718,7 +3543,7 @@ foreach ($existingMeals as $meal) {
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    showNotification('Error saving meals: ' + error.message, 'error');
+                    showNotification('Error saving meals: '.error.message, 'error');
                     saveBtn.innerHTML = originalText;
                     saveBtn.disabled = false;
                 });
@@ -4837,44 +3662,6 @@ foreach ($existingMeals as $meal) {
 
         function updateWaterDisplay() {
             document.getElementById('waterAmount').textContent = `${waterGlasses}/${maxWater}`;
-        }
-
-        function simulateBarcodeScan() {
-            // Add some quick healthy options
-            const quickFoods = [{
-                    name: "Protein Shake (1 scoop)",
-                    calories: 120,
-                    protein: 24,
-                    carbs: 3,
-                    fat: 1
-                },
-                {
-                    name: "Boiled Egg (1 large)",
-                    calories: 78,
-                    protein: 6,
-                    carbs: 0.6,
-                    fat: 5
-                },
-                {
-                    name: "Greek Yogurt (150g)",
-                    calories: 150,
-                    protein: 15,
-                    carbs: 8,
-                    fat: 4
-                },
-                {
-                    name: "Apple (medium)",
-                    calories: 95,
-                    protein: 0.5,
-                    carbs: 25,
-                    fat: 0.3
-                }
-            ];
-
-            const randomFood = quickFoods[Math.floor(Math.random() * quickFoods.length)];
-
-            // Directly ask for meal selection
-            showMealSelection(randomFood.name, randomFood.calories, randomFood.protein, randomFood.carbs, randomFood.fat);
         }
 
         function saveWaterIntake() {
