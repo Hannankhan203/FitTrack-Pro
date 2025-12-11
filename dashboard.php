@@ -45,9 +45,6 @@ if ($hour < 5) {  // Changed from 12 to 5 for "Good night"
 
 // Initialize variables
 $today_workout = ['count' => 0, 'total_duration' => 0];
-$today_exercises = [];
-$today_meals_display = [];
-$today_meals = ['total_calories' => 0];
 $goal_info = null;
 $streak = 0;
 $achievements_count = 0;
@@ -60,128 +57,82 @@ error_log("Today's date (Pakistan): " . $today);
 error_log("Current time (Pakistan): " . $current_time);
 error_log("==========================================");
 
-// ==================== SIMPLIFIED EXERCISES FETCH ====================
+// ==================== TODAY'S WORKOUT STATS ====================
 try {
-    // Get ALL exercises for this user to see what we have
-    $stmt = $pdo->prepare("SELECT * FROM workouts WHERE user_id = ? ORDER BY date DESC LIMIT 20");
-    $stmt->execute([$user_id]);
-    $all_exercises = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-    error_log("Total exercises found for user: " . count($all_exercises));
-} catch (PDOException $e) {
-    error_log("Debug query error: " . $e->getMessage());
-}
-
-// Now get today's exercises - SIMPLIFIED APPROACH
-try {
-    // Try direct comparison first
-    $stmt = $pdo->prepare("SELECT * FROM workouts WHERE user_id = ? AND DATE(date) = ? ORDER BY date DESC LIMIT 10");
+    // Get today's exercises - REMOVED THE LIMIT TO SHOW ALL
+    $stmt = $pdo->prepare("SELECT * FROM workouts WHERE user_id = ? AND DATE(date) = ? ORDER BY date DESC");
     $stmt->execute([$user_id, $today]);
     $today_exercises = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    error_log("Method 1 (DATE()) found: " . count($today_exercises) . " exercises");
-
-    // If no exercises found, try to see if there are any recent ones
-    if (empty($today_exercises)) {
-        error_log("No exercises found for today. Checking last 2 days...");
-        $yesterday = date('Y-m-d', strtotime('-1 day'));
-        $stmt = $pdo->prepare("SELECT * FROM workouts WHERE user_id = ? AND (DATE(date) = ? OR DATE(date) = ?) ORDER BY date DESC LIMIT 10");
-        $stmt->execute([$user_id, $today, $yesterday]);
-        $recent_exercises = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        error_log("Recent exercises (today+yesterday): " . count($recent_exercises));
-
-        // For debugging, let's use recent exercises if none found for today
-        if (count($recent_exercises) > 0 && count($today_exercises) === 0) {
-            $today_exercises = $recent_exercises;
-            error_log("Using recent exercises for display");
-        }
-    }
-} catch (PDOException $e) {
-    error_log("Database error (today exercises): " . $e->getMessage());
-    $today_exercises = [];
-}
-
-// ==================== TODAY'S WORKOUT STATS ====================
-try {
     $today_workout_count = count($today_exercises);
-    $today_total_duration = 0;
+    $today_total_minutes = 0;
+
+    // List of exercises that store duration in SECONDS (duration exercises)
+    $duration_exercises_seconds = [
+        'Knee Plank 🦵',
+        'Inchworms 🐛',
+        'High Stepping 🦵',
+        'Cobra Stretch 🐍',
+        'Plank 🧘‍♂️',
+        'Forearm Plank 🧘‍♂️',
+        'Side Plank 🧘‍♂️',
+        'Hollow Body Hold 🫥',
+        'L-sit L️⃣',
+        'Dead Bug 🐛',
+        'Bird-dog 🐦',
+        'Bear Crawls 🐻'
+    ];
+
+    // List of cardio exercises that store duration in MINUTES
+    $cardio_exercises_minutes = [
+        'Walking 🚶‍♂️',
+        'Running/Jogging 🏃‍♂️',
+        'Cycling 🚴‍♀️',
+        'Swimming 🏊‍♂️',
+        'Jump Rope 🦶',
+        'Rowing 🚣‍♂️',
+        'Elliptical Trainer 🏃‍♂️',
+        'Stair Climber 🏃‍♂️',
+        'Sprint Intervals ⚡',
+        'Burpees 💥',
+        'Mountain Climbers ⛰️'
+    ];
 
     foreach ($today_exercises as $workout) {
         if (!empty($workout['duration']) && $workout['duration'] > 0) {
-            // Check if it's a duration exercise (like plank)
-            $exercise_name = strtolower($workout['exercise'] ?? '');
-            $is_duration_exercise = false;
-            $duration_exercises = [
-                'plank',
-                'forearm plank',
-                'side plank',
-                'hollow body hold',
-                'dead bug',
-                'bird-dog',
-                'bear crawls',
-                'rc plank'
-            ];
+            $exercise_name = $workout['exercise'];
 
-            foreach ($duration_exercises as $dur_ex) {
-                if (strpos($exercise_name, $dur_ex) !== false) {
-                    $is_duration_exercise = true;
-                    break;
-                }
+            // Check if it's a duration exercise (stored in seconds)
+            if (in_array($exercise_name, $duration_exercises_seconds)) {
+                // Convert seconds to minutes
+                $today_total_minutes += ($workout['duration'] / 60);
             }
-
-            // Also check if it's stored as duration exercise (sets and reps = 0)
-            $is_stored_as_duration = (isset($workout['sets']) && $workout['sets'] == 0) &&
-                (isset($workout['reps']) && $workout['reps'] == 0);
-
-            $is_duration_exercise = $is_duration_exercise || $is_stored_as_duration;
-
-            if ($is_duration_exercise) {
-                // Convert seconds to minutes for total duration calculation
-                $today_total_duration += ($workout['duration'] / 60);
+            // Check if it's a cardio exercise (stored in minutes)
+            else if (in_array($exercise_name, $cardio_exercises_minutes)) {
+                // Already in minutes
+                $today_total_minutes += $workout['duration'];
+            }
+            // Check if it's a strength exercise with sets/reps
+            else if (isset($workout['sets']) && $workout['sets'] > 0 && isset($workout['reps']) && $workout['reps'] > 0) {
+                // For strength exercises, duration is already in minutes
+                $today_total_minutes += $workout['duration'];
             } else {
-                // Regular exercise, duration is already in minutes
-                $today_total_duration += $workout['duration'];
+                // Default: assume it's in minutes
+                $today_total_minutes += $workout['duration'];
             }
         } else {
-            // Estimate duration
-            $today_total_duration += 10; // Default 10 minutes per exercise
+            // Estimate duration for exercises without duration data
+            // Default 10 minutes per exercise
+            $today_total_minutes += 10;
         }
     }
 
     $today_workout = [
         'count' => $today_workout_count,
-        'total_duration' => round($today_total_duration, 1)
+        'total_duration' => round($today_total_minutes, 1)
     ];
 } catch (Exception $e) {
     error_log("Error calculating workout stats: " . $e->getMessage());
-}
-
-// ==================== TODAY'S MEALS ====================
-try {
-    $stmt = $pdo->prepare("SELECT meal_time, food_name, calories, protein, carbs, fat, date FROM meals WHERE user_id = ? AND DATE(date) = ? ORDER BY 
-        CASE meal_time 
-            WHEN 'breakfast' THEN 1
-            WHEN 'lunch' THEN 2
-            WHEN 'dinner' THEN 3
-            WHEN 'snack' THEN 4
-            ELSE 5
-        END, id DESC LIMIT 5");
-    $stmt->execute([$user_id, $today]);
-    $today_meals_display = $stmt->fetchAll(PDO::FETCH_ASSOC);
-} catch (PDOException $e) {
-    error_log("Database error (today meals): " . $e->getMessage());
-}
-
-// ==================== MEAL STATS ====================
-try {
-    $stmt = $pdo->prepare("SELECT SUM(calories) as total_calories FROM meals WHERE user_id = ? AND DATE(date) = ?");
-    $stmt->execute([$user_id, $today]);
-    $today_meals = $stmt->fetch(PDO::FETCH_ASSOC);
-    if (!$today_meals || $today_meals['total_calories'] === null) {
-        $today_meals = ['total_calories' => 0];
-    }
-} catch (PDOException $e) {
-    error_log("Database error (meal stats): " . $e->getMessage());
 }
 
 // ==================== GOAL INFO - COMPLETELY FIXED ====================
@@ -234,24 +185,10 @@ try {
         $goal_weight = $goal_info['goal_weight'];
         $goal_type = $goal_info['goal_type'] ?? 'maintain';
 
-        // Debug output - uncomment to see what's happening
-        /*
-        echo "<div style='background:#222;color:white;padding:10px;margin:10px;border:2px solid red;'>";
-        echo "DEBUG - Goal Progress Calculation:<br>";
-        echo "Starting Weight: " . $starting_weight . " kg<br>";
-        echo "Current Weight: " . $current_weight . " kg<br>";
-        echo "Goal Weight: " . $goal_weight . " kg<br>";
-        echo "Goal Type: " . $goal_type . "<br>";
-        */
-
         if ($goal_type == 'lose') {
             if ($starting_weight > $goal_weight && $starting_weight > 0) {
                 $total_to_lose = $starting_weight - $goal_weight;
                 $current_lost = $starting_weight - $current_weight;
-
-                // Debug
-                // echo "Total to lose: " . $total_to_lose . " kg<br>";
-                // echo "Current lost: " . $current_lost . " kg<br>";
 
                 if ($total_to_lose > 0) {
                     $goal_progress = ($current_lost / $total_to_lose) * 100;
@@ -272,10 +209,6 @@ try {
             // Maintenance goal
             $goal_progress = 100;
         }
-
-        // Debug
-        // echo "Progress: " . round($goal_progress) . "%<br>";
-        // echo "</div>";
 
         // Round for display
         $goal_progress = round($goal_progress);
@@ -312,10 +245,41 @@ try {
 
 // ==================== WEEKLY DATA FOR CHART ====================
 try {
+    // List of exercises that store duration in SECONDS
+    $duration_exercises_seconds = [
+        'Knee Plank 🦵',
+        'Inchworms 🐛',
+        'High Stepping 🦵',
+        'Cobra Stretch 🐍',
+        'Plank 🧘‍♂️',
+        'Forearm Plank 🧘‍♂️',
+        'Side Plank 🧘‍♂️',
+        'Hollow Body Hold 🫥',
+        'L-sit L️⃣',
+        'Dead Bug 🐛',
+        'Bird-dog 🐦',
+        'Bear Crawls 🐻'
+    ];
+
+    // List of cardio exercises that store duration in MINUTES
+    $cardio_exercises_minutes = [
+        'Walking 🚶‍♂️',
+        'Running/Jogging 🏃‍♂️',
+        'Cycling 🚴‍♀️',
+        'Swimming 🏊‍♂️',
+        'Jump Rope 🦶',
+        'Rowing 🚣‍♂️',
+        'Elliptical Trainer 🏃‍♂️',
+        'Stair Climber 🏃‍♂️',
+        'Sprint Intervals ⚡',
+        'Burpees 💥',
+        'Mountain Climbers ⛰️'
+    ];
+
     for ($i = 6; $i >= 0; $i--) {
         $day = date('Y-m-d', strtotime("-$i days"));
 
-        // Get all workouts for this day to calculate total duration properly
+        // Get all workouts for this day
         $stmt = $pdo->prepare("SELECT * FROM workouts WHERE user_id = ? AND DATE(date) = ?");
         $stmt->execute([$user_id, $day]);
         $day_workouts = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -325,38 +289,24 @@ try {
         if (!empty($day_workouts)) {
             foreach ($day_workouts as $workout) {
                 if (!empty($workout['duration']) && $workout['duration'] > 0) {
-                    // Check if it's a duration exercise
-                    $exercise_name = strtolower($workout['exercise'] ?? '');
-                    $is_duration_exercise = false;
-                    $duration_exercises = [
-                        'plank',
-                        'forearm plank',
-                        'side plank',
-                        'hollow body hold',
-                        'dead bug',
-                        'bird-dog',
-                        'bear crawls',
-                        'rc plank'
-                    ];
+                    $exercise_name = $workout['exercise'];
 
-                    foreach ($duration_exercises as $dur_ex) {
-                        if (strpos($exercise_name, $dur_ex) !== false) {
-                            $is_duration_exercise = true;
-                            break;
-                        }
-                    }
-
-                    // Also check if it's stored as duration exercise
-                    $is_stored_as_duration = (isset($workout['sets']) && $workout['sets'] == 0) &&
-                        (isset($workout['reps']) && $workout['reps'] == 0);
-
-                    $is_duration_exercise = $is_duration_exercise || $is_stored_as_duration;
-
-                    if ($is_duration_exercise) {
+                    // Check if it's a duration exercise (stored in seconds)
+                    if (in_array($exercise_name, $duration_exercises_seconds)) {
                         // Convert seconds to minutes
                         $total_minutes += ($workout['duration'] / 60);
+                    }
+                    // Check if it's a cardio exercise (stored in minutes)
+                    else if (in_array($exercise_name, $cardio_exercises_minutes)) {
+                        // Already in minutes
+                        $total_minutes += $workout['duration'];
+                    }
+                    // Check if it's a strength exercise with sets/reps
+                    else if (isset($workout['sets']) && $workout['sets'] > 0 && isset($workout['reps']) && $workout['reps'] > 0) {
+                        // For strength exercises, duration is already in minutes
+                        $total_minutes += $workout['duration'];
                     } else {
-                        // Regular exercise, duration is already in minutes
+                        // Default: assume it's in minutes
                         $total_minutes += $workout['duration'];
                     }
                 } else {
@@ -373,19 +323,6 @@ try {
     }
 } catch (PDOException $e) {
     error_log("Database error (weekly data): " . $e->getMessage());
-}
-
-// Function to format datetime
-function formatPakistanTime($datetime)
-{
-    if (empty($datetime)) return '';
-
-    try {
-        $date = new DateTime($datetime);
-        return $date->format('g:i A');
-    } catch (Exception $e) {
-        return '';
-    }
 }
 ?>
 
@@ -627,421 +564,6 @@ function formatPakistanTime($datetime)
             font-size: 1.1rem;
             box-shadow: 0 5px 20px rgba(255, 45, 117, 0.3);
             margin-left: 2rem;
-        }
-
-        /* Exercises Card */
-        .exercises-card {
-            background: linear-gradient(145deg,
-                    rgba(0, 212, 255, 0.05),
-                    rgba(0, 212, 255, 0.02));
-            backdrop-filter: blur(25px);
-            -webkit-backdrop-filter: blur(25px);
-            border: 1px solid rgba(0, 212, 255, 0.15);
-            border-radius: 28px;
-            padding: 2.5rem;
-            margin-bottom: 2rem;
-            box-shadow: 0 20px 60px rgba(0, 212, 255, 0.1);
-        }
-
-        .exercises-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2rem;
-            padding-bottom: 1.5rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .exercises-title {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .exercises-title h4 {
-            font-size: 1.8rem;
-            font-weight: 800;
-            color: white;
-            margin: 0;
-        }
-
-        .exercises-count {
-            background: var(--gradient-primary);
-            color: white;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 800;
-            font-size: 1.2rem;
-            flex-shrink: 0;
-        }
-
-        .exercises-list {
-            display: flex;
-            flex-direction: column;
-            gap: 1.2rem;
-        }
-
-        .exercise-item {
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 20px;
-            padding: 1.8rem;
-            border-left: 5px solid var(--primary);
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .exercise-item:hover {
-            transform: translateY(-5px);
-            background: rgba(0, 212, 255, 0.08);
-            border-left-color: var(--secondary);
-            box-shadow: 0 15px 40px rgba(0, 212, 255, 0.15);
-        }
-
-        .exercise-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 1.5rem;
-        }
-
-        .exercise-name {
-            font-size: 1.4rem;
-            font-weight: 800;
-            margin-bottom: 0.8rem;
-            color: white;
-            letter-spacing: -0.3px;
-        }
-
-        .exercise-category {
-            padding: 6px 16px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .exercise-stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 1rem;
-        }
-
-        .stat-item {
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 16px;
-            padding: 1.2rem;
-            text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            transition: all 0.3s ease;
-        }
-
-        .stat-item:hover {
-            background: rgba(255, 255, 255, 0.05);
-            transform: translateY(-2px);
-        }
-
-        .stat-icon {
-            width: 50px;
-            height: 50px;
-            margin: 0 auto 0.8rem;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.3rem;
-        }
-
-        .stat-icon.calorie-stat {
-            background: rgba(255, 107, 107, 0.1);
-            color: #ff6b6b;
-        }
-
-        .stat-icon.interval-stat {
-            background: rgba(157, 78, 221, 0.1);
-            color: #9d4edd;
-        }
-
-        .stat-icon.info-stat {
-            background: rgba(255, 193, 7, 0.1);
-            color: #ffc107;
-        }
-
-        .stat-icon.strength-stat {
-            background: rgba(0, 212, 255, 0.1);
-            color: var(--primary);
-        }
-
-        .stat-icon.weight-stat {
-            background: rgba(0, 230, 118, 0.1);
-            color: var(--success);
-        }
-
-        .stat-icon.cardio-stat {
-            background: rgba(255, 45, 117, 0.1);
-            color: var(--secondary);
-        }
-
-        .stat-icon.time-stat {
-            background: rgba(157, 78, 221, 0.1);
-            color: var(--accent);
-        }
-
-        .stat-value {
-            font-size: 1.8rem;
-            font-weight: 900;
-            margin-bottom: 0.25rem;
-            color: white;
-        }
-
-        .stat-label {
-            color: rgba(255, 255, 255, 0.6);
-            font-size: 0.9rem;
-            font-weight: 500;
-            text-transform: uppercase;
-        }
-
-        .view-all-exercises {
-            text-align: center;
-            margin-top: 2rem;
-        }
-
-        .empty-exercises {
-            text-align: center;
-            padding: 4rem 2rem;
-        }
-
-        .empty-exercises-icon {
-            font-size: 5rem;
-            background: var(--gradient);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            margin-bottom: 1.5rem;
-            opacity: 0.5;
-        }
-
-        .empty-exercises h4 {
-            font-size: 1.8rem;
-            font-weight: 800;
-            margin-bottom: 1rem;
-            color: white;
-            letter-spacing: -0.5px;
-        }
-
-        .empty-exercises p {
-            color: rgba(255, 255, 255, 0.7);
-            margin-bottom: 2rem;
-            max-width: 400px;
-            margin-left: auto;
-            margin-right: auto;
-            line-height: 1.6;
-            font-size: 1.1rem;
-        }
-
-        /* Meals Card */
-        .meals-card {
-            background: linear-gradient(145deg,
-                    rgba(255, 45, 117, 0.05),
-                    rgba(255, 45, 117, 0.02));
-            backdrop-filter: blur(25px);
-            -webkit-backdrop-filter: blur(25px);
-            border: 1px solid rgba(255, 45, 117, 0.15);
-            border-radius: 28px;
-            padding: 2.5rem;
-            margin-bottom: 2rem;
-            box-shadow: 0 20px 60px rgba(255, 45, 117, 0.1);
-        }
-
-        .meals-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2rem;
-            padding-bottom: 1.5rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .meals-title {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .meals-title h4 {
-            font-size: 1.8rem;
-            font-weight: 800;
-            color: white;
-            margin: 0;
-        }
-
-        .meals-count {
-            background: var(--gradient-secondary);
-            color: white;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 800;
-            font-size: 1.2rem;
-            flex-shrink: 0;
-        }
-
-        .meals-list {
-            display: flex;
-            flex-direction: column;
-            gap: 1.2rem;
-        }
-
-        .meal-item {
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 20px;
-            padding: 1.8rem;
-            border-left: 5px solid var(--secondary);
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .meal-item:hover {
-            transform: translateY(-5px);
-            background: rgba(255, 45, 117, 0.08);
-            border-left-color: var(--accent);
-            box-shadow: 0 15px 40px rgba(255, 45, 117, 0.15);
-        }
-
-        .meal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 1.5rem;
-        }
-
-        .meal-name {
-            font-size: 1.4rem;
-            font-weight: 800;
-            margin-bottom: 0.8rem;
-            color: white;
-            letter-spacing: -0.3px;
-        }
-
-        .meal-type {
-            padding: 6px 16px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .meal-stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 1rem;
-        }
-
-        .meal-stat-item {
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 16px;
-            padding: 1.2rem;
-            text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            transition: all 0.3s ease;
-        }
-
-        .meal-stat-item:hover {
-            background: rgba(255, 255, 255, 0.05);
-            transform: translateY(-2px);
-        }
-
-        .meal-stat-icon {
-            width: 50px;
-            height: 50px;
-            margin: 0 auto 0.8rem;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.3rem;
-        }
-
-        .meal-stat-icon.calorie-stat {
-            background: rgba(255, 45, 117, 0.1);
-            color: var(--secondary);
-        }
-
-        .meal-stat-icon.protein-stat {
-            background: rgba(0, 212, 255, 0.1);
-            color: var(--primary);
-        }
-
-        .meal-stat-icon.carbs-stat {
-            background: rgba(0, 230, 118, 0.1);
-            color: var(--success);
-        }
-
-        .meal-stat-icon.fat-stat {
-            background: rgba(255, 193, 7, 0.1);
-            color: var(--warning);
-        }
-
-        .meal-stat-value {
-            font-size: 1.8rem;
-            font-weight: 900;
-            margin-bottom: 0.25rem;
-            color: white;
-        }
-
-        .meal-stat-label {
-            color: rgba(255, 255, 255, 0.6);
-            font-size: 0.9rem;
-            font-weight: 500;
-            text-transform: uppercase;
-        }
-
-        .view-all-meals {
-            text-align: center;
-            margin-top: 2rem;
-        }
-
-        .empty-meals {
-            text-align: center;
-            padding: 4rem 2rem;
-        }
-
-        .empty-meals-icon {
-            font-size: 5rem;
-            background: var(--gradient);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            margin-bottom: 1.5rem;
-            opacity: 0.5;
-        }
-
-        .empty-meals h4 {
-            font-size: 1.8rem;
-            font-weight: 800;
-            margin-bottom: 1rem;
-            color: white;
-            letter-spacing: -0.5px;
-        }
-
-        .empty-meals p {
-            color: rgba(255, 255, 255, 0.7);
-            margin-bottom: 2rem;
-            max-width: 400px;
-            margin-left: auto;
-            margin-right: auto;
-            line-height: 1.6;
-            font-size: 1.1rem;
         }
 
         /* Stats Cards */
@@ -1491,41 +1013,11 @@ function formatPakistanTime($datetime)
                 margin-top: 1rem;
             }
 
-            .exercises-card,
-            .meals-card,
             .chart-container,
             .goal-card {
                 padding: 1.5rem;
                 border-radius: 24px;
                 margin-bottom: 1.5rem;
-            }
-
-            .exercises-header,
-            .meals-header {
-                flex-direction: column;
-                gap: 1rem;
-                align-items: flex-start;
-                margin-bottom: 1.5rem;
-                padding-bottom: 1rem;
-            }
-
-            .exercises-title h4,
-            .meals-title h4 {
-                font-size: 1.4rem;
-            }
-
-            .exercises-count,
-            .meals-count {
-                width: 35px;
-                height: 35px;
-                font-size: 1rem;
-            }
-
-            .exercise-stats,
-            .meal-stats,
-            .goal-stats {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 0.8rem;
             }
 
             .quick-actions {
@@ -1549,17 +1041,6 @@ function formatPakistanTime($datetime)
 
             .dashboard-header h1 {
                 font-size: 1.8rem;
-            }
-
-            .exercises-title h4,
-            .meals-title h4 {
-                font-size: 1.2rem;
-            }
-
-            .exercise-stats,
-            .meal-stats,
-            .goal-stats {
-                grid-template-columns: 1fr;
             }
 
             .stats-value {
@@ -1667,416 +1148,6 @@ function formatPakistanTime($datetime)
             </div>
         </div>
 
-        <!-- Today's Exercises Card -->
-        <div class="exercises-card mb-4">
-            <div class="exercises-header">
-                <div class="exercises-title">
-                    <i class="fas fa-dumbbell fa-lg text-primary"></i>
-                    <h4 class="mb-0">Today's Exercises</h4>
-                    <div class="exercises-count"><?= count($today_exercises) ?></div>
-                </div>
-                <?php if (!empty($today_exercises)): ?>
-                    <a href="/fitness-tracker/workouts/log.php" class="btn btn-sm btn-outline-primary">
-                        <i class="fas fa-plus me-1"></i>Add More
-                    </a>
-                <?php endif; ?>
-            </div>
-
-            <?php if (!empty($today_exercises)): ?>
-                <div class="exercises-list">
-                    <?php foreach ($today_exercises as $exercise): ?>
-                        <?php
-                        // Get exercise name safely
-                        $exercise_name = htmlspecialchars($exercise['exercise'] ?? 'Unnamed Exercise');
-                        $exercise_name_lower = strtolower($exercise_name);
-
-// Determine if it's cardio or strength
-$is_cardio = false;
-$cardio_keywords = ['run', 'jog', 'cycle', 'swim', 'walk', 'elliptical', 'stair', 'jump', 'burpee', 'sprint', 'bike'];
-
-// Strength exercise patterns that contain "row" but are NOT cardio
-$strength_exercises_with_row = [
-    'bent over row',
-    'seated row',
-    'cable row',
-    't-bar row',
-    'inverted row',
-    'single-arm row',
-    'dumbbell row',
-    'barbell row',
-    'pendlay row',
-    'meadows row',
-    'yates row'
-];
-
-// Check if it's a strength exercise with "row" in the name
-$is_strength_row = false;
-foreach ($strength_exercises_with_row as $strength_row) {
-    if (strpos($exercise_name_lower, $strength_row) !== false) {
-        $is_strength_row = true;
-        break;
-    }
-}
-
-// Only classify as cardio if it contains cardio keywords AND is not a strength row exercise
-if (!$is_strength_row) {
-    foreach ($cardio_keywords as $keyword) {
-        // Special case: "row" should only be cardio if it's specifically about rowing machines
-        // or appears at the end of words like "rowing"
-        if ($keyword === 'row') {
-            // Check if it's specifically about rowing (cardio machine)
-            if (strpos($exercise_name_lower, 'rowing') !== false || 
-                strpos($exercise_name_lower, 'rower') !== false ||
-                strpos($exercise_name_lower, 'row machine') !== false) {
-                $is_cardio = true;
-                break;
-            }
-            // For standalone "row", be more specific
-            if (preg_match('/\brow\b/', $exercise_name_lower) && 
-                !strpos($exercise_name_lower, 'dumbbell') &&
-                !strpos($exercise_name_lower, 'barbell') &&
-                !strpos($exercise_name_lower, 'cable') &&
-                !strpos($exercise_name_lower, 't-bar')) {
-                $is_cardio = true;
-                break;
-            }
-        } else {
-            // For other cardio keywords
-            if (strpos($exercise_name_lower, $keyword) !== false) {
-                $is_cardio = true;
-                break;
-            }
-        }
-    }
-}
-
-// Additional check: if it contains weight-related terms, it's likely strength
-$weight_keywords = ['dumbbell', 'barbell', 'kettlebell', 'weight', 'press', 'curl', 'extension', 'raise', 'fly', 'pull', 'push', 'squat', 'deadlift', 'lunge', 'pull-up', 'chin-up', 'dip', 'crunch'];
-$has_weight_term = false;
-foreach ($weight_keywords as $keyword) {
-    if (strpos($exercise_name_lower, $keyword) !== false) {
-        $has_weight_term = true;
-        break;
-    }
-}
-
-// If it has weight terms and doesn't specifically contain cardio machine names, it's strength
-if ($has_weight_term && !$is_cardio) {
-    $is_cardio = false;
-}
-
-$category = $is_cardio ? 'Cardio' : 'Strength';
-$category_color = $is_cardio ? '#ff006e' : '#3a86ff';
-$category_bg = $is_cardio ? 'rgba(255, 0, 110, 0.1)' : 'rgba(58, 134, 255, 0.1)';
-                        $category = $is_cardio ? 'Cardio' : 'Strength';
-                        $category_color = $is_cardio ? '#ff006e' : '#3a86ff';
-                        $category_bg = $is_cardio ? 'rgba(255, 0, 110, 0.1)' : 'rgba(58, 134, 255, 0.1)';
-
-                        // Check if it's a duration exercise (like plank)
-                        $is_duration_exercise = false;
-                        $duration_exercises = [
-                            'plank',
-                            'forearm plank',
-                            'side plank',
-                            'hollow body hold',
-                            'dead bug',
-                            'bird-dog',
-                            'bear crawls',
-                            'rc plank'
-                        ];
-
-                        foreach ($duration_exercises as $dur_ex) {
-                            if (strpos($exercise_name_lower, $dur_ex) !== false) {
-                                $is_duration_exercise = true;
-                                break;
-                            }
-                        }
-
-                        // Also check if it's stored as duration exercise (sets and reps = 0)
-                        $is_stored_as_duration = (isset($exercise['sets']) && $exercise['sets'] == 0) &&
-                            (isset($exercise['reps']) && $exercise['reps'] == 0);
-
-                        $is_duration_exercise = $is_duration_exercise || $is_stored_as_duration;
-                        ?>
-
-                        <div class="exercise-item">
-                            <div class="exercise-header">
-                                <div>
-                                    <div class="exercise-name"><?= $exercise_name ?></div>
-                                    <span class="exercise-category" style="background: <?= $category_bg ?>; color: <?= $category_color ?>;">
-                                        <?= $category ?>
-                                        <?php if ($is_duration_exercise): ?>
-                                            <span class="badge bg-warning ms-1">Duration</span>
-                                        <?php endif; ?>
-                                    </span>
-                                </div>
-                            </div>
-
-                            <div class="exercise-stats">
-                                <?php if (!$is_cardio): ?>
-                                    <!-- Strength Stats -->
-                                    <?php if ($is_duration_exercise): ?>
-                                        <!-- Duration exercise display (like plank) -->
-                                        <?php if (!empty($exercise['duration']) && $exercise['duration'] > 0): ?>
-                                            <div class="stat-item">
-                                                <div class="stat-icon strength-stat">
-                                                    <i class="fas fa-stopwatch"></i>
-                                                </div>
-                                                <div class="stat-value"><?= htmlspecialchars($exercise['duration']) ?> sec</div>
-                                                <div class="stat-label">Duration</div>
-                                            </div>
-                                        <?php endif; ?>
-
-                                        <!-- For duration exercises, we don't show sets/reps -->
-                                    <?php else: ?>
-                                        <!-- Regular strength exercise -->
-                                        <?php if (!empty($exercise['sets']) && $exercise['sets'] > 0): ?>
-                                            <div class="stat-item">
-                                                <div class="stat-icon strength-stat">
-                                                    <i class="fas fa-redo"></i>
-                                                </div>
-                                                <div class="stat-value"><?= htmlspecialchars($exercise['sets']) ?></div>
-                                                <div class="stat-label">Sets</div>
-                                            </div>
-                                        <?php endif; ?>
-
-                                        <?php if (!empty($exercise['reps']) && $exercise['reps'] > 0): ?>
-                                            <div class="stat-item">
-                                                <div class="stat-icon strength-stat">
-                                                    <i class="fas fa-sync-alt"></i>
-                                                </div>
-                                                <div class="stat-value"><?= htmlspecialchars($exercise['reps']) ?></div>
-                                                <div class="stat-label">Reps</div>
-                                            </div>
-                                        <?php endif; ?>
-
-                                        <?php if (!empty($exercise['weight']) && $exercise['weight'] > 0): ?>
-                                            <div class="stat-item">
-                                                <div class="stat-icon weight-stat">
-                                                    <i class="fas fa-weight-hanging"></i>
-                                                </div>
-                                                <div class="stat-value"><?= htmlspecialchars($exercise['weight']) ?> kg</div>
-                                                <div class="stat-label">Weight</div>
-                                            </div>
-                                        <?php endif; ?>
-
-                                        <?php if (!empty($exercise['duration']) && $exercise['duration'] > 0 && !$is_duration_exercise): ?>
-                                            <div class="stat-item">
-                                                <div class="stat-icon time-stat">
-                                                    <i class="fas fa-stopwatch"></i>
-                                                </div>
-                                                <div class="stat-value"><?= htmlspecialchars($exercise['duration']) ?> min</div>
-                                                <div class="stat-label">Duration</div>
-                                            </div>
-                                        <?php endif; ?>
-                                    <?php endif; ?>
-                                <?php else: ?>
-                                    <!-- Cardio Stats -->
-                                    <?php if (!empty($exercise['duration']) && $exercise['duration'] > 0): ?>
-                                        <div class="stat-item">
-                                            <div class="stat-icon cardio-stat">
-                                                <i class="fas fa-clock"></i>
-                                            </div>
-                                            <div class="stat-value"><?= htmlspecialchars($exercise['duration']) ?> min</div>
-                                            <div class="stat-label">Duration</div>
-                                        </div>
-                                    <?php endif; ?>
-
-                                    <?php if (!empty($exercise['distance']) && $exercise['distance'] > 0): ?>
-                                        <div class="stat-item">
-                                            <div class="stat-icon cardio-stat">
-                                                <i class="fas fa-route"></i>
-                                            </div>
-                                            <div class="stat-value"><?= htmlspecialchars($exercise['distance']) ?> km</div>
-                                            <div class="stat-label">Distance</div>
-                                        </div>
-                                    <?php endif; ?>
-
-                                    <?php if (!empty($exercise['calories']) && $exercise['calories'] > 0): ?>
-                                        <div class="stat-item">
-                                            <div class="stat-icon cardio-stat">
-                                                <i class="fas fa-fire"></i>
-                                            </div>
-                                            <div class="stat-value"><?= htmlspecialchars($exercise['calories']) ?></div>
-                                            <div class="stat-label">Calories</div>
-                                        </div>
-                                    <?php endif; ?>
-
-                                    <?php if (!empty($exercise['sets']) && $exercise['sets'] > 0): ?>
-                                        <div class="stat-item">
-                                            <div class="stat-icon cardio-stat">
-                                                <i class="fas fa-redo"></i>
-                                            </div>
-                                            <div class="stat-value"><?= htmlspecialchars($exercise['sets']) ?></div>
-                                            <div class="stat-label">Intervals</div>
-                                        </div>
-                                    <?php endif; ?>
-                                <?php endif; ?>
-
-                                <!-- If no stats available, show a message -->
-                                <?php
-                                $has_stats = false;
-                                $stat_fields = ['sets', 'reps', 'weight', 'duration', 'distance', 'calories'];
-                                foreach ($stat_fields as $field) {
-                                    if (!empty($exercise[$field]) && $exercise[$field] > 0) {
-                                        $has_stats = true;
-                                        break;
-                                    }
-                                }
-
-                                if (!$has_stats): ?>
-                                    <div class="stat-item">
-                                        <div class="stat-icon info-stat">
-                                            <i class="fas fa-info-circle"></i>
-                                        </div>
-                                        <div class="stat-value">--</div>
-                                        <div class="stat-label">No details</div>
-                                    </div>
-                                <?php endif; ?>
-                            </div>
-                        </div>
-                    <?php endforeach; ?>
-
-                    <?php if (count($today_exercises) >= 5): ?>
-                        <div class="view-all-exercises">
-                            <a href="/fitness-tracker/workouts/log.php" class="btn btn-primary">
-                                <i class="fas fa-list me-1"></i>View All Exercises
-                            </a>
-                        </div>
-                    <?php endif; ?>
-                </div>
-            <?php else: ?>
-                <div class="empty-exercises">
-                    <div class="empty-exercises-icon">
-                        <i class="fas fa-dumbbell"></i>
-                    </div>
-                    <h4>No exercises logged today</h4>
-                    <p>Start your fitness journey by logging your first workout!</p>
-                    <a href="/fitness-tracker/workouts/log.php" class="btn btn-primary btn-lg">
-                        <i class="fas fa-plus me-2"></i>Log Your First Workout
-                    </a>
-                </div>
-            <?php endif; ?>
-        </div>
-
-        <!-- Today's Meals Card -->
-        <div class="meals-card mb-4">
-            <div class="meals-header">
-                <div class="meals-title">
-                    <i class="fas fa-utensils fa-lg" style="color: #ff006e;"></i>
-                    <h4 class="mb-0">Today's Meals</h4>
-                    <div class="meals-count"><?= count($today_meals_display) ?></div>
-                </div>
-                <?php if (!empty($today_meals_display)): ?>
-                    <a href="/fitness-tracker/meals/planner.php" class="btn btn-sm btn-outline-danger" style="border-color: #ff006e; color: #ff006e;">
-                        <i class="fas fa-plus me-1"></i>Add More
-                    </a>
-                <?php endif; ?>
-            </div>
-
-            <?php if (!empty($today_meals_display)): ?>
-                <div class="meals-list">
-                    <?php foreach ($today_meals_display as $meal): ?>
-                        <?php
-                        $meal_type = htmlspecialchars($meal['meal_time']);
-                        $meal_name = htmlspecialchars($meal['food_name']);
-                        $meal_type_color = '#ff006e';
-                        $meal_type_bg = 'rgba(255, 0, 110, 0.1)';
-
-                        switch ($meal_type) {
-                            case 'breakfast':
-                                $meal_type_color = '#ff9a9e';
-                                $meal_type_bg = 'rgba(255, 154, 158, 0.1)';
-                                break;
-                            case 'lunch':
-                                $meal_type_color = '#3a86ff';
-                                $meal_type_bg = 'rgba(58, 134, 255, 0.1)';
-                                break;
-                            case 'dinner':
-                                $meal_type_color = '#38b000';
-                                $meal_type_bg = 'rgba(56, 176, 0, 0.1)';
-                                break;
-                            case 'snack':
-                                $meal_type_color = '#8338ec';
-                                $meal_type_bg = 'rgba(131, 56, 236, 0.1)';
-                                break;
-                        }
-                        ?>
-
-                        <div class="meal-item">
-                            <div class="meal-header">
-                                <div>
-                                    <div class="meal-name"><?= $meal_name ?></div>
-                                    <span class="meal-type" style="background: <?= $meal_type_bg ?>; color: <?= $meal_type_color ?>;">
-                                        <?= ucfirst($meal_type) ?>
-                                    </span>
-                                </div>
-                            </div>
-
-                            <div class="meal-stats">
-                                <div class="meal-stat-item">
-                                    <div class="meal-stat-icon calorie-stat">
-                                        <i class="fas fa-fire"></i>
-                                    </div>
-                                    <div class="meal-stat-value"><?= htmlspecialchars($meal['calories']) ?></div>
-                                    <div class="meal-stat-label">Calories</div>
-                                </div>
-
-                                <?php if (!empty($meal['protein']) && $meal['protein'] > 0): ?>
-                                    <div class="meal-stat-item">
-                                        <div class="meal-stat-icon protein-stat">
-                                            <i class="fas fa-drumstick-bite"></i>
-                                        </div>
-                                        <div class="meal-stat-value"><?= htmlspecialchars($meal['protein']) ?>g</div>
-                                        <div class="meal-stat-label">Protein</div>
-                                    </div>
-                                <?php endif; ?>
-
-                                <?php if (!empty($meal['carbs']) && $meal['carbs'] > 0): ?>
-                                    <div class="meal-stat-item">
-                                        <div class="meal-stat-icon carbs-stat">
-                                            <i class="fas fa-bread-slice"></i>
-                                        </div>
-                                        <div class="meal-stat-value"><?= htmlspecialchars($meal['carbs']) ?>g</div>
-                                        <div class="meal-stat-label">Carbs</div>
-                                    </div>
-                                <?php endif; ?>
-
-                                <?php if (!empty($meal['fat']) && $meal['fat'] > 0): ?>
-                                    <div class="meal-stat-item">
-                                        <div class="meal-stat-icon fat-stat">
-                                            <i class="fas fa-oil-can"></i>
-                                        </div>
-                                        <div class="meal-stat-value"><?= htmlspecialchars($meal['fat']) ?>g</div>
-                                        <div class="meal-stat-label">Fat</div>
-                                    </div>
-                                <?php endif; ?>
-                            </div>
-                        </div>
-                    <?php endforeach; ?>
-
-                    <?php if (count($today_meals_display) >= 5): ?>
-                        <div class="view-all-meals">
-                            <a href="/fitness-tracker/meals/planner.php" class="btn btn-danger">
-                                <i class="fas fa-list me-1"></i>View All Meals
-                            </a>
-                        </div>
-                    <?php endif; ?>
-                </div>
-            <?php else: ?>
-                <div class="empty-meals">
-                    <div class="empty-meals-icon">
-                        <i class="fas fa-utensils"></i>
-                    </div>
-                    <h4>No meals logged today</h4>
-                    <p>Track your nutrition by logging your first meal!</p>
-                    <a href="/fitness-tracker/meals/planner.php" class="btn btn-danger btn-lg">
-                        <i class="fas fa-plus me-2"></i>Log Your First Meal
-                    </a>
-                </div>
-            <?php endif; ?>
-        </div>
-
         <!-- Stats Cards -->
         <div class="row mb-4">
             <div class="col-md-3 col-sm-6 mb-4">
@@ -2092,22 +1163,51 @@ $category_bg = $is_cardio ? 'rgba(255, 0, 110, 0.1)' : 'rgba(58, 134, 255, 0.1)'
                 </div>
             </div>
 
-            <div class="col-md-3 col-sm-6 mb-4">
-                <div class="stats-card">
-                    <div class="stats-icon" style="background: linear-gradient(135deg, #a1c4fd, #c2e9fb); color: #4d96ff;">
-                        <i class="fas fa-apple-alt"></i>
-                    </div>
-                    <div class="stats-value"><?= htmlspecialchars($today_meals['total_calories']) ?></div>
-                    <div class="stats-label">Calories Today</div>
-                    <div class="small text-muted mt-2">
-                        <?php if ($today_meals['total_calories'] > 0): ?>
-                            <i class="fas fa-fire me-1"></i>Calories consumed
-                        <?php else: ?>
-                            <i class="fas fa-info-circle me-1"></i>No meals logged
-                        <?php endif; ?>
-                    </div>
-                </div>
-            </div>
+            <!-- ==================== TODAY'S NUTRITION ==================== -->
+<?php
+$today_calories = 0;
+$today_protein = 0;
+$today_carbs = 0;
+$today_fat = 0;
+$today_meals_count = 0;
+
+try {
+    // Get today's nutrition totals
+    $stmt = $pdo->prepare("SELECT 
+        SUM(calories) as total_calories,
+        SUM(protein) as total_protein,
+        SUM(carbs) as total_carbs,
+        SUM(fat) as total_fat,
+        COUNT(*) as meal_count 
+        FROM meals WHERE user_id = ? AND DATE(date) = ?");
+    $stmt->execute([$user_id, $today]);
+    $nutrition_data = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    $today_calories = $nutrition_data['total_calories'] ?? 0;
+    $today_protein = $nutrition_data['total_protein'] ?? 0;
+    $today_carbs = $nutrition_data['total_carbs'] ?? 0;
+    $today_fat = $nutrition_data['total_fat'] ?? 0;
+    $today_meals_count = $nutrition_data['meal_count'] ?? 0;
+    
+} catch (Exception $e) {
+    error_log("Error calculating nutrition stats: " . $e->getMessage());
+}
+?>
+
+<div class="col-md-3 col-sm-6 mb-4">
+    <div class="stats-card">
+        <div class="stats-icon" style="background: linear-gradient(135deg, #a1c4fd, #c2e9fb); color: #4d96ff;">
+            <i class="fas fa-apple-alt"></i>
+        </div>
+        <div class="stats-value"><?= htmlspecialchars($today_calories) ?></div>
+        <div class="stats-label">Calories Today</div>
+        <div class="small text-muted mt-2">
+            <i class="fas fa-drumstick-bite me-1"></i><?= round($today_protein, 1) ?>g Protein<br>
+            <i class="fas fa-bread-slice me-1"></i><?= round($today_carbs, 1) ?>g Carbs<br>
+            <i class="fas fa-oil-can me-1"></i><?= round($today_fat, 1) ?>g Fat
+        </div>
+    </div>
+</div>
 
             <div class="col-md-3 col-sm-6 mb-4">
                 <div class="stats-card">

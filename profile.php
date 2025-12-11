@@ -12,6 +12,9 @@ require_login();
 $user_id = get_user_id(); 
 require 'includes/db.php';
 
+// Include achievements functions
+require 'includes/achievements.php';
+
 // Check if columns exist, if not create them
 try {
     // Check table structure
@@ -63,30 +66,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['goal_weight']) && iss
         $goal_weight = floatval($_POST['goal_weight']);
         $goal_type = $_POST['goal_type'];
         
-        // First check if columns exist
-        $stmt = $pdo->query("SHOW COLUMNS FROM users LIKE 'goal_weight'");
-        $goal_weight_exists = $stmt->fetch();
-        
-        $stmt = $pdo->query("SHOW COLUMNS FROM users LIKE 'goal_type'");
-        $goal_type_exists = $stmt->fetch();
-        
-        if ($goal_weight_exists && $goal_type_exists) {
-            // Columns exist, update normally
-            $stmt = $pdo->prepare("UPDATE users SET goal_weight = ?, goal_type = ? WHERE id = ?");
-            $stmt->execute([$goal_weight, $goal_type, $user_id]);
-        } else {
-            // Columns don't exist, try to create them first
-            if (!$goal_weight_exists) {
-                $pdo->exec("ALTER TABLE users ADD COLUMN goal_weight DECIMAL(5,2) DEFAULT NULL");
-            }
-            if (!$goal_type_exists) {
-                $pdo->exec("ALTER TABLE users ADD COLUMN goal_type VARCHAR(20) DEFAULT 'lose'");
-            }
-            
-            // Now update
-            $stmt = $pdo->prepare("UPDATE users SET goal_weight = ?, goal_type = ? WHERE id = ?");
-            $stmt->execute([$goal_weight, $goal_type, $user_id]);
-        }
+        // Update user goal
+        $stmt = $pdo->prepare("UPDATE users SET goal_weight = ?, goal_type = ? WHERE id = ?");
+        $stmt->execute([$goal_weight, $goal_type, $user_id]);
         
         // Update local user data
         $user['goal_weight'] = $goal_weight;
@@ -95,53 +77,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['goal_weight']) && iss
         // Set success message
         $_SESSION['success_message'] = "Goal updated successfully!";
         
+        // Check for achievements after goal update
+        check_and_award_achievements($pdo, $user_id);
+        
         // Redirect to avoid form resubmission
         header("Location: profile.php");
         exit();
         
     } catch (PDOException $e) {
-        // More specific error handling
-        $error_message = "Database update error: " . $e->getMessage();
-        
-        // Check if it's a column missing error
-        if (strpos($e->getMessage(), 'goal_weight') !== false) {
-            try {
-                // Try to add the missing column
-                $pdo->exec("ALTER TABLE users ADD COLUMN goal_weight DECIMAL(5,2) DEFAULT NULL");
-                $pdo->exec("ALTER TABLE users ADD COLUMN goal_type VARCHAR(20) DEFAULT 'lose'");
-                
-                // Retry the update
-                $stmt = $pdo->prepare("UPDATE users SET goal_weight = ?, goal_type = ? WHERE id = ?");
-                $stmt->execute([$goal_weight, $goal_type, $user_id]);
-                
-                $_SESSION['success_message'] = "Goal updated successfully!";
-                header("Location: profile.php");
-                exit();
-                
-            } catch (PDOException $e2) {
-                $error_message .= " - Also failed to add columns: " . $e2->getMessage();
-                die($error_message);
-            }
-        } else {
-            die($error_message);
-        }
+        die("Database update error: " . $e->getMessage());
     }
 }
 
-// Get achievements - with error handling
-$earned_badges = [];
-try {
-    $stmt = $pdo->prepare("SELECT badge FROM achievements WHERE user_id = ?");
-    $stmt->execute([$user_id]);
-    $badges = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
-    // Extract badge names
-    $earned_badges = array_column($badges, 'badge');
-    
-} catch (PDOException $e) {
-    // If achievements table doesn't exist or has issues, use empty array
-    $earned_badges = [];
-}
+// Check for achievements when visiting profile
+$new_badges = check_and_award_achievements($pdo, $user_id);
+
+// Get earned badges for display
+$earned_badges = get_user_badges($pdo, $user_id);
+
+// Define badge information for display
+$all_badges = [
+    'First Workout' => [
+        'icon' => 'fa-dumbbell', 
+        'color' => '#00d4ff', 
+        'desc' => 'Complete your first workout'
+    ],
+    '1000 Calories Logged' => [
+        'icon' => 'fa-fire', 
+        'color' => '#ff2d75', 
+        'desc' => 'Log 1000 calories in meals'
+    ],
+    '5kg Lost' => [
+        'icon' => 'fa-weight-scale', 
+        'color' => '#00e676', 
+        'desc' => 'Lose 5kg from starting weight'
+    ],
+    '30 Day Streak' => [
+        'icon' => 'fa-calendar-check', 
+        'color' => '#ffc107', 
+        'desc' => 'Maintain a 30-day workout streak'
+    ]
+];
 ?>
 
 <!DOCTYPE html>
@@ -159,6 +135,7 @@ try {
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Montserrat:wght@800;900&display=swap" rel="stylesheet">
     
     <style>
+        /* All your existing CSS styles remain the same */
         :root {
             --primary: #00d4ff;
             --primary-dark: #0099cc;
@@ -845,6 +822,84 @@ try {
             color: var(--success);
         }
         
+        /* Achievement Celebration Modal */
+        .achievement-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(10, 15, 35, 0.9);
+            backdrop-filter: blur(20px);
+            z-index: 1100;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        .achievement-modal.show {
+            display: flex;
+        }
+        
+        .achievement-modal-content {
+            background: linear-gradient(135deg, rgba(0, 230, 118, 0.1), rgba(0, 212, 255, 0.1));
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 28px;
+            padding: 3rem;
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 30px 80px rgba(0, 230, 118, 0.3);
+            animation: scaleIn 0.5s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes scaleIn {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        
+        .celebration-icon {
+            font-size: 5rem;
+            background: var(--gradient-success);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 1.5rem;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        .celebration-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            color: white;
+        }
+        
+        .celebration-badge-name {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--success);
+            margin-bottom: 1rem;
+        }
+        
+        .celebration-message {
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 2rem;
+            font-size: 1.1rem;
+        }
+        
         /* Mobile navbar close button */
         .navbar-close {
             position: absolute;
@@ -1333,6 +1388,21 @@ try {
     </style>
 </head>
 <body>
+    <!-- Achievement Celebration Modal -->
+    <div id="achievementModal" class="achievement-modal">
+        <div class="achievement-modal-content">
+            <div class="celebration-icon">
+                <i class="fas fa-trophy"></i>
+            </div>
+            <h2 class="celebration-title">Achievement Unlocked!</h2>
+            <div class="celebration-badge-name" id="achievementBadgeName"></div>
+            <div class="celebration-message" id="achievementMessage">Congratulations! You've earned a new badge.</div>
+            <button class="btn btn-success" onclick="closeAchievementModal()">
+                <i class="fas fa-check me-2"></i>Awesome!
+            </button>
+        </div>
+    </div>
+
     <!-- Desktop Navigation -->
     <nav class="navbar navbar-expand-lg">
         <div class="container">
@@ -1442,6 +1512,23 @@ try {
                     </div>
                     <?php unset($_SESSION['success_message']); endif; ?>
                     
+                    <?php if(isset($_SESSION['new_badge'])): ?>
+                    <div class="achievement-banner">
+                        <div>
+                            <i class="fas fa-trophy me-2"></i>
+                            <strong>New Achievement: <?= htmlspecialchars($_SESSION['new_badge']) ?>!</strong>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-light" onclick="this.parentElement.style.display='none'">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <?php 
+                    // Store badge name for JavaScript celebration
+                    $new_badge_name = $_SESSION['new_badge'];
+                    unset($_SESSION['new_badge']); 
+                    endif; 
+                    ?>
+                    
                     <form method="POST" id="goalForm">
                         <!-- Current Weight -->
                         <div class="mb-4">
@@ -1540,14 +1627,6 @@ try {
                     </div>
                     
                     <?php
-                    // Define all badges
-                    $all_badges = [
-                        'First Workout' => ['icon' => 'fa-dumbbell', 'color' => '#00d4ff', 'desc' => 'Complete your first workout'],
-                        '1000 Calories Logged' => ['icon' => 'fa-fire', 'color' => '#ff2d75', 'desc' => 'Log 1000 calories in meals'],
-                        '5kg Lost' => ['icon' => 'fa-weight-scale', 'color' => '#00e676', 'desc' => 'Lose 5kg from starting weight'],
-                        '30 Day Streak' => ['icon' => 'fa-calendar-check', 'color' => '#ffc107', 'desc' => 'Maintain a 30-day workout streak']
-                    ];
-                    
                     $earned_count = count($earned_badges);
                     ?>
                     
@@ -1674,6 +1753,59 @@ try {
             // Make selectGoalType globally accessible
             window.selectGoalType = selectGoalType;
             
+            // Achievement celebration
+            function showAchievementModal(badgeName) {
+                const modal = document.getElementById('achievementModal');
+                const badgeNameElement = document.getElementById('achievementBadgeName');
+                const messageElement = document.getElementById('achievementMessage');
+                
+                if (modal && badgeNameElement) {
+                    badgeNameElement.textContent = badgeName;
+                    
+                    // Set different messages based on badge
+                    let message = "Congratulations! You've earned a new badge.";
+                    if (badgeName === 'First Workout') {
+                        message = "Great start! Your first workout is complete.";
+                    } else if (badgeName === '1000 Calories Logged') {
+                        message = "You've logged 1000 calories! Keep tracking your nutrition.";
+                    } else if (badgeName === '5kg Lost') {
+                        message = "Incredible progress! You've lost 5kg.";
+                    } else if (badgeName === '30 Day Streak') {
+                        message = "Amazing consistency! 30 days of workouts complete.";
+                    }
+                    
+                    messageElement.textContent = message;
+                    modal.classList.add('show');
+                    
+                    // Play celebration sound (optional)
+                    try {
+                        const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/286/286-preview.mp3');
+                        audio.volume = 0.3;
+                        audio.play().catch(e => console.log("Audio play failed:", e));
+                    } catch (e) {
+                        console.log("Audio error:", e);
+                    }
+                }
+            }
+            
+            function closeAchievementModal() {
+                const modal = document.getElementById('achievementModal');
+                if (modal) {
+                    modal.classList.remove('show');
+                }
+            }
+            
+            // Make functions globally accessible
+            window.showAchievementModal = showAchievementModal;
+            window.closeAchievementModal = closeAchievementModal;
+            
+            // Show achievement modal if there's a new badge
+            <?php if(isset($new_badge_name)): ?>
+            setTimeout(() => {
+                showAchievementModal("<?= $new_badge_name ?>");
+            }, 1000);
+            <?php endif; ?>
+            
             // Form submission animation
             document.getElementById('goalForm').addEventListener('submit', function(e) {
                 const submitBtn = this.querySelector('button[type="submit"]');
@@ -1733,6 +1865,21 @@ try {
                     if (navbarCollapse && navbarCollapse.classList.contains('show') && !isClickInsideNavbar) {
                         navbarToggler.click();
                     }
+                }
+            });
+            
+            // Close achievement modal when clicking outside
+            document.addEventListener('click', function(event) {
+                const modal = document.getElementById('achievementModal');
+                if (modal && modal.classList.contains('show') && event.target === modal) {
+                    closeAchievementModal();
+                }
+            });
+            
+            // Close achievement modal with Escape key
+            document.addEventListener('keydown', function(event) {
+                if (event.key === 'Escape') {
+                    closeAchievementModal();
                 }
             });
         });

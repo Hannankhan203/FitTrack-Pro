@@ -2238,6 +2238,43 @@ foreach ($existingMeals as $meal) {
                     }
                 },
                 {
+                    title: "Vegetable Roll (1 piece)",
+                    nutrition: {
+                        calories: 260,
+                        protein: 5,
+                        carbs: 32,
+                        fat: 13
+                    }
+                },
+                {
+                    title: "Aloo Samosa (1 piece)",
+                    nutrition: {
+                        calories: 220,
+                        protein: 3,
+                        carbs: 28,
+                        fat: 11
+                    }
+                },
+                {
+                    title: "Gosht Ki Boti (1 piece, cooked)",
+                    nutrition: {
+                        calories: 55,
+                        protein: 7,
+                        carbs: 0,
+                        fat: 3
+                    }
+                },
+                {
+                    title: "Chicken Box Patty (1 piece)",
+                    nutrition: {
+                        calories: 380,
+                        protein: 12,
+                        carbs: 32,
+                        fat: 22
+                    }
+                },
+
+                {
                     title: "Mutter (Peas) with Rice (1 plate)",
                     nutrition: {
                         calories: 350,
@@ -2313,11 +2350,21 @@ foreach ($existingMeals as $meal) {
                     title: "Red Lobia (Rajma/Kidney Beans, 1 bowl)",
                     nutrition: {
                         calories: 220,
-                        protein: 12,
+                        protein: 15,
                         carbs: 40,
+                        fat: 1
+                    }
+                },
+                {
+                    title: "Black Chole (1 bowl)",
+                    nutrition: {
+                        calories: 270,
+                        protein: 15,
+                        carbs: 45,
                         fat: 4
                     }
                 },
+
                 {
                     title: "Chana Masala with Puri (2 Puris)",
                     nutrition: {
@@ -3249,6 +3296,33 @@ foreach ($existingMeals as $meal) {
                         protein: 3,
                         carbs: 38,
                         fat: 10
+                    }
+                },
+                {
+                    title: "Normal White Bread (1 slice)",
+                    nutrition: {
+                        calories: 75,
+                        protein: 2.5,
+                        carbs: 14,
+                        fat: 1
+                    }
+                },
+                {
+                    title: "Normal White Bread (2 slices)",
+                    nutrition: {
+                        calories: 150,
+                        protein: 5,
+                        carbs: 28,
+                        fat: 2
+                    }
+                },
+                {
+                    title: "Standard White Bread Slice",
+                    nutrition: {
+                        calories: 80,
+                        protein: 3,
+                        carbs: 15,
+                        fat: 1
                     }
                 },
                 {
