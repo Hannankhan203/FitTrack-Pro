@@ -1851,7 +1851,7 @@ foreach ($existingMeals as $meal) {
                         </div>
                         <div class="stats-value" id="proteinAmount"><?php echo $totalProtein; ?>g</div>
                         <div class="stats-label">Protein</div>
-                        <div class="stats-goal">Target: 200g (for muscle)</div>
+                        <div class="stats-goal">Target: 160g (for muscle)</div>
                     </div>
                 </div>
 
@@ -1862,7 +1862,7 @@ foreach ($existingMeals as $meal) {
                         </div>
                         <div class="stats-value" id="carbsAmount"><?php echo $totalCarbs; ?>g</div>
                         <div class="stats-label">Carbohydrates</div>
-                        <div class="stats-goal">Target: 360g (Energy source)</div>
+                        <div class="stats-goal">Target: 180g (Energy source)</div>
                     </div>
                 </div>
 
@@ -1873,7 +1873,7 @@ foreach ($existingMeals as $meal) {
                         </div>
                         <div class="stats-value" id="fatAmount"><?php echo $totalFat; ?>g</div>
                         <div class="stats-label">Fats</div>
-                        <div class="stats-goal">Target: 83g (Healthy fats)</div>
+                        <div class="stats-goal">Target: 80g (Healthy fats)</div>
                     </div>
                 </div>
             </div>
@@ -2215,9 +2215,98 @@ foreach ($existingMeals as $meal) {
                         fat: 2
                     }
                 },
+                {
+                    title: "White Bun (1 medium)",
+                    nutrition: {
+                        calories: 150,
+                        protein: 5,
+                        carbs: 28,
+                        fat: 2
+                    }
+                },
+                {
+                    title: "Foil Baked Chicken (250g)",
+                    nutrition: {
+                        calories: 400,
+                        protein: 80,
+                        carbs: 2,
+                        fat: 7
+                    }
+                },
+                {
+                    title: "1 Plate Cooked Rice (200g)",
+                    nutrition: {
+                        calories: 270,
+                        protein: 6,
+                        carbs: 55,
+                        fat: 0.5
+                    }
+                },
+                {
+                    title: "Moong Daal Chewra (100g)",
+                    nutrition: {
+                        calories: 480,
+                        protein: 22,
+                        carbs: 45,
+                        fat: 22
+                    }
+                },
+                {
+                    title: "Aalu ka Samosa",
+                    nutrition: {
+                        calories: 270,
+                        protein: 6,
+                        carbs: 30,
+                        fat: 16
+                    }
+                },
+                {
+                    title: "Chapati (Medium) (40g)",
+                    nutrition: {
+                        calories: 125,
+                        protein: 4,
+                        carbs: 20,
+                        fat: 1
+                    }
+                },
+                {
+                    title: "Pulao (1 Plate 250g)",
+                    nutrition: {
+                        calories: 460,
+                        protein: 22,
+                        carbs: 60,
+                        fat: 15
+                    }
+                },
             ],
-            'fastfood': [],
+            'fastfood': [{
+                title: "Zinger Burger",
+                nutrition: {
+                    calories: 450,
+                    protein: 25,
+                    carbs: 40,
+                    fat: 25
+                }
+            }, ],
             'beverages': [{
+                    title: "Homemade Whey (1 cup)",
+                    nutrition: {
+                        calories: 60,
+                        protein: 8,
+                        carbs: 8,
+                        fat: 1
+                    }
+                },
+                {
+                    title: "Homemade Whey (Half cup)",
+                    nutrition: {
+                        calories: 30,
+                        protein: 4,
+                        carbs: 4,
+                        fat: 0.5
+                    }
+                },
+                {
                     title: "Tea with Gur + Powdered Milk (1 cup)",
                     nutrition: {
                         calories: 110,
@@ -2296,6 +2385,15 @@ foreach ($existingMeals as $meal) {
                         protein: 8,
                         carbs: 12,
                         fat: 8
+                    }
+                },
+                {
+                    title: "Gatorade (500 ml)",
+                    nutrition: {
+                        calories: 120,
+                        protein: 0,
+                        carbs: 29,
+                        fat: 0
                     }
                 },
 
@@ -2402,15 +2500,6 @@ foreach ($existingMeals as $meal) {
             ],
             'desserts': [],
             'healthy': [{
-                    title: "Homemade Whey (1 cup)",
-                    nutrition: {
-                        calories: 60,
-                        protein: 8,
-                        carbs: 8,
-                        fat: 1
-                    }
-                },
-                {
                     title: "Egg White Only (from 1 large egg)",
                     nutrition: {
                         calories: 17,
@@ -2482,6 +2571,69 @@ foreach ($existingMeals as $meal) {
                         fat: 3
                     }
                 },
+                {
+                    title: "Daliya + Milk + Dry Milk (1 bowl)",
+                    nutrition: {
+                        calories: 340,
+                        protein: 22,
+                        carbs: 55,
+                        fat: 6
+                    }
+                },
+                {
+                    title: "Daliya + Milk + Dry Milk (Half bowl)",
+                    nutrition: {
+                        calories: 170,
+                        protein: 11,
+                        carbs: 27.5,
+                        fat: 3
+                    }
+                },
+                {
+                    title: "Daliya + Milk + Dry Milk + 2 tsp Honey (1 bowl)",
+                    nutrition: {
+                        calories: 380,
+                        protein: 22,
+                        carbs: 63,
+                        fat: 6
+                    }
+                },
+                {
+                    title: "Daliya + Milk + Dry Milk + 2 tsp Honey (Half bowl)",
+                    nutrition: {
+                        calories: 190,
+                        protein: 11,
+                        carbs: 31.5,
+                        fat: 3
+                    }
+                },
+                {
+                    title: "Black Chana (1 bowl, boiled)",
+                    nutrition: {
+                        calories: 250,
+                        protein: 15,
+                        carbs: 40,
+                        fat: 3
+                    }
+                },
+                {
+                    title: "Daal Masoor/Moong (1 cup cooked)",
+                    nutrition: {
+                        calories: 180,
+                        protein: 12,
+                        carbs: 27,
+                        fat: 3
+                    }
+                },
+                {
+                    title: "Bread + Peanut Butter",
+                    nutrition: {
+                        calories: 250,
+                        protein: 10,
+                        carbs: 26,
+                        fat: 12
+                    }
+                }
 
             ],
             'custom': []

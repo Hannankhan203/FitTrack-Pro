@@ -39,12 +39,12 @@ if (!empty($saved_exercises)) {
     }
 } else {
     error_log("No exercises found for today");
-    
+
     // DEBUG: Show ALL exercises for this user to check if data exists
     $stmt_all = $pdo->prepare("SELECT * FROM workouts WHERE user_id = ? ORDER BY date DESC LIMIT 10");
     $stmt_all->execute([$user_id]);
     $all_exercises = $stmt_all->fetchAll();
-    
+
     error_log("=== LAST 10 EXERCISES FOR USER ===");
     foreach ($all_exercises as $ex) {
         $db_date = $ex['date'];
@@ -1465,9 +1465,6 @@ function formatExerciseDate($db_time)
                 <p class="text-muted mb-3">Exercises you've saved today. Click delete to remove them.</p>
 
                 <?php foreach ($saved_exercises as $exercise):
-                    // Format the timestamp from database
-                    $exercise_time = formatExerciseTime($exercise['date']);
-
                     // Determine exercise type based on name
                     $exercise_name = $exercise['exercise'];
                     $exercise_type = 'strength'; // Default
@@ -1548,28 +1545,24 @@ function formatExerciseDate($db_time)
                 ?>
                     <div class="saved-exercise-card" id="saved-exercise-<?= $exercise['id'] ?>">
                         <div class="saved-exercise-info">
-                            <!-- Add timestamp header -->
-                            <div class="saved-exercise-time mb-2">
-                                <i class="fas fa-clock me-1"></i>
-                                Saved at: <?= htmlspecialchars($exercise_time) ?> PKT
-                            </div>
+                            <!-- REMOVED THE TIMESTAMP HEADER SECTION -->
 
                             <div class="saved-exercise-name">
                                 <i class="fas <?= $icon ?> me-2 
-                            <?php
-                            if ($exercise_type === 'cardio') echo 'text-danger';
-                            elseif ($exercise_type === 'duration') echo 'text-warning';
-                            else echo 'text-primary';
-                            ?>
-                        "></i>
+                    <?php
+                    if ($exercise_type === 'cardio') echo 'text-danger';
+                    elseif ($exercise_type === 'duration') echo 'text-warning';
+                    else echo 'text-primary';
+                    ?>
+                "></i>
                                 <?= htmlspecialchars($exercise['exercise']) ?>
                                 <span class="exercise-type-indicator 
-                            <?php
-                            if ($exercise_type === 'cardio') echo 'type-cardio';
-                            elseif ($exercise_type === 'duration') echo 'type-mobility';
-                            else echo 'type-strength';
-                            ?>
-                        ">
+                    <?php
+                    if ($exercise_type === 'cardio') echo 'type-cardio';
+                    elseif ($exercise_type === 'duration') echo 'type-mobility';
+                    else echo 'type-strength';
+                    ?>
+                ">
                                     <?= ucfirst($exercise_type) ?>
                                 </span>
                             </div>
@@ -1859,6 +1852,32 @@ function formatExerciseDate($db_time)
                 icon: "fa-wall"
             },
 
+            // =============== LOWER BODY / LEGS ===============
+            {
+                group: "Lower Body & Legs 🦵",
+                name: "Angled leg press 🦵",
+                type: "strength",
+                icon: "fa-weight"
+            },
+            {
+                group: "Lower Body & Legs 🦵",
+                name: "Leg extensions 🦵",
+                type: "strength",
+                icon: "fa-arrow-up"
+            },
+            {
+                group: "Lower Body & Legs 🦵",
+                name: "Seated calf raises 🦵",
+                type: "strength",
+                icon: "fa-shoe-prints"
+            },
+            {
+                group: "Lower Body & Legs 🦵",
+                name: "Lying leg curl 🦵",
+                type: "strength",
+                icon: "fa-person-running"
+            },
+
             // =============== SQUATS & LUNGES ===============
             {
                 group: "Squats & Lunges 🦵",
@@ -1907,6 +1926,38 @@ function formatExerciseDate($db_time)
                 icon: "fa-arrows-rotate"
             },
 
+            // =============== SHOULDER EXERCISES ===============
+            {
+                group: "Shoulders 🤸‍♂️",
+                name: "Shoulder Press ⬆️",
+                type: "strength",
+                icon: "fa-arrow-up"
+            },
+            {
+                group: "Shoulders 🤸‍♂️",
+                name: "Stability ball lateral raise 🎯",
+                type: "strength",
+                icon: "fa-basketball"
+            },
+            {
+                group: "Shoulders 🤸‍♂️",
+                name: "Low Pulley Front Raises 🔻",
+                type: "strength",
+                icon: "fa-arrow-up"
+            },
+            {
+                group: "Shoulders 🤸‍♂️",
+                name: "Shrugs 🤷‍♂️",
+                type: "strength",
+                icon: "fa-arrow-up"
+            },
+            {
+                group: "Shoulders 🤸‍♂️",
+                name: "Face Pull 🤷‍♂️",
+                type: "strength",
+                icon: "fa-arrow-up"
+            },
+
             // =============== MOBILITY & STRETCHING ===============
             {
                 group: "Mobility & Stretching 🧘‍♂️",
@@ -1941,7 +1992,68 @@ function formatExerciseDate($db_time)
                 name: "Adjustable Hand Gripper ✊",
                 type: "strength",
                 icon: "fa-hand-fist"
-            }
+            },
+            // =============== BICEPS EXERCISES ===============
+            {
+                group: "Biceps 💪",
+                name: "Bicep Curls 💪",
+                type: "strength",
+                icon: "fa-hand-fist"
+            },
+            {
+                group: "Biceps 💪",
+                name: "Barbell Curls 💪",
+                type: "strength",
+                icon: "fa-hand-fist"
+            },
+            {
+                group: "Biceps 💪",
+                name: "Hammer Curls 💪",
+                type: "strength",
+                icon: "fa-hand-fist"
+            },
+
+            // =============== FOREARMS EXERCISES ===============
+            {
+                group: "Forearms 🦾",
+                name: "Wrist Curls ✋",
+                type: "strength",
+                icon: "fa-hand"
+            },
+
+            // =============== CHEST EXERCISES ===============
+            {
+                group: "Chest 🦸‍♂️",
+                name: "Machine Bench Press 🦸‍♂️",
+                type: "strength",
+                icon: "fa-weight-hanging"
+            },
+            {
+                group: "Chest 🦸‍♂️",
+                name: "Machine Incline Bench Press 🦸‍♂️",
+                type: "strength",
+                icon: "fa-arrow-up"
+            },
+            {
+                group: "Chest 🦸‍♂️",
+                name: "Smith Bench Press 🦸‍♂️",
+                type: "strength",
+                icon: "fa-dumbbell"
+            },
+
+            // =============== TRICEPS EXERCISES ===============
+            {
+                group: "Triceps 💪",
+                name: "Tricep Push-Downs 💪",
+                type: "strength",
+                icon: "fa-arrow-down"
+            },
+            {
+                group: "Triceps 💪",
+                name: "Overhead Tricep Extension 💪",
+                type: "strength",
+                icon: "fa-arrow-up"
+            },
         ];
 
         // Exercises that don't require weight input
